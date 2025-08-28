@@ -2,6 +2,8 @@ from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 from datetime import timedelta
 
+from odoo.odoo.tools.view_validation import validate
+
 
 class ClinicAppointment(models.Model):
     _name = 'clinic.appointment'
@@ -152,8 +154,8 @@ class ClinicAppointment(models.Model):
         holidays = self.env['clinic.holiday'].search([
             ('doctor_id', '=', self.doctor_id.id),
             ('state', '=', 'approved'),
-            ('from_date', '<=', self.appointment_date.date()),
-            ('to_date', '>=', self.appointment_date.date())
+            ('from_date', '<=', self.appointment_date),
+            ('to_date', '>=', self.appointment_date)
         ])
         if holidays:
             return {
@@ -326,7 +328,7 @@ class ClinicAppointment(models.Model):
         day = self.env['clinic.days'].search([('name', '=', day_name)], limit=1)
         
         if not day or day not in self.doctor_id.available_days:
-            # Doctor doesn't work on this day, can't create follow-up automatically
+            # Doctor doesn't work on this da    y, can't create follow-up automatically
             return
         
         # Check if doctor is on leave
@@ -350,6 +352,7 @@ class ClinicAppointment(models.Model):
         
         if not available_slot:
             # No available slots, can't create follow-up automatically
+
             return
         
         # Create follow-up appointment
