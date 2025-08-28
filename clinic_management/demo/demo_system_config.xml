@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Configuration Parameters -->
+        <record id="clinic_allow_online_booking_param" model="ir.config_parameter">
+            <field name="key">clinic_management.allow_online_booking</field>
+            <field name="value">True</field>
+        </record>
+        
+        <record id="clinic_booking_confirmation_email_param" model="ir.config_parameter">
+            <field name="key">clinic_management.booking_confirmation_email</field>
+            <field name="value">True</field>
+        </record>
+        
+        <!-- Demo Department -->
+        <record id="demo_department_medical" model="hr.department">
+            <field name="name">Medical Department</field>
+            <field name="complete_name">Springfield Medical Center / Medical Department</field>
+        </record>
+        
+        <record id="demo_department_cardiology" model="hr.department">
+            <field name="name">Cardiology</field>
+            <field name="parent_id" ref="demo_department_medical"/>
+            <field name="complete_name">Springfield Medical Center / Medical Department / Cardiology</field>
+        </record>
+        
+        <record id="demo_department_dermatology" model="hr.department">
+            <field name="name">Dermatology</field>
+            <field name="parent_id" ref="demo_department_medical"/>
+            <field name="complete_name">Springfield Medical Center / Medical Department / Dermatology</field>
+        </record>
+        
+        <record id="demo_department_pediatrics" model="hr.department">
+            <field name="name">Pediatrics</field>
+            <field name="parent_id" ref="demo_department_medical"/>
+            <field name="complete_name">Springfield Medical Center / Medical Department / Pediatrics</field>
+        </record>
+        
+        <record id="demo_department_orthopedics" model="hr.department">
+            <field name="name">Orthopedics</field>
+            <field name="parent_id" ref="demo_department_medical"/>
+            <field name="complete_name">Springfield Medical Center / Medical Department / Orthopedics</field>
+        </record>
+        
+        <record id="demo_department_neurology" model="hr.department">
+            <field name="name">Neurology</field>
+            <field name="parent_id" ref="demo_department_medical"/>
+            <field name="complete_name">Springfield Medical Center / Medical Department / Neurology</field>
+        </record>
+        
+        <record id="demo_department_ophthalmology" model="hr.department">
+            <field name="name">Ophthalmology</field>
+            <field name="parent_id" ref="demo_department_medical"/>
+            <field name="complete_name">Springfield Medical Center / Medical Department / Ophthalmology</field>
+        </record>
+        
+        <record id="demo_department_psychiatry" model="hr.department">
+            <field name="name">Psychiatry</field>
+            <field name="parent_id" ref="demo_department_medical"/>
+            <field name="complete_name">Springfield Medical Center / Medical Department / Psychiatry</field>
+        </record>
+        
+        <!-- Update doctors with departments -->
+        <record id="demo_doctor_john_smith" model="clinic.doctor">
+            <field name="department" ref="demo_department_cardiology"/>
+        </record>
+        
+        <record id="demo_doctor_sarah_brown" model="clinic.doctor">
+            <field name="department" ref="demo_department_dermatology"/>
+        </record>
+        
+        <record id="demo_doctor_michael_johnson" model="clinic.doctor">
+            <field name="department" ref="demo_department_pediatrics"/>
+        </record>
+        
+        <record id="demo_doctor_emily_davis" model="clinic.doctor">
+            <field name="department" ref="demo_department_orthopedics"/>
+        </record>
+        
+        <record id="demo_doctor_robert_wilson" model="clinic.doctor">
+            <field name="department" ref="demo_department_neurology"/>
+        </record>
+        
+        <record id="demo_doctor_lisa_garcia" model="clinic.doctor">
+            <field name="department" ref="demo_department_ophthalmology"/>
+        </record>
+        
+        <record id="demo_doctor_david_martinez" model="clinic.doctor">
+            <field name="department" ref="demo_department_psychiatry"/>
+        </record>
+        
+    </data>
+</odoo>

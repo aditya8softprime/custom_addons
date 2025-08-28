@@ -1,0 +1,154 @@
+/* Clinic Website Custom Styles */
+
+/* Header Styling */
+.clinic-header {
+    background-color: #f8f9fa;
+    padding: 20px 0;
+}
+
+/* Hero Section */
+.clinic-hero {
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    color: white;
+    padding: 60px 0;
+}
+
+.clinic-hero h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+/* Doctor Cards */
+.doctor-card {
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.doctor-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.doctor-card .card-img-top {
+    height: 200px;
+    object-fit: cover;
+}
+
+.doctor-card .badge {
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+/* Service Cards */
+.service-card {
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.service-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.service-card .card-img-top {
+    height: 180px;
+    object-fit: cover;
+}
+
+/* Booking Form */
+.booking-form {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+}
+
+.booking-form .card-header {
+    padding: 20px;
+}
+
+.booking-form .form-control {
+    padding: 12px;
+    height: auto;
+}
+
+.booking-form .btn-primary {
+    padding: 12px 30px;
+    font-weight: 600;
+}
+
+/* Appointment Confirmation */
+.confirmation-header {
+    padding: 30px;
+    text-align: center;
+}
+
+.confirmation-details {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+/* Doctor Profile */
+.doctor-profile-header {
+    padding: 30px 0;
+    background-color: #f8f9fa;
+}
+
+.doctor-profile-image {
+    max-width: 300px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.doctor-availability {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.doctor-availability .list-group-item {
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Services Page */
+.services-list {
+    margin-top: 40px;
+}
+
+.service-detail {
+    margin-bottom: 30px;
+    padding: 20px;
+    border-radius: 8px;
+    background-color: #fff;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .clinic-hero {
+        padding: 40px 0;
+    }
+    
+    .clinic-hero h1 {
+        font-size: 2rem;
+    }
+    
+    .doctor-card .card-img-top,
+    .service-card .card-img-top {
+        height: 160px;
+    }
+}
+
+/* Animation for elements */
+.fade-in {
+    animation: fadeIn 0.8s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}

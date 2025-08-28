@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Main Clinic Management Menu -->
+    <menuitem id="menu_clinic_root" 
+              name="Clinic Management"
+              web_icon="clinic_management,static/description/icon.png"
+              sequence="10"/>
+    
+    <!-- Appointments Menu -->
+    <menuitem id="menu_clinic_appointments"
+              name="Appointments"
+              parent="menu_clinic_root"
+              sequence="20"/>
+    
+    <menuitem id="menu_clinic_appointment_today"
+              name="Today's Appointments"
+              parent="menu_clinic_appointments"
+              action="action_clinic_appointment_today"
+              sequence="10"/>
+    
+    <menuitem id="menu_clinic_appointment_all"
+              name="All Appointments"
+              parent="menu_clinic_appointments"
+              action="action_clinic_appointment"
+              sequence="20"/>
+    
+    <!-- Other Records Menu -->
+    <menuitem id="menu_clinic_other"
+              name="Prescription and Labtest"
+              parent="menu_clinic_root"
+              sequence="30"/>
+    
+
+    <menuitem id="menu_clinic_prescription_new"
+              name="Prescriptions"
+              parent="menu_clinic_other"
+              action="action_clinic_prescription"
+              sequence="1"/>
+    
+    <menuitem id="menu_clinic_lab_test"
+              name="Lab Tests"
+              parent="menu_clinic_other"
+              action="action_clinic_lab_test"
+              sequence="2"/>
+    
+    <menuitem id="menu_clinic_holiday"
+              name="Doctor Leaves"
+              parent="menu_clinic_configuration"
+              action="action_clinic_holiday"
+              sequence="30"/>
+    
+    <menuitem id="menu_clinic_special_tag"
+              name="Doctor Special Tags"
+              parent="menu_clinic_configuration"
+              action="action_clinic_doctor_special_tag"
+              sequence="40"/>
+    
+    <!-- Website Menu -->
+    <menuitem id="menu_clinic_website_root"
+              name="Website"
+              parent="menu_clinic_root"
+              sequence="50"/>
+    
+    <menuitem id="menu_clinic_website_settings"
+              name="Website Settings"
+              parent="menu_clinic_website_root"
+              action="action_clinic_website_settings"
+              sequence="10"/>
+    
+    <menuitem id="menu_clinic_testimonial"
+              name="Testimonials"
+              parent="menu_clinic_website_root"
+              action="action_clinic_testimonial"
+              sequence="20"/>
+    
+    <!-- Configuration Menu -->
+    <menuitem id="menu_clinic_configuration"
+              name="Configuration"
+              parent="menu_clinic_root"
+              sequence="100"/>
+
+    <menuitem id="menu_clinic_doctor"
+              name="Doctors"
+              parent="menu_clinic_configuration"
+              action="action_clinic_doctor"
+              sequence="10"/>
+
+    <menuitem id="menu_clinic_patient"
+              name="Patients"
+              parent="menu_clinic_configuration"
+              action="action_clinic_patient"
+              sequence="20"/>
+
+    <menuitem id="menu_clinic_service"
+              name="Services/Treatments"
+              parent="menu_clinic_configuration"
+              action="action_clinic_service"
+              sequence="30"/>
+
+    <menuitem id="menu_clinic_slot"
+              name="Slots"
+              parent="menu_clinic_configuration"
+              action="action_clinic_slot"
+              sequence="40"/>
+
+    <menuitem id="menu_clinic_days"
+              name="Days"
+              parent="menu_clinic_configuration"
+              action="action_clinic_days"
+              sequence="50"/>
+</odoo>

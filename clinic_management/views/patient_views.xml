@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Patient Views -->
+    <record id="view_clinic_patient_form" model="ir.ui.view">
+        <field name="name">clinic.patient.form</field>
+        <field name="model">clinic.patient</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_appointments" type="object" 
+                                class="oe_stat_button" icon="fa-calendar">
+                            <field name="appointment_count" widget="statinfo" string="Appointments"/>
+                        </button>
+                        <button name="action_view_prescriptions" type="object" 
+                                class="oe_stat_button" icon="fa-file-text-o">
+                            <field name="prescription_count" widget="statinfo" string="Prescriptions"/>
+                        </button>
+                        <button name="action_view_lab_tests" type="object" 
+                                class="oe_stat_button" icon="fa-flask">
+                            <field name="lab_test_count" widget="statinfo" string="Lab Tests"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Patient Name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="gender"/>
+                            <field name="age"/>
+                            <field name="phone"/>
+                            <field name="email"/>
+                        </group>
+                        <group>
+                            <field name="address"/>
+                            <field name="has_medical_history"/>
+                            <field name="medical_report" filename="medical_report_filename" 
+                                   invisible="not has_medical_history"/>
+                            <field name="medical_report_filename" invisible="1"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Appointments">
+                            <field name="appointment_ids">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="doctor_id"/>
+                                    <field name="appointment_date"/>
+                                    <field name="symptom"/>
+                                    <field name="state"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Prescriptions">
+                            <field name="prescription_ids">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="doctor_id"/>
+                                    <field name="prescription_date"/>
+                                    <field name="state"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Lab Tests" invisible="not lab_test_ids">
+                            <field name="lab_test_ids">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="doctor_id"/>
+                                    <field name="test_date"/>
+                                    <field name="state"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Medical History">
+                            <field name="symptom" readonly="1" placeholder="Symptoms history from previous appointments"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_clinic_patient_list" model="ir.ui.view">
+        <field name="name">clinic.patient.list</field>
+        <field name="model">clinic.patient</field>
+        <field name="arch" type="xml">
+            <list string="Patients">
+                <field name="name"/>
+                <field name="gender"/>
+                <field name="age"/>
+                <field name="phone"/>
+                <field name="email"/>
+                <field name="appointment_count"/>
+                <field name="active" invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_clinic_patient_kanban" model="ir.ui.view">
+        <field name="name">clinic.patient.kanban</field>
+        <field name="model">clinic.patient</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="id"/>
+                <field name="name"/>
+                <field name="gender"/>
+                <field name="age"/>
+                <field name="phone"/>
+                <field name="appointment_count"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click">
+                            <div class="oe_kanban_details">
+                                <strong class="o_kanban_record_title">
+                                    <field name="name"/>
+                                </strong>
+                                <div>
+                                    <field name="gender"/> - <field name="age"/> years
+                                </div>
+                                <div>
+                                    <field name="phone"/>
+                                </div>
+                                <div t-if="appointment_count > 0" class="oe_kanban_bottom_right">
+                                    <span class="badge badge-pill badge-primary">
+                                        <field name="appointment_count"/> Appointments
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_clinic_patient_search" model="ir.ui.view">
+        <field name="name">clinic.patient.search</field>
+        <field name="model">clinic.patient</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="Patient"/>
+                <field name="phone"/>
+                <field name="email"/>
+                <separator/>
+                <filter string="Male" name="male" domain="[('gender', '=', 'male')]"/>
+                <filter string="Female" name="female" domain="[('gender', '=', 'female')]"/>
+                <filter string="Has Medical History" name="has_medical_history" domain="[('has_medical_history', '=', True)]"/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_by_gender" string="Gender" context="{'group_by': 'gender'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_clinic_patient" model="ir.actions.act_window">
+        <field name="name">Patients</field>
+        <field name="res_model">clinic.patient</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="context">{'search_default_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first patient!
+            </p>
+            <p>
+                Add patients to your clinic to manage their appointments, prescriptions, and medical history.
+            </p>
+        </field>
+    </record>
+
+   
+    <!-- Lab Test Views -->
+    <record id="view_clinic_lab_test_form" model="ir.ui.view">
+        <field name="name">clinic.lab.test.form</field>
+        <field name="model">clinic.lab.test</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_complete" string="Mark as Completed" type="object" 
+                            invisible="state != 'requested'" class="btn-primary"/>
+                    <button name="action_cancel" string="Cancel" type="object" 
+                            invisible="state != 'requested'" class="btn-danger"/>
+                    <field name="state" widget="statusbar" statusbar_visible="requested,completed,cancelled"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Test Name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="patient_id"/>
+                            <field name="doctor_id"/>
+                            <field name="test_date"/>
+                        </group>
+                        <group>
+                            <field name="appointment_id" 
+                                   domain="[('patient_id', '=', patient_id), ('doctor_id', '=', doctor_id)]"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Notes">
+                            <field name="notes" placeholder="Additional notes for the lab test"/>
+                        </page>
+                        <page string="Results" invisible="state != 'completed'">
+                            <group>
+                                <field name="result" placeholder="Test results"/>
+                                <field name="result_document" filename="result_document_filename"/>
+                                <field name="result_document_filename" invisible="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_clinic_lab_test_list" model="ir.ui.view">
+        <field name="name">clinic.lab.test.list</field>
+        <field name="model">clinic.lab.test</field>
+        <field name="arch" type="xml">
+            <list string="Lab Tests">
+                <field name="name"/>
+                <field name="patient_id"/>
+                <field name="doctor_id"/>
+                <field name="test_date"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_clinic_lab_test_search" model="ir.ui.view">
+        <field name="name">clinic.lab.test.search</field>
+        <field name="model">clinic.lab.test</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="patient_id"/>
+                <field name="doctor_id"/>
+                <separator/>
+                <filter string="Requested" name="requested" domain="[('state', '=', 'requested')]"/>
+                <filter string="Completed" name="completed" domain="[('state', '=', 'completed')]"/>
+                <filter string="Cancelled" name="cancelled" domain="[('state', '=', 'cancelled')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_by_patient" string="Patient" context="{'group_by': 'patient_id'}"/>
+                    <filter name="group_by_doctor" string="Doctor" context="{'group_by': 'doctor_id'}"/>
+                    <filter name="group_by_state" string="Status" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_clinic_lab_test" model="ir.actions.act_window">
+        <field name="name">Lab Tests</field>
+        <field name="res_model">clinic.lab.test</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_requested': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first lab test!
+            </p>
+            <p>
+                Create lab test requests for your patients.
+            </p>
+        </field>
+    </record>
+</odoo>

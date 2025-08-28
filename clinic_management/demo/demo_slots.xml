@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Demo Slots for Dr. John Smith (Cardiology) -->
+        <record id="demo_slot_john_mon_09" model="clinic.slot">
+            <field name="doctor_id" ref="demo_doctor_john_smith"/>
+            <field name="day_id" ref="clinic_management.days_monday"/>
+            <field name="start_time">9.0</field>
+            <field name="end_time">9.5</field>
+            <field name="duration">30</field>
+            <field name="slot_number">MON-09:00</field>
+            <field name="max_patients">1</field>
+            <field name="status">available</field>
+        </record>
+        
+        <record id="demo_slot_john_mon_0930" model="clinic.slot">
+            <field name="doctor_id" ref="demo_doctor_john_smith"/>
+            <field name="day_id" ref="clinic_management.days_monday"/>
+            <field name="start_time">9.5</field>
+            <field name="end_time">10.0</field>
+            <field name="duration">30</field>
+            <field name="slot_number">MON-09:30</field>
+            <field name="max_patients">1</field>
+            <field name="status">available</field>
+        </record>
+        
+        <record id="demo_slot_john_mon_10" model="clinic.slot">
+            <field name="doctor_id" ref="demo_doctor_john_smith"/>
+            <field name="day_id" ref="clinic_management.days_monday"/>
+            <field name="start_time">10.0</field>
+            <field name="end_time">10.5</field>
+            <field name="duration">30</field>
+            <field name="slot_number">MON-10:00</field>
+            <field name="max_patients">1</field>
+            <field name="status">available</field>
+        </record>
+        
+        <record id="demo_slot_john_mon_1030" model="clinic.slot">
+            <field name="doctor_id" ref="demo_doctor_john_smith"/>
+            <field name="day_id" ref="clinic_management.days_monday"/>
+            <field name="start_time">10.5</field>
+            <field name="end_time">11.0</field>
+            <field name="duration">30</field>
+            <field name="slot_number">MON-10:30</field>
+            <field name="max_patients">1</field>
+            <field name="status">available</field>
+        </record>
+        
+        <record id="demo_slot_john_tue_14" model="clinic.slot">
+            <field name="doctor_id" ref="demo_doctor_john_smith"/>
+            <field name="day_id" ref="clinic_management.days_tuesday"/>
+            <field name="start_time">14.0</field>
+            <field name="end_time">14.5</field>
+            <field name="duration">30</field>
+            <field name="slot_number">TUE-14:00</field>
+            <field name="max_patients">1</field>
+            <field name="status">available</field>
+        </record>
+        
+        <record id="demo_slot_john_tue_1430" model="clinic.slot">
+            <field name="doctor_id" ref="demo_doctor_john_smith"/>
+            <field name="day_id" ref="clinic_management.days_tuesday"/>
+            <field name="start_time">14.5</field>
+            <field name="end_time">15.0</field>
+            <field name="duration">30</field>
+            <field name="slot_number">TUE-14:30</field>
+            <field name="max_patients">1</field>
+            <field name="status">available</field>
+        </record>
+        
+        <!-- Demo Slots for Dr. Sarah Brown (Dermatology) -->
+        <record id="demo_slot_sarah_mon_10" model="clinic.slot">
+            <field name="doctor_id" ref="demo_doctor_sarah_brown"/>
+            <field name="day_id" ref="clinic_management.days_monday"/>
+            <field name="start_time">10.0</field>
+            <field name="end_time">10.5</field>
+            <field name="duration">30</field>
+            <field name="slot_number">MON-10:00</field>
+            <field name="max_patients">1</field>
+            <field name="status">available</field>
+        </record>
+        
+        <record id="demo_slot_sarah_mon_1030" model="clinic.slot">
+            <field name="doctor_id" ref="demo_doctor_sarah_brown"/>
+            <field name="day_id" ref="clinic_management.days_monday"/>
+            <field name="start_time">10.5</field>
+            <field name="end_time">11.0</field>
+            <field name="duration">30</field>
+            <field name="slot_number">MON-10:30</field>
+            <field name="max_patients">1</field>
+            <field name="status">available</field>
+        </record>
+        
+        <record id="demo_slot_sarah_wed_15" model="clinic.slot">
+            <field name="doctor_id" ref="demo_doctor_sarah_brown"/>
+            <field name="day_id" ref="clinic_management.days_wednesday"/>
+            <field name="start_time">15.0</field>
+            <field name="end_time">15.5</field>
+            <field name="duration">30</field>
+            <field name="slot_number">WED-15:00</field>
+            <field name="max_patients">1</field>
+            <field name="status">available</field>
+        </record>
+        
+        <record id="demo_slot_sarah_fri_11" model="clinic.slot">
+            <field name="doctor_id" ref="demo_doctor_sarah_brown"/>
+            <field name="day_id" ref="clinic_management.days_friday"/>
+            <field name="start_time">11.0</field>
+            <field name="end_time">11.5</field>
+            <field name="duration">30</field>
+            <field name="slot_number">FRI-11:00</field>
+            <field name="max_patients">1</field>
+            <field name="status">available</field>
+        </record>
+        
+        <!-- Demo Slots for Dr. Michael Johnson (Pediatrics) -->
+        <record id="demo_slot_michael_tue_08" model="clinic.slot">
+            <field name="doctor_id" ref="demo_doctor_michael_johnson"/>
+            <field name="day_id" ref="clinic_management.days_tuesday"/>
+            <field name="start_time">8.0</field>
+            <field name="end_time">8.33</field>
+            <field name="duration">20</field>
+            <field name="slot_number">TUE-08:00</field>
+            <field name="max_patients">2</field>
+            <field name="status">available</field>
+        </record>
+        
+        <record id="demo_slot_michael_tue_0820" model="clinic.slot">
+            <field name="doctor_id" ref="demo_doctor_michael_johnson"/>
+            <field name="day_id" ref="clinic_management.days_tuesday"/>
+            <field name="start_time">8.33</field>
+            <field name="end_time">8.67</field>
+            <field name="duration">20</field>
+            <field name="slot_number">TUE-08:20</field>
+            <field name="max_patients">2</field>
+            <field name="status">available</field>
+        </record>
+        
+        <record id="demo_slot_michael_thu_09" model="clinic.slot">
+            <field name="doctor_id" ref="demo_doctor_michael_johnson"/>
+            <field name="day_id" ref="clinic_management.days_thursday"/>
+            <field name="start_time">9.0</field>
+            <field name="end_time">9.33</field>
+            <field name="duration">20</field>
+            <field name="slot_number">THU-09:00</field>
+            <field name="max_patients">2</field>
+            <field name="status">available</field>
+        </record>
+        
+        <record id="demo_slot_michael_fri_10" model="clinic.slot">
+            <field name="doctor_id" ref="demo_doctor_michael_johnson"/>
+            <field name="day_id" ref="clinic_management.days_friday"/>
+            <field name="start_time">10.0</field>
+            <field name="end_time">10.33</field>
+            <field name="duration">20</field>
+            <field name="slot_number">FRI-10:00</field>
+            <field name="max_patients">2</field>
+            <field name="status">available</field>
+        </record>
+        
+        <!-- Demo Slots for Dr. Emily Davis (Orthopedics) -->
+        <record id="demo_slot_emily_mon_09" model="clinic.slot">
+            <field name="doctor_id" ref="demo_doctor_emily_davis"/>
+            <field name="day_id" ref="clinic_management.days_monday"/>
+            <field name="start_time">9.0</field>
+            <field name="end_time">9.75</field>
+            <field name="duration">45</field>
+            <field name="slot_number">MON-09:00</field>
+            <field name="max_patients">1</field>
+            <field name="status">available</field>
+        </record>
+        
+        <record id="demo_slot_emily_mon_0945" model="clinic.slot">
+            <field name="doctor_id" ref="demo_doctor_emily_davis"/>
+            <field name="day_id" ref="clinic_management.days_monday"/>
+            <field name="start_time">9.75</field>
+            <field name="end_time">10.5</field>
+            <field name="duration">45</field>
+            <field name="slot_number">MON-09:45</field>
+            <field name="max_patients">1</field>
+            <field name="status">available</field>
+        </record>
+        
+        <record id="demo_slot_emily_wed_14" model="clinic.slot">
+            <field name="doctor_id" ref="demo_doctor_emily_davis"/>
+            <field name="day_id" ref="clinic_management.days_wednesday"/>
+            <field name="start_time">14.0</field>
+            <field name="end_time">14.75</field>
+            <field name="duration">45</field>
+            <field name="slot_number">WED-14:00</field>
+            <field name="max_patients">1</field>
+            <field name="status">available</field>
+        </record>
+        
+        <!-- Demo Slots for Dr. Robert Wilson (Neurology) -->
+        <record id="demo_slot_robert_mon_10" model="clinic.slot">
+            <field name="doctor_id" ref="demo_doctor_robert_wilson"/>
+            <field name="day_id" ref="clinic_management.days_monday"/>
+            <field name="start_time">10.0</field>
+            <field name="end_time">11.0</field>
+            <field name="duration">60</field>
+            <field name="slot_number">MON-10:00</field>
+            <field name="max_patients">1</field>
+            <field name="status">available</field>
+        </record>
+        
+        <record id="demo_slot_robert_wed_11" model="clinic.slot">
+            <field name="doctor_id" ref="demo_doctor_robert_wilson"/>
+            <field name="day_id" ref="clinic_management.days_wednesday"/>
+            <field name="start_time">11.0</field>
+            <field name="end_time">12.0</field>
+            <field name="duration">60</field>
+            <field name="slot_number">WED-11:00</field>
+            <field name="max_patients">1</field>
+            <field name="status">available</field>
+        </record>
+        
+        <record id="demo_slot_robert_fri_13" model="clinic.slot">
+            <field name="doctor_id" ref="demo_doctor_robert_wilson"/>
+            <field name="day_id" ref="clinic_management.days_friday"/>
+            <field name="start_time">13.0</field>
+            <field name="end_time">14.0</field>
+            <field name="duration">60</field>
+            <field name="slot_number">FRI-13:00</field>
+            <field name="max_patients">1</field>
+            <field name="status">available</field>
+        </record>
+        
+        <!-- Demo Slots for Dr. Lisa Garcia (Ophthalmology) -->
+        <record id="demo_slot_lisa_tue_09" model="clinic.slot">
+            <field name="doctor_id" ref="demo_doctor_lisa_garcia"/>
+            <field name="day_id" ref="clinic_management.days_tuesday"/>
+            <field name="start_time">9.0</field>
+            <field name="end_time">9.5</field>
+            <field name="duration">30</field>
+            <field name="slot_number">TUE-09:00</field>
+            <field name="max_patients">1</field>
+            <field name="status">available</field>
+        </record>
+        
+        <record id="demo_slot_lisa_thu_10" model="clinic.slot">
+            <field name="doctor_id" ref="demo_doctor_lisa_garcia"/>
+            <field name="day_id" ref="clinic_management.days_thursday"/>
+            <field name="start_time">10.0</field>
+            <field name="end_time">10.5</field>
+            <field name="duration">30</field>
+            <field name="slot_number">THU-10:00</field>
+            <field name="max_patients">1</field>
+            <field name="status">available</field>
+        </record>
+        
+        <record id="demo_slot_lisa_sat_11" model="clinic.slot">
+            <field name="doctor_id" ref="demo_doctor_lisa_garcia"/>
+            <field name="day_id" ref="clinic_management.days_saturday"/>
+            <field name="start_time">11.0</field>
+            <field name="end_time">11.5</field>
+            <field name="duration">30</field>
+            <field name="slot_number">SAT-11:00</field>
+            <field name="max_patients">1</field>
+            <field name="status">available</field>
+        </record>
+        
+        <!-- Demo Slots for Dr. David Martinez (Psychiatry) -->
+        <record id="demo_slot_david_mon_11" model="clinic.slot">
+            <field name="doctor_id" ref="demo_doctor_david_martinez"/>
+            <field name="day_id" ref="clinic_management.days_monday"/>
+            <field name="start_time">11.0</field>
+            <field name="end_time">12.0</field>
+            <field name="duration">60</field>
+            <field name="slot_number">MON-11:00</field>
+            <field name="max_patients">1</field>
+            <field name="status">available</field>
+        </record>
+        
+        <record id="demo_slot_david_tue_15" model="clinic.slot">
+            <field name="doctor_id" ref="demo_doctor_david_martinez"/>
+            <field name="day_id" ref="clinic_management.days_tuesday"/>
+            <field name="start_time">15.0</field>
+            <field name="end_time">16.0</field>
+            <field name="duration">60</field>
+            <field name="slot_number">TUE-15:00</field>
+            <field name="max_patients">1</field>
+            <field name="status">available</field>
+        </record>
+        
+        <record id="demo_slot_david_fri_17" model="clinic.slot">
+            <field name="doctor_id" ref="demo_doctor_david_martinez"/>
+            <field name="day_id" ref="clinic_management.days_friday"/>
+            <field name="start_time">17.0</field>
+            <field name="end_time">18.0</field>
+            <field name="duration">60</field>
+            <field name="slot_number">FRI-17:00</field>
+            <field name="max_patients">1</field>
+            <field name="status">available</field>
+        </record>
+        
+    </data>
+</odoo>

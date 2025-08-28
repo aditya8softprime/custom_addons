@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Demo Patients -->
+        <record id="demo_patient_alice_cooper" model="clinic.patient">
+            <field name="name">Alice Cooper</field>
+            <field name="gender">female</field>
+            <field name="age">35</field>
+            <field name="phone">+1-555-1001</field>
+            <field name="email">alice.cooper@email.com</field>
+            <field name="address">123 Oak Street, Springfield, IL 62701</field>
+            <field name="has_medical_history">True</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="demo_patient_bob_johnson" model="clinic.patient">
+            <field name="name">Bob Johnson</field>
+            <field name="gender">male</field>
+            <field name="age">42</field>
+            <field name="phone">+1-555-1002</field>
+            <field name="email">bob.johnson@email.com</field>
+            <field name="address">456 Pine Avenue, Springfield, IL 62702</field>
+            <field name="has_medical_history">False</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="demo_patient_carol_smith" model="clinic.patient">
+            <field name="name">Carol Smith</field>
+            <field name="gender">female</field>
+            <field name="age">28</field>
+            <field name="phone">+1-555-1003</field>
+            <field name="email">carol.smith@email.com</field>
+            <field name="address">789 Maple Drive, Springfield, IL 62703</field>
+            <field name="has_medical_history">True</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="demo_patient_david_brown" model="clinic.patient">
+            <field name="name">David Brown</field>
+            <field name="gender">male</field>
+            <field name="age">55</field>
+            <field name="phone">+1-555-1004</field>
+            <field name="email">david.brown@email.com</field>
+            <field name="address">321 Cedar Lane, Springfield, IL 62704</field>
+            <field name="has_medical_history">True</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="demo_patient_eva_wilson" model="clinic.patient">
+            <field name="name">Eva Wilson</field>
+            <field name="gender">female</field>
+            <field name="age">31</field>
+            <field name="phone">+1-555-1005</field>
+            <field name="email">eva.wilson@email.com</field>
+            <field name="address">654 Birch Road, Springfield, IL 62705</field>
+            <field name="has_medical_history">False</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="demo_patient_frank_davis" model="clinic.patient">
+            <field name="name">Frank Davis</field>
+            <field name="gender">male</field>
+            <field name="age">67</field>
+            <field name="phone">+1-555-1006</field>
+            <field name="email">frank.davis@email.com</field>
+            <field name="address">987 Elm Street, Springfield, IL 62706</field>
+            <field name="has_medical_history">True</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="demo_patient_grace_miller" model="clinic.patient">
+            <field name="name">Grace Miller</field>
+            <field name="gender">female</field>
+            <field name="age">23</field>
+            <field name="phone">+1-555-1007</field>
+            <field name="email">grace.miller@email.com</field>
+            <field name="address">159 Walnut Avenue, Springfield, IL 62707</field>
+            <field name="has_medical_history">False</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="demo_patient_henry_garcia" model="clinic.patient">
+            <field name="name">Henry Garcia</field>
+            <field name="gender">male</field>
+            <field name="age">49</field>
+            <field name="phone">+1-555-1008</field>
+            <field name="email">henry.garcia@email.com</field>
+            <field name="address">753 Chestnut Street, Springfield, IL 62708</field>
+            <field name="has_medical_history">True</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="demo_patient_isabel_martinez" model="clinic.patient">
+            <field name="name">Isabel Martinez</field>
+            <field name="gender">female</field>
+            <field name="age">38</field>
+            <field name="phone">+1-555-1009</field>
+            <field name="email">isabel.martinez@email.com</field>
+            <field name="address">852 Spruce Lane, Springfield, IL 62709</field>
+            <field name="has_medical_history">True</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="demo_patient_jack_anderson" model="clinic.patient">
+            <field name="name">Jack Anderson</field>
+            <field name="gender">male</field>
+            <field name="age">26</field>
+            <field name="phone">+1-555-1010</field>
+            <field name="email">jack.anderson@email.com</field>
+            <field name="address">951 Poplar Drive, Springfield, IL 62710</field>
+            <field name="has_medical_history">False</field>
+            <field name="active">True</field>
+        </record>
+        
+        <!-- Pediatric Patients -->
+        <record id="demo_patient_lucy_thompson" model="clinic.patient">
+            <field name="name">Lucy Thompson</field>
+            <field name="gender">female</field>
+            <field name="age">8</field>
+            <field name="phone">+1-555-1011</field>
+            <field name="email">lucy.thompson.parent@email.com</field>
+            <field name="address">147 Oakwood Circle, Springfield, IL 62711</field>
+            <field name="has_medical_history">False</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="demo_patient_max_white" model="clinic.patient">
+            <field name="name">Max White</field>
+            <field name="gender">male</field>
+            <field name="age">12</field>
+            <field name="phone">+1-555-1012</field>
+            <field name="email">max.white.parent@email.com</field>
+            <field name="address">258 Meadowbrook Lane, Springfield, IL 62712</field>
+            <field name="has_medical_history">True</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="demo_patient_nina_lee" model="clinic.patient">
+            <field name="name">Nina Lee</field>
+            <field name="gender">female</field>
+            <field name="age">5</field>
+            <field name="phone">+1-555-1013</field>
+            <field name="email">nina.lee.parent@email.com</field>
+            <field name="address">369 Riverside Drive, Springfield, IL 62713</field>
+            <field name="has_medical_history">False</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="demo_patient_oliver_clark" model="clinic.patient">
+            <field name="name">Oliver Clark</field>
+            <field name="gender">male</field>
+            <field name="age">15</field>
+            <field name="phone">+1-555-1014</field>
+            <field name="email">oliver.clark.parent@email.com</field>
+            <field name="address">741 Sunset Boulevard, Springfield, IL 62714</field>
+            <field name="has_medical_history">True</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="demo_patient_penny_harris" model="clinic.patient">
+            <field name="name">Penny Harris</field>
+            <field name="gender">female</field>
+            <field name="age">10</field>
+            <field name="phone">+1-555-1015</field>
+            <field name="email">penny.harris.parent@email.com</field>
+            <field name="address">963 Highland Avenue, Springfield, IL 62715</field>
+            <field name="has_medical_history">False</field>
+            <field name="active">True</field>
+        </record>
+        
+    </data>
+</odoo>

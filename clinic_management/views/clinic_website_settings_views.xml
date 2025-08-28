@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Clinic Website Settings Form View -->
+    <record id="view_clinic_website_settings_form" model="ir.ui.view">
+        <field name="name">clinic.website.settings.form</field>
+        <field name="model">clinic.website.settings</field>
+        <field name="arch" type="xml">
+            <form string="Clinic Website Settings">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <notebook>
+                        <page string="Clinic Information" name="clinic_info">
+                            <group>
+                                <group>
+                                    <field name="clinic_name" required="1"/>
+                                    <field name="clinic_tagline"/>
+                                </group>
+                                <group>
+                                    <field name="logo_image" widget="image"/>
+                                    <field name="banner_image" widget="image"/>
+                                </group>
+                            </group>
+                            <group string="Clinic Description">
+                                <field name="clinic_description" nolabel="1" placeholder="Describe your clinic and its services..." options="{'collaborative': true, 'resizable': true}"/>
+                            </group>
+                        </page>
+                        <page string="Contact Information" name="contact_info">
+                            <group>
+                                <group>
+                                    <field name="phone"/>
+                                    <field name="email"/>
+                                </group>
+                                <group>
+                                    <field name="address"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Social Media" name="social_media">
+                            <group>
+                                <field name="facebook_url" widget="url"/>
+                                <field name="twitter_url" widget="url"/>
+                                <field name="instagram_url" widget="url"/>
+                                <field name="linkedin_url" widget="url"/>
+                            </group>
+                        </page>
+                        <page string="Booking Settings" name="booking_settings">
+                            <group>
+                                <field name="enable_online_booking"/>
+                                <field name="booking_email_template_id" 
+                                       options="{'no_create': True, 'no_open': True}"
+                                       domain="[('model_id.model', '=', 'clinic.appointment')]"/>
+                            </group>
+                            <group string="Booking Confirmation Message">
+                                <field name="booking_confirmation_message" nolabel="1" 
+                                       placeholder="Thank you for booking an appointment with us..." 
+                                       options="{'collaborative': true, 'resizable': true}"/>
+                            </group>
+                        </page>
+                        <page string="SEO Settings" name="seo_settings">
+                            <group>
+                                <field name="meta_title"/>
+                                <field name="meta_description"/>
+                                <field name="meta_keywords"/>
+                            </group>
+                        </page>
+                        <page string="Footer Information" name="footer_info">
+                            <group>
+                                <field name="footer_text" nolabel="1" options="{'collaborative': true, 'resizable': true}"/>
+                                <field name="copyright_text"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Updated Website Settings Action -->
+    <record id="action_clinic_website_settings" model="ir.actions.act_window">
+        <field name="name">Clinic Website Settings</field>
+        <field name="res_model">clinic.website.settings</field>
+        <field name="view_mode">form</field>
+        <field name="res_id" eval="False"/>
+        <field name="target">current</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Configure your clinic website settings
+            </p>
+            <p>
+                Set up your clinic's information, booking options, and appearance settings
+                for the website.
+            </p>
+        </field>
+    </record>
+</odoo>

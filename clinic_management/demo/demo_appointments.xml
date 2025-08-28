@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Demo Appointments -->
+        <record id="demo_appointment_001" model="clinic.appointment">
+            <field name="name">APP/2025/001</field>
+            <field name="patient_id" ref="demo_patient_alice_cooper"/>
+            <field name="doctor_id" ref="demo_doctor_john_smith"/>
+            <field name="slot_id" ref="demo_slot_john_mon_09"/>
+            <field name="appointment_date" eval="(datetime.date.today() + datetime.timedelta(days=1))"/>
+            <field name="consulting_fee">300.00</field>
+            <field name="symptom">Chest pain and shortness of breath during exercise. Patient reports discomfort for the past week.</field>
+            <field name="state">confirmed</field>
+            <field name="next_visit_days">30</field>
+            <field name="is_lab_test_required">True</field>
+        </record>
+        
+        <record id="demo_appointment_002" model="clinic.appointment">
+            <field name="name">APP/2025/002</field>
+            <field name="patient_id" ref="demo_patient_bob_johnson"/>
+            <field name="doctor_id" ref="demo_doctor_sarah_brown"/>
+            <field name="slot_id" ref="demo_slot_sarah_mon_10"/>
+            <field name="appointment_date" eval="(datetime.date.today() + datetime.timedelta(days=1))"/>
+            <field name="consulting_fee">200.00</field>
+            <field name="symptom">Skin rash on arms and legs. Itchy and red patches appeared 3 days ago.</field>
+            <field name="state">confirmed</field>
+            <field name="next_visit_days">14</field>
+            <field name="is_lab_test_required">False</field>
+        </record>
+        
+        <record id="demo_appointment_003" model="clinic.appointment">
+            <field name="name">APP/2025/003</field>
+            <field name="patient_id" ref="demo_patient_lucy_thompson"/>
+            <field name="doctor_id" ref="demo_doctor_michael_johnson"/>
+            <field name="slot_id" ref="demo_slot_michael_tue_08"/>
+            <field name="appointment_date" eval="(datetime.date.today() + datetime.timedelta(days=2))"/>
+            <field name="consulting_fee">180.00</field>
+            <field name="symptom">Fever and cough for 2 days. Child is also complaining of sore throat.</field>
+            <field name="state">confirmed</field>
+            <field name="next_visit_days">7</field>
+            <field name="is_lab_test_required">False</field>
+        </record>
+        
+        <record id="demo_appointment_004" model="clinic.appointment">
+            <field name="name">APP/2025/004</field>
+            <field name="patient_id" ref="demo_patient_david_brown"/>
+            <field name="doctor_id" ref="demo_doctor_emily_davis"/>
+            <field name="slot_id" ref="demo_slot_emily_mon_09"/>
+            <field name="appointment_date" eval="(datetime.date.today() + datetime.timedelta(days=1))"/>
+            <field name="consulting_fee">250.00</field>
+            <field name="symptom">Lower back pain radiating to right leg. Pain worsens when sitting for long periods.</field>
+            <field name="state">confirmed</field>
+            <field name="next_visit_days">21</field>
+            <field name="is_lab_test_required">True</field>
+        </record>
+        
+        <record id="demo_appointment_005" model="clinic.appointment">
+            <field name="name">APP/2025/005</field>
+            <field name="patient_id" ref="demo_patient_eva_wilson"/>
+            <field name="doctor_id" ref="demo_doctor_robert_wilson"/>
+            <field name="slot_id" ref="demo_slot_robert_mon_10"/>
+            <field name="appointment_date" eval="(datetime.date.today() + datetime.timedelta(days=1))"/>
+            <field name="consulting_fee">280.00</field>
+            <field name="symptom">Frequent headaches and dizziness. Episodes occur 3-4 times per week for the last month.</field>
+            <field name="state">confirmed</field>
+            <field name="next_visit_days">30</field>
+            <field name="is_lab_test_required">True</field>
+        </record>
+        
+        <record id="demo_appointment_006" model="clinic.appointment">
+            <field name="name">APP/2025/006</field>
+            <field name="patient_id" ref="demo_patient_frank_davis"/>
+            <field name="doctor_id" ref="demo_doctor_lisa_garcia"/>
+            <field name="slot_id" ref="demo_slot_lisa_tue_09"/>
+            <field name="appointment_date" eval="(datetime.date.today() + datetime.timedelta(days=2))"/>
+            <field name="consulting_fee">220.00</field>
+            <field name="symptom">Blurred vision in left eye and seeing floaters. Started 2 weeks ago.</field>
+            <field name="state">confirmed</field>
+            <field name="next_visit_days">14</field>
+            <field name="is_lab_test_required">False</field>
+        </record>
+        
+        <record id="demo_appointment_007" model="clinic.appointment">
+            <field name="name">APP/2025/007</field>
+            <field name="patient_id" ref="demo_patient_grace_miller"/>
+            <field name="doctor_id" ref="demo_doctor_david_martinez"/>
+            <field name="slot_id" ref="demo_slot_david_mon_11"/>
+            <field name="appointment_date" eval="(datetime.date.today() + datetime.timedelta(days=1))"/>
+            <field name="consulting_fee">350.00</field>
+            <field name="symptom">Anxiety and panic attacks. Feeling overwhelmed with work and having trouble sleeping.</field>
+            <field name="state">confirmed</field>
+            <field name="next_visit_days">14</field>
+            <field name="is_lab_test_required">False</field>
+        </record>
+        
+        <record id="demo_appointment_008" model="clinic.appointment">
+            <field name="name">APP/2025/008</field>
+            <field name="patient_id" ref="demo_patient_henry_garcia"/>
+            <field name="doctor_id" ref="demo_doctor_john_smith"/>
+            <field name="slot_id" ref="demo_slot_john_tue_14"/>
+            <field name="appointment_date" eval="(datetime.date.today() + datetime.timedelta(days=2))"/>
+            <field name="consulting_fee">300.00</field>
+            <field name="symptom">High blood pressure follow-up. Patient on medication for 6 months.</field>
+            <field name="state">confirmed</field>
+            <field name="next_visit_days">60</field>
+            <field name="is_lab_test_required">True</field>
+        </record>
+        
+        <record id="demo_appointment_009" model="clinic.appointment">
+            <field name="name">APP/2025/009</field>
+            <field name="patient_id" ref="demo_patient_isabel_martinez"/>
+            <field name="doctor_id" ref="demo_doctor_sarah_brown"/>
+            <field name="slot_id" ref="demo_slot_sarah_wed_15"/>
+            <field name="appointment_date" eval="(datetime.date.today() + datetime.timedelta(days=3))"/>
+            <field name="consulting_fee">200.00</field>
+            <field name="symptom">Acne treatment follow-up. Patient has been on prescribed medication for 2 months.</field>
+            <field name="state">confirmed</field>
+            <field name="next_visit_days">30</field>
+            <field name="is_lab_test_required">False</field>
+        </record>
+        
+        <record id="demo_appointment_010" model="clinic.appointment">
+            <field name="name">APP/2025/010</field>
+            <field name="patient_id" ref="demo_patient_max_white"/>
+            <field name="doctor_id" ref="demo_doctor_michael_johnson"/>
+            <field name="slot_id" ref="demo_slot_michael_thu_09"/>
+            <field name="appointment_date" eval="(datetime.date.today() + datetime.timedelta(days=4))"/>
+            <field name="consulting_fee">180.00</field>
+            <field name="symptom">Annual check-up and vaccination. Child is due for school immunizations.</field>
+            <field name="state">confirmed</field>
+            <field name="next_visit_days">365</field>
+            <field name="is_lab_test_required">False</field>
+        </record>
+        
+        <!-- Past Appointments (Completed) -->
+        <record id="demo_appointment_011" model="clinic.appointment">
+            <field name="name">APP/2025/011</field>
+            <field name="patient_id" ref="demo_patient_jack_anderson"/>
+            <field name="doctor_id" ref="demo_doctor_john_smith"/>
+            <field name="slot_id" ref="demo_slot_john_mon_0930"/>
+            <field name="appointment_date" eval="(datetime.date.today() - datetime.timedelta(days=7))"/>
+            <field name="consulting_fee">300.00</field>
+            <field name="symptom">General health check-up. Regular annual examination.</field>
+            <field name="state">completed</field>
+            <field name="next_visit_days">365</field>
+            <field name="is_lab_test_required">True</field>
+        </record>
+        
+        <record id="demo_appointment_012" model="clinic.appointment">
+            <field name="name">APP/2025/012</field>
+            <field name="patient_id" ref="demo_patient_carol_smith"/>
+            <field name="doctor_id" ref="demo_doctor_emily_davis"/>
+            <field name="slot_id" ref="demo_slot_emily_wed_14"/>
+            <field name="appointment_date" eval="(datetime.date.today() - datetime.timedelta(days=14))"/>
+            <field name="consulting_fee">250.00</field>
+            <field name="symptom">Knee pain after jogging. Patient is a regular runner.</field>
+            <field name="state">completed</field>
+            <field name="next_visit_days">30</field>
+            <field name="is_lab_test_required">False</field>
+        </record>
+        
+        <!-- Draft Appointments -->
+        <record id="demo_appointment_013" model="clinic.appointment">
+            <field name="name">APP/2025/013</field>
+            <field name="patient_id" ref="demo_patient_nina_lee"/>
+            <field name="doctor_id" ref="demo_doctor_michael_johnson"/>
+            <field name="slot_id" ref="demo_slot_michael_fri_10"/>
+            <field name="appointment_date" eval="(datetime.date.today() + datetime.timedelta(days=7))"/>
+            <field name="consulting_fee">180.00</field>
+            <field name="symptom">Routine pediatric check-up. Child wellness visit.</field>
+            <field name="state">draft</field>
+            <field name="next_visit_days">90</field>
+            <field name="is_lab_test_required">False</field>
+        </record>
+        
+        <record id="demo_appointment_014" model="clinic.appointment">
+            <field name="name">APP/2025/014</field>
+            <field name="patient_id" ref="demo_patient_oliver_clark"/>
+            <field name="doctor_id" ref="demo_doctor_robert_wilson"/>
+            <field name="slot_id" ref="demo_slot_robert_fri_13"/>
+            <field name="appointment_date" eval="(datetime.date.today() + datetime.timedelta(days=5))"/>
+            <field name="consulting_fee">280.00</field>
+            <field name="symptom">Concentration problems and frequent headaches affecting school performance.</field>
+            <field name="state">draft</field>
+            <field name="next_visit_days">21</field>
+            <field name="is_lab_test_required">True</field>
+        </record>
+        
+        <record id="demo_appointment_015" model="clinic.appointment">
+            <field name="name">APP/2025/015</field>
+            <field name="patient_id" ref="demo_patient_penny_harris"/>
+            <field name="doctor_id" ref="demo_doctor_lisa_garcia"/>
+            <field name="slot_id" ref="demo_slot_lisa_sat_11"/>
+            <field name="appointment_date" eval="(datetime.date.today() + datetime.timedelta(days=6))"/>
+            <field name="consulting_fee">220.00</field>
+            <field name="symptom">Eye examination for glasses. Child has difficulty seeing the blackboard at school.</field>
+            <field name="state">draft</field>
+            <field name="next_visit_days">180</field>
+            <field name="is_lab_test_required">False</field>
+        </record>
+        
+    </data>
+</odoo>

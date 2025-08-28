@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_clinic_slot_form" model="ir.ui.view">
+        <field name="name">clinic.slot.form</field>
+        <field name="model">clinic.slot</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_set_available" type="object" string="Set Available" 
+                            invisible="status not in ('blocked','cancelled')" class="btn-primary"/>
+                    <button name="action_block" type="object" string="Block" 
+                            invisible="status != 'available'" class="btn-secondary"/>
+                    <button name="action_cancel" type="object" string="Cancel" 
+                            invisible="status not in ('available','booked','blocked')" class="btn-danger"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="slot_number"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="doctor_id"/>
+                            <field name="day_id"/>
+                            <field name="start_time" widget="float_time"/>
+                            <field name="end_time" widget="float_time"/>
+                        </group>
+                        <group>
+                            <field name="duration"/>
+                            <field name="max_patients"/>
+                            <field name="current_patients"/>
+                            <field name="status"/>
+                            <field name="color" invisible="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Appointments" invisible="status == 'available'">
+                            <field name="appointment_ids">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="patient_id"/>
+                                    <field name="appointment_date"/>
+                                    <field name="state"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_clinic_slot_list" model="ir.ui.view">
+        <field name="name">clinic.slot.list</field>
+        <field name="model">clinic.slot</field>
+        <field name="arch" type="xml">
+            <list string="Slots">
+                <field name="doctor_id"/>
+                <field name="day_id"/>
+                <field name="slot_number"/>
+                <field name="start_time" widget="float_time"/>
+                <field name="end_time" widget="float_time"/>
+                <field name="duration"/>
+                <field name="current_patients"/>
+                <field name="max_patients"/>
+                <field name="status" decoration-success="status == 'available'" 
+                       decoration-danger="status == 'booked'" 
+                       decoration-warning="status == 'blocked'" 
+                       decoration-info="status == 'cancelled'" 
+                       decoration-muted="status == 'expired'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_clinic_slot_kanban" model="ir.ui.view">
+        <field name="name">clinic.slot.kanban</field>
+        <field name="model">clinic.slot</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="doctor_id" records_draggable="0" class="o_kanban_small_column">
+                <field name="doctor_id"/>
+                <field name="day_id"/>
+                <field name="slot_number"/>
+                <field name="start_time"/>
+                <field name="end_time"/>
+                <field name="status"/>
+                <field name="color"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div t-attf-class="oe_kanban_card oe_kanban_global_click o_kanban_record_has_image_fill #{color ? 'oe_kanban_color_' + color : ''}">
+                            <div class="oe_kanban_details">
+                                <strong class="o_kanban_record_title">
+                                    <field name="slot_number"/>
+                                </strong>
+                                <div class="o_kanban_record_subtitle">
+                                    <field name="day_id"/>
+                                </div>
+                                <div>
+                                    <strong>Time: </strong>
+                                    <field name="start_time" widget="float_time"/> - <field name="end_time" widget="float_time"/>
+                                </div>
+                                <div>
+                                    <field name="status" widget="badge" 
+                                           decoration-success="status == 'available'" 
+                                           decoration-danger="status == 'booked'" 
+                                           decoration-warning="status == 'blocked'" 
+                                           decoration-info="status == 'cancelled'" 
+                                           decoration-muted="status == 'expired'"/>
+                                </div>
+                                <div t-if="status == 'booked'">
+                                    <strong>Patients: </strong>
+                                    <field name="current_patients"/> / <field name="max_patients"/>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_clinic_slot_calendar" model="ir.ui.view">
+        <field name="name">clinic.slot.calendar</field>
+        <field name="model">clinic.slot</field>
+        <field name="arch" type="xml">
+            <calendar string="Slots" date_start="start_time" date_stop="end_time" mode="day" color="doctor_id">
+                <field name="slot_number"/>
+                <field name="doctor_id"/>
+                <field name="status"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="view_clinic_slot_search" model="ir.ui.view">
+        <field name="name">clinic.slot.search</field>
+        <field name="model">clinic.slot</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="slot_number"/>
+                <field name="doctor_id"/>
+                <field name="day_id"/>
+                <separator/>
+                <filter string="Available" name="available" domain="[('status', '=', 'available')]"/>
+                <filter string="Booked" name="booked" domain="[('status', '=', 'booked')]"/>
+                <filter string="Blocked" name="blocked" domain="[('status', '=', 'blocked')]"/>
+                <filter string="Cancelled" name="cancelled" domain="[('status', '=', 'cancelled')]"/>
+                <filter string="Expired" name="expired" domain="[('status', '=', 'expired')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_by_doctor" string="Doctor" context="{'group_by': 'doctor_id'}"/>
+                    <filter name="group_by_day" string="Day" context="{'group_by': 'day_id'}"/>
+                    <filter name="group_by_status" string="Status" context="{'group_by': 'status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_clinic_slot" model="ir.actions.act_window">
+        <field name="name">Slots</field>
+        <field name="res_model">clinic.slot</field>
+        <field name="view_mode">kanban,list,form,calendar</field>
+        <field name="context">{'search_default_group_by_doctor': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No slots defined!
+            </p>
+            <p>
+                Slots are automatically generated when you create or update a doctor's availability.
+            </p>
+        </field>
+    </record>
+</odoo>

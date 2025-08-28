@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Paracetamol -->
+    <record id="product_paracetamol" model="product.template">
+        <field name="name">Paracetamol 500mg</field>
+        <field name="type">product</field>
+        <field name="categ_id" ref="product.product_category_all"/>
+        <field name="list_price">5.00</field>
+        <field name="standard_price">3.00</field>
+        <field name="uom_id" ref="uom.product_uom_unit"/>
+        <field name="uom_po_id" ref="uom.product_uom_unit"/>
+        <field name="sale_ok">true</field>
+        <field name="purchase_ok">true</field>
+        <field name="description_sale">Pain relief and fever reducer</field>
+    </record>
+
+    <!-- Amoxicillin -->
+    <record id="product_amoxicillin" model="product.template">
+        <field name="name">Amoxicillin 250mg</field>
+        <field name="type">product</field>
+        <field name="categ_id" ref="product.product_category_all"/>
+        <field name="list_price">10.00</field>
+        <field name="standard_price">6.00</field>
+        <field name="uom_id" ref="uom.product_uom_unit"/>
+        <field name="uom_po_id" ref="uom.product_uom_unit"/>
+        <field name="sale_ok">true</field>
+        <field name="purchase_ok">true</field>
+        <field name="description_sale">Antibiotic for bacterial infections</field>
+    </record>
+
+    <!-- Ibuprofen -->
+    <record id="product_ibuprofen" model="product.template">
+        <field name="name">Ibuprofen 400mg</field>
+        <field name="type">product</field>
+        <field name="categ_id" ref="product.product_category_all"/>
+        <field name="list_price">8.00</field>
+        <field name="standard_price">4.00</field>
+        <field name="uom_id" ref="uom.product_uom_unit"/>
+        <field name="uom_po_id" ref="uom.product_uom_unit"/>
+        <field name="sale_ok">true</field>
+        <field name="purchase_ok">true</field>
+        <field name="description_sale">Anti-inflammatory and pain relief</field>
+    </record>
+</odoo>

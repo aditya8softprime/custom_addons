@@ -1,0 +1,87 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_clinic_doctor_admin,clinic.doctor admin,model_clinic_doctor,group_clinic_admin,1,1,1,1
+access_clinic_doctor_system,clinic.doctor system,model_clinic_doctor,base.group_system,1,1,1,1
+access_clinic_doctor_manager,clinic.doctor manager,model_clinic_doctor,group_clinic_manager,1,1,1,0
+access_clinic_doctor_receptionist,clinic.doctor receptionist,model_clinic_doctor,group_clinic_receptionist,1,0,0,0
+access_clinic_doctor_nurse,clinic.doctor nurse,model_clinic_doctor,group_clinic_nurse,1,0,0,0
+access_clinic_doctor_doctor,clinic.doctor doctor,model_clinic_doctor,group_clinic_doctor,1,1,0,0
+
+access_clinic_service_admin,clinic.service admin,model_clinic_service,group_clinic_admin,1,1,1,1
+access_clinic_service_manager,clinic.service manager,model_clinic_service,group_clinic_manager,1,1,1,1
+access_clinic_service_receptionist,clinic.service receptionist,model_clinic_service,group_clinic_receptionist,1,0,0,0
+access_clinic_service_nurse,clinic.service nurse,model_clinic_service,group_clinic_nurse,1,0,0,0
+access_clinic_service_doctor,clinic.service doctor,model_clinic_service,group_clinic_doctor,1,0,0,0
+
+access_clinic_days_admin,clinic.days admin,model_clinic_days,group_clinic_admin,1,1,1,1
+access_clinic_days_manager,clinic.days manager,model_clinic_days,group_clinic_manager,1,1,1,1
+access_clinic_days_receptionist,clinic.days receptionist,model_clinic_days,group_clinic_receptionist,1,0,0,0
+access_clinic_days_nurse,clinic.days nurse,model_clinic_days,group_clinic_nurse,1,0,0,0
+access_clinic_days_doctor,clinic.days doctor,model_clinic_days,group_clinic_doctor,1,1,0,0
+
+access_clinic_slot_admin,clinic.slot admin,model_clinic_slot,group_clinic_admin,1,1,1,1
+access_clinic_slot_manager,clinic.slot manager,model_clinic_slot,group_clinic_manager,1,1,1,1
+access_clinic_slot_receptionist,clinic.slot receptionist,model_clinic_slot,group_clinic_receptionist,1,1,1,0
+access_clinic_slot_nurse,clinic.slot nurse,model_clinic_slot,group_clinic_nurse,1,1,0,0
+access_clinic_slot_doctor,clinic.slot doctor,model_clinic_slot,group_clinic_doctor,1,1,1,1
+
+access_clinic_patient_admin,clinic.patient admin,model_clinic_patient,group_clinic_admin,1,1,1,1
+access_clinic_patient_system,clinic.patient system,model_clinic_patient,base.group_system,1,1,1,1
+access_clinic_patient_manager,clinic.patient manager,model_clinic_patient,group_clinic_manager,1,1,1,1
+access_clinic_patient_receptionist,clinic.patient receptionist,model_clinic_patient,group_clinic_receptionist,1,1,1,0
+access_clinic_patient_nurse,clinic.patient nurse,model_clinic_patient,group_clinic_nurse,1,1,1,0
+access_clinic_patient_doctor,clinic.patient doctor,model_clinic_patient,group_clinic_doctor,1,1,1,0
+
+access_clinic_appointment_admin,clinic.appointment admin,model_clinic_appointment,group_clinic_admin,1,1,1,1
+access_clinic_appointment_system,clinic.appointment system,model_clinic_appointment,base.group_system,1,1,1,1
+access_clinic_appointment_manager,clinic.appointment manager,model_clinic_appointment,group_clinic_manager,1,1,1,1
+access_clinic_appointment_receptionist,clinic.appointment receptionist,model_clinic_appointment,group_clinic_receptionist,1,1,1,0
+access_clinic_appointment_nurse,clinic.appointment nurse,model_clinic_appointment,group_clinic_nurse,1,1,1,0
+access_clinic_appointment_doctor,clinic.appointment doctor,model_clinic_appointment,group_clinic_doctor,1,1,1,0
+
+access_clinic_holiday_admin,clinic.holiday admin,model_clinic_holiday,group_clinic_admin,1,1,1,1
+access_clinic_holiday_manager,clinic.holiday manager,model_clinic_holiday,group_clinic_manager,1,1,1,1
+access_clinic_holiday_receptionist,clinic.holiday receptionist,model_clinic_holiday,group_clinic_receptionist,1,1,0,0
+access_clinic_holiday_nurse,clinic.holiday nurse,model_clinic_holiday,group_clinic_nurse,1,0,0,0
+access_clinic_holiday_doctor,clinic.holiday doctor,model_clinic_holiday,group_clinic_doctor,1,1,1,0
+
+access_clinic_prescription_admin,clinic.prescription admin,model_clinic_prescription,group_clinic_admin,1,1,1,1
+access_clinic_prescription_manager,clinic.prescription manager,model_clinic_prescription,group_clinic_manager,1,1,1,1
+access_clinic_prescription_receptionist,clinic.prescription receptionist,model_clinic_prescription,group_clinic_receptionist,1,1,1,0
+access_clinic_prescription_nurse,clinic.prescription nurse,model_clinic_prescription,group_clinic_nurse,1,1,1,0
+access_clinic_prescription_doctor,clinic.prescription doctor,model_clinic_prescription,group_clinic_doctor,1,1,1,1
+
+access_clinic_prescription_medication_admin,clinic.prescription.medication admin,model_clinic_prescription_medication,group_clinic_admin,1,1,1,1
+access_clinic_prescription_medication_manager,clinic.prescription.medication manager,model_clinic_prescription_medication,group_clinic_manager,1,1,1,1
+access_clinic_prescription_medication_receptionist,clinic.prescription.medication receptionist,model_clinic_prescription_medication,group_clinic_receptionist,1,1,1,0
+access_clinic_prescription_medication_nurse,clinic.prescription.medication nurse,model_clinic_prescription_medication,group_clinic_nurse,1,1,1,0
+access_clinic_prescription_medication_doctor,clinic.prescription.medication doctor,model_clinic_prescription_medication,group_clinic_doctor,1,1,1,1
+
+access_clinic_lab_test_admin,clinic.lab.test admin,model_clinic_lab_test,group_clinic_admin,1,1,1,1
+access_clinic_lab_test_manager,clinic.lab.test manager,model_clinic_lab_test,group_clinic_manager,1,1,1,1
+access_clinic_lab_test_receptionist,clinic.lab.test receptionist,model_clinic_lab_test,group_clinic_receptionist,1,1,1,0
+access_clinic_lab_test_nurse,clinic.lab.test nurse,model_clinic_lab_test,group_clinic_nurse,1,1,1,0
+access_clinic_lab_test_doctor,clinic.lab.test doctor,model_clinic_lab_test,group_clinic_doctor,1,1,1,1
+
+access_clinic_doctor_special_tag_admin,clinic.doctor.special.tag admin,model_clinic_doctor_special_tag,group_clinic_admin,1,1,1,1
+access_clinic_doctor_special_tag_manager,clinic.doctor.special.tag manager,model_clinic_doctor_special_tag,group_clinic_manager,1,1,1,1
+access_clinic_doctor_special_tag_receptionist,clinic.doctor.special.tag receptionist,model_clinic_doctor_special_tag,group_clinic_receptionist,1,0,0,0
+access_clinic_doctor_special_tag_nurse,clinic.doctor.special.tag nurse,model_clinic_doctor_special_tag,group_clinic_nurse,1,0,0,0
+access_clinic_doctor_special_tag_doctor,clinic.doctor.special.tag doctor,model_clinic_doctor_special_tag,group_clinic_doctor,1,0,0,0
+
+access_clinic_testimonial_admin,clinic.testimonial admin,model_clinic_testimonial,group_clinic_admin,1,1,1,1
+access_clinic_testimonial_manager,clinic.testimonial manager,model_clinic_testimonial,group_clinic_manager,1,1,1,1
+access_clinic_testimonial_receptionist,clinic.testimonial receptionist,model_clinic_testimonial,group_clinic_receptionist,1,1,1,0
+access_clinic_testimonial_nurse,clinic.testimonial nurse,model_clinic_testimonial,group_clinic_nurse,1,1,0,0
+access_clinic_testimonial_doctor,clinic.testimonial doctor,model_clinic_testimonial,group_clinic_doctor,1,1,0,0
+access_clinic_testimonial_public,clinic.testimonial public,model_clinic_testimonial,,1,0,0,0
+
+access_appointment_reschedule_wizard_admin,appointment.reschedule.wizard admin,model_appointment_reschedule_wizard,group_clinic_admin,1,1,1,1
+access_appointment_reschedule_wizard_system,appointment.reschedule.wizard system,model_appointment_reschedule_wizard,base.group_system,1,1,1,1
+access_appointment_reschedule_wizard_manager,appointment.reschedule.wizard manager,model_appointment_reschedule_wizard,group_clinic_manager,1,1,1,1
+access_appointment_reschedule_wizard_receptionist,appointment.reschedule.wizard receptionist,model_appointment_reschedule_wizard,group_clinic_receptionist,1,1,1,0
+access_appointment_reschedule_wizard_nurse,appointment.reschedule.wizard nurse,model_appointment_reschedule_wizard,group_clinic_nurse,1,1,1,0
+access_appointment_reschedule_wizard_doctor,appointment.reschedule.wizard doctor,model_appointment_reschedule_wizard,group_clinic_doctor,1,1,1,0
+
+access_clinic_website_settings_admin,clinic.website.settings admin,model_clinic_website_settings,group_clinic_admin,1,1,1,1
+access_clinic_website_settings_system,clinic.website.settings system,model_clinic_website_settings,base.group_system,1,1,1,1
+access_clinic_website_settings_manager,clinic.website.settings manager,model_clinic_website_settings,group_clinic_manager,1,1,1,0

@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Doctor Special Tag Views -->
+    <record id="view_clinic_doctor_special_tag_form" model="ir.ui.view">
+        <field name="name">clinic.doctor.special.tag.form</field>
+        <field name="model">clinic.doctor.special.tag</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="color" widget="color_picker"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_clinic_doctor_special_tag_list" model="ir.ui.view">
+        <field name="name">clinic.doctor.special.tag.list</field>
+        <field name="model">clinic.doctor.special.tag</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="color" widget="color"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_clinic_doctor_special_tag" model="ir.actions.act_window">
+        <field name="name">Doctor Special Tags</field>
+        <field name="res_model">clinic.doctor.special.tag</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Doctor Views -->
+    <record id="view_clinic_doctor_form" model="ir.ui.view">
+        <field name="name">clinic.doctor.form</field>
+        <field name="model">clinic.doctor</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <field name="employee_id" invisible="1"/>
+                    <field name="user_id" invisible="1"/>
+                    <button name="action_create_employee" type="object" string="Create Employee" 
+                            class="btn-primary" invisible="employee_id"/>
+                    <button name="action_create_user" type="object" string="Create User" 
+                            class="btn-secondary" invisible="user_id"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="bg-danger" invisible="active"/>
+                    <field name="active" invisible="1"/>
+                    <field name="image" widget="image" class="oe_avatar"/>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Doctor Name"/>
+                        </h1>
+                        <h3 class="text-muted" invisible="not qualification">
+                            <field name="qualification" nolabel="1" placeholder="Qualifications"/>
+                        </h3>
+                    </div>
+                 
+                    <notebook>
+                        <page string="Personal Information" name="personal_info">
+                            <group>
+                                <group>
+                                    <field name="license_no" required="1"/>
+                                    <field name="mobile" widget="phone"/>
+                                    <field name="email" widget="email"/>
+                                    <field name="website" widget="url"/>
+                                    <field name="gender"/>
+                                    <field name="date_of_birth"/>
+                                    <field name="experience_years"/>
+                                </group>
+                                <group>
+                                    <field name="department" options="{'no_create': True}"/>
+                                    <field name="consultation_fee" widget="monetary"/>
+                                    <field name="currency_id" invisible="1"/>
+                                    <field name="specialization_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                                    <field name="special_tag_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                                    <field name="languages" widget="many2many_tags"/>
+                                    <field name="registration_date"/>
+                                    <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Availability" name="availability">
+                            <group>
+                                <group string="Working Hours">
+                                    <field name="available_days" widget="many2many_tags" options="{'no_create': True}"/>
+                                    <label for="working_start_time"/>
+                                    <div class="o_row">
+                                        <field name="working_start_time" widget="float_time"/> - 
+                                        <field name="working_end_time" widget="float_time"/>
+                                    </div>
+                                </group>
+                                <group string="Slot Configuration">
+                                    <field name="slot_duration"/>
+                                    <field name="max_patients_per_slot"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Slots" name="slots">
+                            <field name="slot_ids">
+                                <list>
+                                    <field name="day_id"/>
+                                    <field name="slot_number"/>
+                                    <field name="start_time" widget="float_time"/>
+                                    <field name="end_time" widget="float_time"/>
+                                    <field name="duration"/>
+                                    <field name="max_patients"/>
+                                    <field name="current_patients"/>
+                                    <field name="status" decoration-success="status == 'available'" 
+                                           decoration-warning="status == 'partially_booked'" 
+                                           decoration-danger="status == 'fully_booked'"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Bio/Description" name="bio">
+                            <field name="bio" placeholder="Doctor's bio/description for website" options="{'collaborative': true}"/>
+                        </page>
+                        <page string="System Information" name="system_info" groups="base.group_system">
+                            <group>
+                                <field name="user_id" readonly="1"/>
+                                <field name="employee_id" readonly="1"/>
+                                <field name="create_uid" readonly="1"/>
+                                <field name="create_date" readonly="1"/>
+                                <field name="write_uid" readonly="1"/>
+                                <field name="write_date" readonly="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_clinic_doctor_list" model="ir.ui.view">
+        <field name="name">clinic.doctor.list</field>
+        <field name="model">clinic.doctor</field>
+        <field name="arch" type="xml">
+            <list string="Doctors">
+                <field name="name" decoration-bf="1"/>
+                <field name="license_no"/>
+                <field name="specialization_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                <field name="department"/>
+                <field name="experience_years"/>
+                <field name="mobile" widget="phone"/>
+                <field name="email" widget="email"/>
+                <field name="consultation_fee" sum="Total Fees"/>
+                <field name="available_days" widget="many2many_tags"/>
+                <field name="gender"/>
+                <field name="registration_date"/>
+                <field name="active" invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_clinic_doctor_kanban" model="ir.ui.view">
+        <field name="name">clinic.doctor.kanban</field>
+        <field name="model">clinic.doctor</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="id"/>
+                <field name="name"/>
+                <field name="image"/>
+                <field name="specialization_ids"/>
+                <field name="special_tag_ids"/>
+                <field name="consultation_fee"/>
+                <field name="currency_id"/>
+                <field name="department"/>
+                <field name="active"/>
+                <field name="mobile"/>
+                <field name="email"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click o_kanban_record_has_image_fill o_res_partner_kanban">
+                            <field name="active" invisible="1"/>
+                            <!-- Show a ribbon for archived doctors -->
+                            <widget name="web_ribbon" title="Archived" bg_color="bg-danger" invisible="active"/>
+                            
+                            <!-- Doctor's image -->
+                            <div class="o_kanban_image_fill_left d-none d-md-block" t-attf-style="background-image: url(#{kanban_image('clinic.doctor', 'image', id, placeholder)})" />
+                            
+                            <div class="oe_kanban_details d-flex flex-column">
+                                <!-- Doctor's name -->
+                                <div class="o_kanban_record_top mb-0">
+                                    <div class="o_kanban_record_headings">
+                                        <strong class="o_kanban_record_title">
+                                            <field name="name"/>
+                                        </strong>
+                                        <small class="text-muted" t-if="record.department.raw_value">
+                                            <field name="department"/>
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                <!-- Doctor's specializations as tags -->
+                                <div class="o_kanban_tags_section mb-2" t-if="record.specialization_ids.raw_value &amp;&amp; record.specialization_ids.raw_value.length > 0">
+                                    <field name="specialization_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                                </div>
+                                
+                                <!-- Special tags if any -->
+                                <div class="o_kanban_tags_section mb-2" t-if="record.special_tag_ids.raw_value &amp;&amp; record.special_tag_ids.raw_value.length > 0">
+                                    <field name="special_tag_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                                </div>
+                                
+                                <!-- Contact info -->
+                                <div class="o_kanban_record_bottom">
+                                    <div class="oe_kanban_bottom_left">
+                                        <div t-if="record.consultation_fee.raw_value">
+                                            <span class="fw-bold">Fee: </span>
+                                            <field name="consultation_fee" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                                        </div>
+                                    </div>
+                                    <div class="oe_kanban_bottom_right">
+                                        <a t-if="record.mobile.raw_value" t-attf-href="tel:#{record.mobile.raw_value}" class="me-1">
+                                            <i class="fa fa-phone text-primary" title="Phone" role="img" aria-label="Phone"/>
+                                        </a>
+                                        <a t-if="record.email.raw_value" t-attf-href="mailto:#{record.email.raw_value}">
+                                            <i class="fa fa-envelope text-primary" title="Email" role="img" aria-label="Email"/>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_clinic_doctor_search" model="ir.ui.view">
+        <field name="name">clinic.doctor.search</field>
+        <field name="model">clinic.doctor</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="Doctor" filter_domain="['|', '|', ('name', 'ilike', self), ('email', 'ilike', self), ('license_no', 'ilike', self)]"/>
+                <field name="specialization_ids"/>
+                <field name="department"/>
+                <field name="license_no"/>
+                <field name="mobile"/>
+                <field name="email"/>
+                <field name="experience_years"/>
+                <field name="languages"/>
+                <filter string="Male" name="male" domain="[('gender', '=', 'male')]"/>
+                <filter string="Female" name="female" domain="[('gender', '=', 'female')]"/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+                <separator/>
+                <filter string="Registered This Month" name="registered_this_month" 
+                        domain="[('registration_date', '&gt;=', (context_today() + relativedelta(day=1)).strftime('%Y-%m-%d')),
+                                 ('registration_date', '&lt;=', (context_today() + relativedelta(months=1, day=1, days=-1)).strftime('%Y-%m-%d'))]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_by_department" string="Department" context="{'group_by': 'department'}"/>
+                    <filter name="group_by_specialization" string="Specialization" context="{'group_by': 'specialization_ids'}"/>
+                    <filter name="group_by_gender" string="Gender" context="{'group_by': 'gender'}"/>
+                    <filter name="group_by_experience" string="Experience" context="{'group_by': 'experience_years'}"/>
+                    <filter name="group_by_registration_date" string="Registration Date" context="{'group_by': 'registration_date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_clinic_doctor_calendar" model="ir.ui.view">
+        <field name="name">clinic.doctor.calendar</field>
+        <field name="model">clinic.doctor</field>
+        <field name="arch" type="xml">
+            <calendar string="Doctors Calendar" date_start="working_start_time" date_stop="working_end_time" mode="week" color="name">
+                <field name="name"/>
+                <field name="specialization_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                <field name="consultation_fee" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+            </calendar>
+        </field>
+    </record>
+
+    <!-- Update the action to include the calendar view -->
+    <record id="action_clinic_doctor" model="ir.actions.act_window">
+        <field name="name">Doctors</field>
+        <field name="res_model">clinic.doctor</field>
+        <field name="view_mode">kanban,list,calendar,form</field>
+        <field name="context">{'search_default_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first doctor!
+            </p>
+            <p>
+                Add doctors to your clinic with their specializations, working hours, and consultation fees.
+            </p>
+        </field>
+    </record>
+</odoo>

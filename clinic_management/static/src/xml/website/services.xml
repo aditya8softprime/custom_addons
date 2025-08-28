@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="clinic_management.ClinicServices">
+        <!-- Empty template since we're only enhancing the existing page -->
+    </t>
+</templates>

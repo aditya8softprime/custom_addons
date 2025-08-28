@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Demo Website Settings -->
+        <record id="demo_website_settings" model="clinic.website.settings">
+            <field name="name">Clinic Website Settings</field>
+            <field name="clinic_name">Springfield Medical Center</field>
+            <field name="clinic_tagline">Your Health is Our Priority - Excellence in Healthcare Since 1985</field>
+            <field name="clinic_description"><![CDATA[
+                <div class="clinic-description">
+                    <h3>Welcome to Springfield Medical Center</h3>
+                    <p>At Springfield Medical Center, we are committed to providing exceptional healthcare services to our community. Our team of experienced physicians and healthcare professionals work together to ensure you receive the highest quality medical care in a comfortable and welcoming environment.</p>
+                    
+                    <h4>Our Mission</h4>
+                    <p>To deliver comprehensive, compassionate healthcare services that improve the health and well-being of our patients and community.</p>
+                    
+                    <h4>Our Values</h4>
+                    <ul>
+                        <li><strong>Compassion:</strong> We treat every patient with kindness, respect, and empathy</li>
+                        <li><strong>Excellence:</strong> We strive for the highest standards in all aspects of care</li>
+                        <li><strong>Innovation:</strong> We embrace new technologies and methods to improve patient outcomes</li>
+                        <li><strong>Integrity:</strong> We conduct ourselves with honesty and transparency</li>
+                        <li><strong>Collaboration:</strong> We work together as a team to provide the best possible care</li>
+                    </ul>
+                    
+                    <h4>Why Choose Us?</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul>
+                                <li>Board-certified physicians</li>
+                                <li>State-of-the-art medical equipment</li>
+                                <li>Comprehensive range of specialties</li>
+                                <li>Same-day appointments available</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul>
+                                <li>Electronic health records</li>
+                                <li>Online appointment booking</li>
+                                <li>Insurance accepted</li>
+                                <li>Patient-centered care approach</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            ]]></field>
+            
+            <!-- Contact Information -->
+            <field name="phone">+1-555-MEDICAL (555-633-4225)</field>
+            <field name="email">info@springfieldmedical.com</field>
+            <field name="address">1234 Healthcare Boulevard
+Springfield Medical Plaza, Suite 100
+Springfield, IL 62701
+
+Hours:
+Monday - Friday: 8:00 AM - 6:00 PM
+Saturday: 9:00 AM - 3:00 PM
+Sunday: Emergency only
+
+Emergency: 911 or +1-555-URGENT</field>
+            
+            <!-- Social Media -->
+            <field name="facebook_url">https://facebook.com/springfieldmedicalcenter</field>
+            <field name="twitter_url">https://twitter.com/springfieldmed</field>
+            <field name="instagram_url">https://instagram.com/springfieldmedical</field>
+            <field name="linkedin_url">https://linkedin.com/company/springfield-medical-center</field>
+            
+            <!-- SEO -->
+            <field name="meta_title">Springfield Medical Center - Premier Healthcare Services in Springfield, IL</field>
+            <field name="meta_description">Springfield Medical Center offers comprehensive healthcare services including cardiology, dermatology, pediatrics, orthopedics, neurology, ophthalmology, and psychiatry. Book your appointment online today.</field>
+            <field name="meta_keywords">Springfield Medical Center, healthcare, medical services, doctors, specialists, cardiology, dermatology, pediatrics, orthopedics, neurology, ophthalmology, psychiatry, Springfield IL, medical appointments, online booking</field>
+            
+            <!-- Booking Settings -->
+            <field name="enable_online_booking">True</field>
+            <field name="booking_confirmation_message"><![CDATA[
+                <div class="booking-confirmation">
+                    <h3>🎉 Appointment Booked Successfully!</h3>
+                    <p>Thank you for choosing Springfield Medical Center. Your appointment has been confirmed and you will receive a confirmation email shortly.</p>
+                    
+                    <div class="alert alert-info">
+                        <h4>What's Next?</h4>
+                        <ul>
+                            <li>Check your email for appointment details and preparation instructions</li>
+                            <li>Arrive 15 minutes early for check-in</li>
+                            <li>Bring a valid ID and insurance card</li>
+                            <li>Bring a list of current medications</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <h4>Need to Reschedule?</h4>
+                        <p>Please contact us at least 24 hours in advance: <strong>+1-555-MEDICAL</strong></p>
+                    </div>
+                    
+                    <p><em>We look forward to seeing you and providing excellent healthcare service!</em></p>
+                </div>
+            ]]></field>
+            
+            <!-- Footer Information -->
+            <field name="footer_text"><![CDATA[
+                <div class="clinic-footer">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h5>Quick Links</h5>
+                            <ul class="list-unstyled">
+                                <li><a href="/appointment">Book Appointment</a></li>
+                                <li><a href="/services">Our Services</a></li>
+                                <li><a href="/doctors">Our Doctors</a></li>
+                                <li><a href="/testimonials">Patient Reviews</a></li>
+                                <li><a href="/contact">Contact Us</a></li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h5>Services</h5>
+                            <ul class="list-unstyled">
+                                <li>General Consultation</li>
+                                <li>Cardiology</li>
+                                <li>Dermatology</li>
+                                <li>Pediatrics</li>
+                                <li>Orthopedics</li>
+                                <li>Neurology</li>
+                                <li>Ophthalmology</li>
+                                <li>Psychiatry</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h5>Emergency</h5>
+                            <p>For medical emergencies, call <strong>911</strong> immediately.</p>
+                            <p>For urgent care: <strong>+1-555-URGENT</strong></p>
+                            <br/>
+                            <h5>Insurance</h5>
+                            <p>We accept most major insurance plans. Please contact our billing department for specific coverage questions.</p>
+                        </div>
+                    </div>
+                </div>
+            ]]></field>
+            <field name="copyright_text">© 2025 Springfield Medical Center. All rights reserved. | Licensed Healthcare Facility | HIPAA Compliant</field>
+        </record>
+        
+    </data>
+</odoo>

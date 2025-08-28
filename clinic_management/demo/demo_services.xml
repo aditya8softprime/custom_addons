@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Demo Services -->
+        <record id="demo_service_general_consultation" model="clinic.service">
+            <field name="name">General Consultation</field>
+            <field name="description"><![CDATA[
+                <p>Comprehensive health check-up and general medical consultation.</p>
+                <ul>
+                    <li>Physical examination</li>
+                    <li>Health assessment</li>
+                    <li>Medical advice</li>
+                    <li>Prescription if needed</li>
+                </ul>
+            ]]></field>
+            <field name="price">150.00</field>
+            <field name="active">True</field>
+            <field name="color">1</field>
+        </record>
+        
+        <record id="demo_service_cardiology" model="clinic.service">
+            <field name="name">Cardiology</field>
+            <field name="description"><![CDATA[
+                <p>Specialized heart and cardiovascular system examination.</p>
+                <ul>
+                    <li>ECG examination</li>
+                    <li>Blood pressure monitoring</li>
+                    <li>Heart rhythm analysis</li>
+                    <li>Cardiovascular health assessment</li>
+                </ul>
+            ]]></field>
+            <field name="price">300.00</field>
+            <field name="active">True</field>
+            <field name="color">2</field>
+        </record>
+        
+        <record id="demo_service_dermatology" model="clinic.service">
+            <field name="name">Dermatology</field>
+            <field name="description"><![CDATA[
+                <p>Skin, hair, and nail health examination and treatment.</p>
+                <ul>
+                    <li>Skin condition diagnosis</li>
+                    <li>Acne treatment</li>
+                    <li>Skin cancer screening</li>
+                    <li>Cosmetic dermatology</li>
+                </ul>
+            ]]></field>
+            <field name="price">200.00</field>
+            <field name="active">True</field>
+            <field name="color">3</field>
+        </record>
+        
+        <record id="demo_service_pediatrics" model="clinic.service">
+            <field name="name">Pediatrics</field>
+            <field name="description"><![CDATA[
+                <p>Child health and development consultation and care.</p>
+                <ul>
+                    <li>Child health check-ups</li>
+                    <li>Vaccination schedules</li>
+                    <li>Growth monitoring</li>
+                    <li>Developmental assessments</li>
+                </ul>
+            ]]></field>
+            <field name="price">180.00</field>
+            <field name="active">True</field>
+            <field name="color">4</field>
+        </record>
+        
+        <record id="demo_service_orthopedics" model="clinic.service">
+            <field name="name">Orthopedics</field>
+            <field name="description"><![CDATA[
+                <p>Bone, joint, and muscle examination and treatment.</p>
+                <ul>
+                    <li>Fracture diagnosis and treatment</li>
+                    <li>Joint pain assessment</li>
+                    <li>Sports injury treatment</li>
+                    <li>Rehabilitation planning</li>
+                </ul>
+            ]]></field>
+            <field name="price">250.00</field>
+            <field name="active">True</field>
+            <field name="color">5</field>
+        </record>
+        
+        <record id="demo_service_neurology" model="clinic.service">
+            <field name="name">Neurology</field>
+            <field name="description"><![CDATA[
+                <p>Nervous system disorders diagnosis and treatment.</p>
+                <ul>
+                    <li>Headache and migraine treatment</li>
+                    <li>Neurological examinations</li>
+                    <li>Memory and cognitive assessments</li>
+                    <li>Sleep disorder evaluation</li>
+                </ul>
+            ]]></field>
+            <field name="price">280.00</field>
+            <field name="active">True</field>
+            <field name="color">6</field>
+        </record>
+        
+        <record id="demo_service_ophthalmology" model="clinic.service">
+            <field name="name">Ophthalmology</field>
+            <field name="description"><![CDATA[
+                <p>Eye health examination and vision care.</p>
+                <ul>
+                    <li>Vision testing</li>
+                    <li>Eye disease diagnosis</li>
+                    <li>Contact lens fitting</li>
+                    <li>Eye surgery consultation</li>
+                </ul>
+            ]]></field>
+            <field name="price">220.00</field>
+            <field name="active">True</field>
+            <field name="color">7</field>
+        </record>
+        
+        <record id="demo_service_psychiatry" model="clinic.service">
+            <field name="name">Psychiatry</field>
+            <field name="description"><![CDATA[
+                <p>Mental health assessment and treatment.</p>
+                <ul>
+                    <li>Mental health evaluation</li>
+                    <li>Therapy sessions</li>
+                    <li>Medication management</li>
+                    <li>Counseling services</li>
+                </ul>
+            ]]></field>
+            <field name="price">350.00</field>
+            <field name="active">True</field>
+            <field name="color">8</field>
+        </record>
+        
+    </data>
+</odoo>

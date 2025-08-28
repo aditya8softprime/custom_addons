@@ -1,0 +1,743 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Custom CSS for Professional Look -->
+    <template id="clinic_custom_css" name="Clinic Custom CSS">
+        <xpath expr="//head" position="inside">
+            <style>
+                .service-tile, .doctor-tile {
+                    transition: transform 0.3s ease, box-shadow 0.3s ease;
+                    border: none;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    cursor: pointer;
+                }
+                
+                .service-tile:hover, .doctor-tile:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+                }
+                
+                .service-tile a, .doctor-tile a {
+                    color: inherit;
+                    text-decoration: none;
+                }
+                
+                .service-tile a:hover, .doctor-tile a:hover {
+                    color: inherit;
+                    text-decoration: none;
+                }
+                
+                .service-icon-placeholder {
+                    transition: background-color 0.3s ease;
+                }
+                
+                .service-tile:hover .service-icon-placeholder {
+                    background-color: #007bff !important;
+                }
+                
+                /* Dropdown Menu Hover Effect */
+                .navbar-nav .dropdown:hover .dropdown-menu {
+                    display: block;
+                    margin-top: 0;
+                    opacity: 1;
+                    visibility: visible;
+                    transform: translateY(0);
+                }
+                
+                .dropdown-menu {
+                    border: none;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    border-radius: 8px;
+                    opacity: 0;
+                    visibility: hidden;
+                    transform: translateY(-10px);
+                    transition: all 0.3s ease;
+                }
+                
+                .dropdown-item:hover {
+                    background-color: #f8f9fa;
+                    color: #007bff;
+                    transform: translateX(5px);
+                    transition: all 0.2s ease;
+                }
+                
+                .section-title {
+                    position: relative;
+                    margin-bottom: 3rem;
+                }
+                
+                .section-title:after {
+                    content: '';
+                    position: absolute;
+                    bottom: -10px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 60px;
+                    height: 3px;
+                    background: #007bff;
+                }
+                
+                .card.h-100 {
+                    height: 100% !important;
+                }
+                
+                /* Navigation styling */
+                .navbar-nav .nav-link {
+                    font-weight: 500;
+                    padding: 0.5rem 1rem;
+                    transition: color 0.3s ease;
+                }
+                
+                .navbar-nav .nav-link:hover {
+                    color: #007bff !important;
+                }
+                
+                /* Custom dropdown arrow */
+                .dropdown-toggle::after {
+                    transition: transform 0.3s ease;
+                }
+                
+                .dropdown:hover .dropdown-toggle::after {
+                    transform: rotate(180deg);
+                }
+            </style>
+        </xpath>
+    </template>
+    
+    <!-- Inherit website layout to include custom CSS -->
+    <template id="website_layout_inherit_clinic" inherit_id="website.layout">
+        <xpath expr="//head" position="inside">
+            <t t-call="clinic_management.clinic_custom_css"/>
+        </xpath>
+    </template>
+    <!-- Clinic Homepage -->
+    <template id="clinic_homepage" name="Clinic Homepage">
+        <t t-call="website.layout">
+            <div id="wrap">
+                <div class="container mt-5">
+                    <!-- Hero Section -->
+                    <div class="row mb-5">
+                        <div class="col-md-12 text-center">
+                            <h1 class="display-4 text-primary">Welcome to Our Clinic</h1>
+                            <p class="lead">Quality Healthcare Services You Can Trust</p>
+                            <div class="mt-4">
+                                <a href="/clinic/booking" class="btn btn-primary btn-lg mr-3">Book Appointment</a>
+                                <a href="/clinic/services" class="btn btn-outline-primary btn-lg">Our Services</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Services Section - Tiles with Name and Image Only -->
+                    <div class="row mb-5">
+                        <div class="col-md-12">
+                            <h2 class="text-center section-title">Our Services</h2>
+                            <div class="row">
+                                <t t-foreach="services" t-as="service">
+                                    <div class="col-md-3 col-sm-6 mb-4">
+                                        <div class="card h-100 service-tile">
+                                            <a t-attf-href="/clinic/service/#{service.id}" class="text-decoration-none">
+                                                <div class="card-body text-center p-4">
+                                                    <div class="service-icon mb-3">
+                                                        <img t-if="service.icon" t-attf-src="data:image/png;base64,#{service.icon}" 
+                                                             class="img-fluid" 
+                                                             style="width: 60px; height: 60px; object-fit: cover;"
+                                                             t-att-alt="service.name"/>
+                                                        <div t-else="" class="service-icon-placeholder bg-primary rounded-circle mx-auto d-flex align-items-center justify-content-center" 
+                                                             style="width: 60px; height: 60px;">
+                                                            <i class="fa fa-stethoscope fa-2x text-white"></i>
+                                                        </div>
+                                                    </div>
+                                                    <h5 class="card-title text-dark" t-esc="service.name"/>
+                                                </div>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Doctors Section - Tiles with Name and Image Only -->
+                    <div class="row mb-5">
+                        <div class="col-md-12">
+                            <h2 class="text-center section-title">Our Doctors</h2>
+                            <div class="row">
+                                <t t-foreach="doctors" t-as="doctor">
+                                    <div class="col-md-3 col-sm-6 mb-4">
+                                        <div class="card h-100 doctor-tile">
+                                            <a t-attf-href="/clinic/doctor/#{doctor.id}" class="text-decoration-none">
+                                                <div class="card-body text-center p-4">
+                                                    <div class="doctor-image mb-3">
+                                                        <img t-if="doctor.image" t-attf-src="data:image/png;base64,#{doctor.image}" 
+                                                             class="rounded-circle" 
+                                                             style="width: 80px; height: 80px; object-fit: cover;"
+                                                             t-att-alt="doctor.name"/>
+                                                        <div t-else="" class="rounded-circle bg-light mx-auto d-flex align-items-center justify-content-center" 
+                                                             style="width: 80px; height: 80px;">
+                                                            <i class="fa fa-user fa-2x text-muted"></i>
+                                                        </div>
+                                                    </div>
+                                                    <h6 class="card-title text-dark mb-0">Dr. <span t-esc="doctor.name"/></h6>
+                                                </div>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Services Page -->
+    <template id="services_page" name="Services Page">
+        <t t-call="website.layout">
+            <div id="wrap">
+                <div class="container mt-5">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h1 class="text-center mb-5">Our Medical Services</h1>
+                            <div class="row">
+                                <t t-foreach="services" t-as="service">
+                                    <div class="col-md-6 mb-4">
+                                        <div class="card h-100">
+                                            <div class="card-body">
+                                                <h5 class="card-title" t-esc="service.name"/>
+                                                <p class="card-text" t-esc="service.description"/>
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span class="text-primary font-weight-bold">₹<span t-esc="service.price"/></span>
+                                                </div>
+                                                <div class="mt-3">
+                                                    <a t-attf-href="/clinic/service/#{service.id}" class="btn btn-outline-primary btn-sm mr-2">Learn More</a>
+                                                    <a href="/clinic/booking" class="btn btn-primary btn-sm">Book Now</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Booking Form -->
+    <template id="booking_form" name="Appointment Booking Form">
+        <t t-call="website.layout">
+            <div id="wrap">
+                <div class="container mt-5">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h1 class="text-center mb-5">Book Your Appointment</h1>
+                            <div class="row justify-content-center">
+                                <div class="col-md-8">
+                                    <div class="card">
+                                        <div class="card-header bg-primary text-white">
+                                            <h5 class="mb-0">Appointment Details</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <form action="/clinic/booking/submit" method="post" enctype="multipart/form-data">
+                                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                                
+                                                <div class="row">
+                                                    <div class="form-group col-md-6 mb-3">
+                                                        <label for="patient_name">Patient Name *</label>
+                                                        <input type="text" class="form-control" id="patient_name" name="patient_name" required="required"/>
+                                                    </div>
+                                                    <div class="form-group col-md-6 mb-3">
+                                                        <label for="phone">Phone Number *</label>
+                                                        <input type="tel" class="form-control" id="phone" name="phone" required="required"/>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="row">
+                                                    <div class="form-group col-md-6 mb-3">
+                                                        <label for="email">Email</label>
+                                                        <input type="email" class="form-control" id="email" name="email"/>
+                                                    </div>
+                                                    <div class="form-group col-md-6 mb-3">
+                                                        <label for="age">Age *</label>
+                                                        <input type="number" class="form-control" id="age" name="age" min="1" max="120" required="required"/>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="row">
+                                                    <div class="form-group col-md-6 mb-3">
+                                                        <label for="gender">Gender *</label>
+                                                        <select class="form-control" id="gender" name="gender" required="required">
+                                                            <option value="">Select Gender</option>
+                                                            <option value="male">Male</option>
+                                                            <option value="female">Female</option>
+                                                            <option value="other">Other</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-group col-md-6 mb-3">
+                                                        <label for="doctor_id">Preferred Doctor *</label>
+                                                        <select class="form-control" id="doctor_id" name="doctor_id" required="required">
+                                                            <option value="">Select Doctor</option>
+                                                            <t t-foreach="doctors" t-as="doctor">
+                                                                <option t-att-value="doctor.id">Dr. <span t-esc="doctor.name"/> - <span t-esc="', '.join(doctor.specialization_ids.mapped('name'))"/></option>
+                                                            </t>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="row">
+                                                    <div class="form-group col-md-6 mb-3">
+                                                        <label for="appointment_date">Preferred Date *</label>
+                                                        <input type="date" class="form-control" id="appointment_date" name="appointment_date" required="required"/>
+                                                    </div>
+                                                    <div class="form-group col-md-6 mb-3">
+                                                        <label for="slot_id">Available Time Slots *</label>
+                                                        <select class="form-control" id="slot_id" name="slot_id" required="required">
+                                                            <option value="">First select doctor and date</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="form-group mb-3">
+                                                    <label for="symptom">Symptoms / Reason for Visit *</label>
+                                                    <textarea class="form-control" id="symptom" name="symptom" rows="3" placeholder="Please describe your symptoms..." required="required"></textarea>
+                                                </div>
+                                                
+                                                <div class="text-center">
+                                                    <button type="submit" class="btn btn-primary btn-lg">Submit Appointment Request</button>
+                                                    <div class="mt-2">
+                                                        <small class="text-muted">* Required fields</small>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <script>
+                // Add JavaScript for dynamic slot loading
+                document.addEventListener('DOMContentLoaded', function() {
+                    const doctorSelect = document.getElementById('doctor_id');
+                    const dateInput = document.getElementById('appointment_date');
+                    const slotSelect = document.getElementById('slot_id');
+                    
+                    function loadSlots() {
+                        const doctorId = doctorSelect.value;
+                        const date = dateInput.value;
+                        
+                        if (doctorId &amp;&amp; date) {
+                            // Clear slots
+                            slotSelect.innerHTML = '<option value="">Loading...</option>';
+                            
+                            // Make AJAX request to get slots
+                            fetch('/clinic/booking/slots', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                },
+                                body: JSON.stringify({
+                                    jsonrpc: '2.0',
+                                    method: 'call',
+                                    params: {
+                                        doctor_id: doctorId,
+                                        date_str: date
+                                    }
+                                })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                slotSelect.innerHTML = '<option value="">Select Time Slot</option>';
+                                if (data.result &amp;&amp; data.result.length > 0) {
+                                    data.result.forEach(slot => {
+                                        const option = document.createElement('option');
+                                        option.value = slot.id;
+                                        option.textContent = slot.start_time + ' - ' + slot.end_time;
+                                        slotSelect.appendChild(option);
+                                    });
+                                } else {
+                                    slotSelect.innerHTML = '<option value="">No slots available</option>';
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error loading slots:', error);
+                                slotSelect.innerHTML = '<option value="">Error loading slots</option>';
+                            });
+                        } else {
+                            slotSelect.innerHTML = '<option value="">First select doctor and date</option>';
+                        }
+                    }
+                    
+                    doctorSelect.addEventListener('change', loadSlots);
+                    dateInput.addEventListener('change', loadSlots);
+                    
+                    // Set minimum date to today
+                    const today = new Date().toISOString().split('T')[0];
+                    dateInput.setAttribute('min', today);
+                });
+            </script>
+        </t>
+    </template>
+
+    <!-- Booking Confirmation -->
+    <template id="booking_confirmation" name="Booking Confirmation">
+        <t t-call="website.layout">
+            <div id="wrap">
+                <div class="container mt-5">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="text-center">
+                                <div class="card">
+                                    <div class="card-header bg-success text-white">
+                                        <h2 class="mb-0">Appointment Request Submitted!</h2>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="py-5">
+                                            <i class="fa fa-check-circle text-success" style="font-size: 64px;"></i>
+                                            <h3 class="mt-4">Thank You!</h3>
+                                            <p class="lead">Your appointment request has been submitted successfully.</p>
+                                            <p>We will contact you shortly to confirm your appointment.</p>
+                                        </div>
+                                        <div class="mt-4">
+                                            <a href="/clinic" class="btn btn-primary">Return to Homepage</a>
+                                            <a href="/clinic/services" class="btn btn-outline-primary ml-2">View Services</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Doctor Detail Page -->
+    <template id="doctor_detail" name="Doctor Detail">
+        <t t-call="website.layout">
+            <div id="wrap" class="oe_structure">
+                <div class="container mt-5 mb-5">
+                    <div class="row justify-content-center">
+                        <div class="col-lg-8 col-md-10">
+                            <div class="card shadow-lg border-0 rounded-3">
+                                <div class="card-body p-4">
+                                    <div class="row align-items-center">
+                                        
+                                        <!-- Doctor Image -->
+                                        <div class="col-md-4 text-center">
+                                            <img t-if="doctor.image"
+                                                t-attf-src="data:image/png;base64,#{doctor.image}" 
+                                                class="rounded-circle img-thumbnail mb-3"
+                                                style="width: 140px; height: 140px; object-fit: cover;"
+                                                t-att-alt="doctor.name"/>
+                                            <img t-else=""
+                                                src="/web/static/src/img/placeholder.png"
+                                                class="rounded-circle img-thumbnail mb-3"
+                                                style="width: 140px; height: 140px;"
+                                                alt="Doctor"/>
+                                        </div>
+                                        
+                                        <!-- Doctor Info -->
+                                        <div class="col-md-8">
+                                            <h2 class="mb-2">Dr. <span t-esc="doctor.name"/></h2>
+                                            
+                                            <!-- Specializations -->
+                                            <div class="mb-2">
+                                                <t t-foreach="doctor.specialization_ids" t-as="spec">
+                                                    <span class="badge badge-primary mr-1 mb-1" t-esc="spec.name"/>
+                                                </t>
+                                            </div>
+                                            
+                                            <p class="mb-1"><strong>Qualification:</strong> <span t-esc="doctor.qualification"/></p>
+                                            <p class="mb-1"><strong>Experience:</strong> <span t-esc="doctor.experience_years"/> years</p>
+                                            <p class="mb-1"><strong>Consultation Fee:</strong> ₹<span t-esc="doctor.consultation_fee"/></p>
+                                            
+                                            <t t-if="doctor.bio">
+                                                <hr/>
+                                                <p class="mb-1"><strong>About:</strong></p>
+                                                <p class="text-muted" t-esc="doctor.bio"/>
+                                            </t>
+                                            
+                                            <!-- Action Buttons -->
+                                            <div class="mt-3">
+                                                <a href="/clinic/booking" class="btn btn-primary">
+                                                    <i class="fa fa-calendar-check-o mr-1"></i> Book Appointment
+                                                </a>
+                                                <a href="/clinic" class="btn btn-outline-secondary ml-2">
+                                                    <i class="fa fa-arrow-left mr-1"></i> Back to Homepage
+                                                </a>
+                                            </div>
+                                        </div>
+                                        
+                                    </div> <!-- end row -->
+                                </div> <!-- end card-body -->
+                            </div> <!-- end card -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Individual Service Detail Page -->
+    <template id="service_detail" name="Service Detail Page">
+        <t t-call="website.layout">
+            <div id="wrap">
+                <div class="container mt-5">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb">
+                                    <li class="breadcrumb-item"><a href="/clinic">Home</a></li>
+                                    <li class="breadcrumb-item"><a href="/clinic/services">Services</a></li>
+                                    <li class="breadcrumb-item active" aria-current="page" t-esc="service.name"/>
+                                </ol>
+                            </nav>
+                            
+                            <h1 class="mb-4" t-esc="service.name"/>
+                            <div class="service-description mb-4" t-raw="service.description"/>
+                            
+                            <div class="service-price mb-4">
+                                <h4 class="text-primary">Price: ₹<span t-esc="service.price"/></h4>
+                            </div>
+                            
+                            <div class="service-actions mb-4">
+                                <a href="/clinic/booking" class="btn btn-primary btn-lg">Book Appointment</a>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Available Doctors</h5>
+                                </div>
+                                <div class="card-body">
+                                    <t t-if="doctors">
+                                        <t t-foreach="doctors" t-as="doctor">
+                                            <div class="doctor-item mb-3">
+                                                <h6>Dr. <span t-esc="doctor.name"/></h6>
+                                                <p class="text-muted mb-1" t-esc="doctor.qualification"/>
+                                                <p class="text-success">Fee: ₹<span t-esc="doctor.consultation_fee"/></p>
+                                                <a t-attf-href="/clinic/doctor/#{doctor.id}" class="btn btn-sm btn-outline-primary">View Profile</a>
+                                            </div>
+                                        </t>
+                                    </t>
+                                    <t t-else="">
+                                        <p class="text-muted">No doctors available for this service currently.</p>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Custom Navigation Header with Dropdowns -->
+        <!-- Custom Navigation Header with Proper Menu Structure -->
+        <!-- Custom Navigation Header with Proper Menu Structure -->
+    <template id="clinic_header_nav" inherit_id="website.template_header_default" priority="20">
+        <xpath expr="//t[@t-foreach='website.menu_id.child_id']" position="replace">
+            <!-- Empty to remove default menu items -->
+        </xpath>
+        <xpath expr="//ul[hasclass('navbar-nav')]" position="replace">
+            <ul class="navbar-nav ms-auto">
+                <!-- Home -->
+                <li class="nav-item">
+                    <a class="nav-link" href="/clinic">Home</a>
+                </li>
+                
+                <!-- Services Dropdown -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="servicesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Services
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="servicesDropdown">
+                        <li><a class="dropdown-item" href="/clinic/services">All Services</a></li>
+                        <li><hr class="dropdown-divider"/></li>
+                        <t t-set="services" t-value="request.env['clinic.service'].sudo().search([('active', '=', True)], limit=8)"/>
+                        <t t-foreach="services" t-as="service">
+                            <li><a class="dropdown-item" t-attf-href="/clinic/service/#{service.id}" t-esc="service.name"/></li>
+                        </t>
+                    </ul>
+                </li>
+                
+                <!-- Doctors Dropdown -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="doctorsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Doctors
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="doctorsDropdown">
+                        <li><a class="dropdown-item" href="/clinic/doctors">All Doctors</a></li>
+                        <li><hr class="dropdown-divider"/></li>
+                        <t t-set="doctors" t-value="request.env['clinic.doctor'].sudo().search([('active', '=', True)], limit=8)"/>
+                        <t t-foreach="doctors" t-as="doctor">
+                            <li><a class="dropdown-item" t-attf-href="/clinic/doctor/#{doctor.id}">Dr. <span t-esc="doctor.name"/></a></li>
+                        </t>
+                    </ul>
+                </li>
+                
+                <!-- Booking -->
+                <li class="nav-item">
+                    <a class="nav-link" href="/clinic/booking">Booking</a>
+                </li>
+                
+                <!-- About Us -->
+                <li class="nav-item">
+                    <a class="nav-link" href="/clinic/about">About Us</a>
+                </li>
+                
+                <!-- Contact Us -->
+                <li class="nav-item">
+                    <a class="nav-link" href="/clinic/contact">Contact Us</a>
+                </li>
+            </ul>
+        </xpath>
+    </template>
+
+    <!-- Doctors List Page -->
+    <template id="doctors_page" name="Doctors List Page">
+        <t t-call="website.layout">
+            <div id="wrap">
+                <div class="container mt-5">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h1 class="text-center mb-5">Our Medical Team</h1>
+                            <div class="row">
+                                <t t-foreach="doctors" t-as="doctor">
+                                    <div class="col-md-4 mb-4">
+                                        <div class="card h-100 text-center">
+                                            <div class="card-body">
+                                                <img t-if="doctor.image" t-attf-src="data:image/png;base64,#{doctor.image}" 
+                                                     class="rounded-circle mb-3" 
+                                                     style="width: 120px; height: 120px; object-fit: cover;"
+                                                     t-att-alt="doctor.name"/>
+                                                <div t-else="" class="rounded-circle mb-3 mx-auto bg-light d-flex align-items-center justify-content-center" 
+                                                     style="width: 120px; height: 120px;">
+                                                    <i class="fa fa-user fa-3x text-muted"></i>
+                                                </div>
+                                                <h5 class="card-title">Dr. <span t-esc="doctor.name"/></h5>
+                                                <p class="card-text">
+                                                    <t t-foreach="doctor.specialization_ids" t-as="spec">
+                                                        <span class="badge badge-primary mr-1" t-esc="spec.name"/>
+                                                    </t>
+                                                </p>
+                                                <p class="text-muted" t-esc="doctor.qualification"/>
+                                                <p class="text-success">Fee: ₹<span t-esc="doctor.consultation_fee"/></p>
+                                                <a t-attf-href="/clinic/doctor/#{doctor.id}" class="btn btn-primary">View Profile</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- About Us Page -->
+    <template id="about_page" name="About Us Page">
+        <t t-call="website.layout">
+            <div id="wrap">
+                <div class="container mt-5">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h1 class="text-center mb-5">About Our Clinic</h1>
+                            <div class="row">
+                                <div class="col-md-8 mx-auto">
+                                    <p class="lead text-center mb-4">Providing quality healthcare services with compassion and excellence for over a decade.</p>
+                                    
+                                    <h3>Our Mission</h3>
+                                    <p>To provide comprehensive, compassionate, and quality healthcare services to our community, ensuring that every patient receives personalized care in a comfortable and healing environment.</p>
+                                    
+                                    <h3>Our Vision</h3>
+                                    <p>To be the leading healthcare provider in the region, recognized for our clinical excellence, innovative treatments, and patient-centered approach.</p>
+                                    
+                                    <h3>Why Choose Us?</h3>
+                                    <ul class="list-unstyled">
+                                        <li><i class="fa fa-check text-success mr-2"></i> Experienced and qualified medical professionals</li>
+                                        <li><i class="fa fa-check text-success mr-2"></i> State-of-the-art medical equipment and facilities</li>
+                                        <li><i class="fa fa-check text-success mr-2"></i> Comprehensive range of medical services</li>
+                                        <li><i class="fa fa-check text-success mr-2"></i> Patient-centered care and personalized treatment plans</li>
+                                        <li><i class="fa fa-check text-success mr-2"></i> Convenient online appointment booking</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Contact Us Page -->
+    <template id="contact_page" name="Contact Us Page">
+        <t t-call="website.layout">
+            <div id="wrap">
+                <div class="container mt-5">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h1 class="text-center mb-5">Contact Us</h1>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h3>Get In Touch</h3>
+                                    <div class="contact-info">
+                                        <p><i class="fa fa-map-marker text-primary mr-2"></i> <strong>Address:</strong><br/>
+                                        123 Medical Center Drive<br/>
+                                        Healthcare City, HC 12345</p>
+                                        
+                                        <p><i class="fa fa-phone text-primary mr-2"></i> <strong>Phone:</strong><br/>
+                                        +1 (555) 123-4567</p>
+                                        
+                                        <p><i class="fa fa-envelope text-primary mr-2"></i> <strong>Email:</strong><br/>
+                                        info@myclinic.com</p>
+                                        
+                                        <p><i class="fa fa-clock-o text-primary mr-2"></i> <strong>Hours:</strong><br/>
+                                        Monday - Friday: 8:00 AM - 6:00 PM<br/>
+                                        Saturday: 9:00 AM - 4:00 PM<br/>
+                                        Sunday: Closed</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h3>Send us a Message</h3>
+                                    <form method="post" action="/clinic/contact/submit">
+                                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                        <div class="form-group mb-3">
+                                            <label for="contact_name">Name *</label>
+                                            <input type="text" class="form-control" id="contact_name" name="name" required=""/>
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="contact_email">Email *</label>
+                                            <input type="email" class="form-control" id="contact_email" name="email" required=""/>
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="contact_phone">Phone</label>
+                                            <input type="tel" class="form-control" id="contact_phone" name="phone"/>
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="contact_subject">Subject</label>
+                                            <input type="text" class="form-control" id="contact_subject" name="subject"/>
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="contact_message">Message *</label>
+                                            <textarea class="form-control" id="contact_message" name="message" rows="5" required=""></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">Send Message</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>

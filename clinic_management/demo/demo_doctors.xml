@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Doctor Special Tags -->
+        <record id="demo_tag_senior_consultant" model="clinic.doctor.special.tag">
+            <field name="name">Senior Consultant</field>
+            <field name="color">1</field>
+        </record>
+        
+        <record id="demo_tag_emergency_specialist" model="clinic.doctor.special.tag">
+            <field name="name">Emergency Specialist</field>
+            <field name="color">2</field>
+        </record>
+        
+        <record id="demo_tag_surgery_expert" model="clinic.doctor.special.tag">
+            <field name="name">Surgery Expert</field>
+            <field name="color">3</field>
+        </record>
+        
+        <record id="demo_tag_fellowship_trained" model="clinic.doctor.special.tag">
+            <field name="name">Fellowship Trained</field>
+            <field name="color">4</field>
+        </record>
+        
+        <!-- Demo Doctors -->
+        <record id="demo_doctor_john_smith" model="clinic.doctor">
+            <field name="name">Dr. John Smith</field>
+            <field name="qualification">MD Cardiology, MBBS, Fellowship in Interventional Cardiology</field>
+            <field name="license_no">MED12345</field>
+            <field name="mobile">+1-555-0101</field>
+            <field name="email">dr.john.smith@clinic.com</field>
+            <field name="specialization_ids" eval="[(6, 0, [ref('demo_service_cardiology'), ref('demo_service_general_consultation')])]"/>
+            <field name="available_days" eval="[(6, 0, [ref('clinic_management.days_monday'), ref('clinic_management.days_tuesday'), ref('clinic_management.days_wednesday'), ref('clinic_management.days_thursday'), ref('clinic_management.days_friday')])]"/>
+            <field name="working_start_time">9.0</field>
+            <field name="working_end_time">17.0</field>
+            <field name="slot_duration">30</field>
+            <field name="max_patients_per_slot">1</field>
+            <field name="consultation_fee">300.00</field>
+            <field name="special_tag_ids" eval="[(6, 0, [ref('demo_tag_senior_consultant'), ref('demo_tag_fellowship_trained')])]"/>
+            <field name="bio"><![CDATA[
+                <p>Dr. John Smith is a renowned cardiologist with over 15 years of experience in treating heart diseases. He specializes in interventional cardiology and has performed thousands of successful procedures.</p>
+                <p><strong>Education:</strong></p>
+                <ul>
+                    <li>MBBS from Harvard Medical School</li>
+                    <li>MD Cardiology from Johns Hopkins</li>
+                    <li>Fellowship in Interventional Cardiology</li>
+                </ul>
+                <p><strong>Specialties:</strong> Heart Disease, Cardiac Surgery, Angioplasty</p>
+            ]]></field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="demo_doctor_sarah_brown" model="clinic.doctor">
+            <field name="name">Dr. Sarah Brown</field>
+            <field name="qualification">MD Dermatology, MBBS, Diploma in Cosmetic Dermatology</field>
+            <field name="license_no">MED67890</field>
+            <field name="mobile">+1-555-0102</field>
+            <field name="email">dr.sarah.brown@clinic.com</field>
+            <field name="specialization_ids" eval="[(6, 0, [ref('demo_service_dermatology'), ref('demo_service_general_consultation')])]"/>
+            <field name="available_days" eval="[(6, 0, [ref('clinic_management.days_monday'), ref('clinic_management.days_wednesday'), ref('clinic_management.days_friday'), ref('clinic_management.days_saturday')])]"/>
+            <field name="working_start_time">10.0</field>
+            <field name="working_end_time">18.0</field>
+            <field name="slot_duration">30</field>
+            <field name="max_patients_per_slot">1</field>
+            <field name="consultation_fee">200.00</field>
+            <field name="special_tag_ids" eval="[(6, 0, [ref('demo_tag_senior_consultant')])]"/>
+            <field name="bio"><![CDATA[
+                <p>Dr. Sarah Brown is a skilled dermatologist with 12 years of experience in skin care and cosmetic procedures. She is known for her expertise in treating various skin conditions.</p>
+                <p><strong>Education:</strong></p>
+                <ul>
+                    <li>MBBS from Stanford University</li>
+                    <li>MD Dermatology from Mayo Clinic</li>
+                    <li>Diploma in Cosmetic Dermatology</li>
+                </ul>
+                <p><strong>Specialties:</strong> Acne Treatment, Skin Cancer, Cosmetic Dermatology</p>
+            ]]></field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="demo_doctor_michael_johnson" model="clinic.doctor">
+            <field name="name">Dr. Michael Johnson</field>
+            <field name="qualification">MD Pediatrics, MBBS, Diploma in Child Health</field>
+            <field name="license_no">MED13579</field>
+            <field name="mobile">+1-555-0103</field>
+            <field name="email">dr.michael.johnson@clinic.com</field>
+            <field name="specialization_ids" eval="[(6, 0, [ref('demo_service_pediatrics'), ref('demo_service_general_consultation')])]"/>
+            <field name="available_days" eval="[(6, 0, [ref('clinic_management.days_tuesday'), ref('clinic_management.days_thursday'), ref('clinic_management.days_friday'), ref('clinic_management.days_saturday')])]"/>
+            <field name="working_start_time">8.0</field>
+            <field name="working_end_time">16.0</field>
+            <field name="slot_duration">20</field>
+            <field name="max_patients_per_slot">2</field>
+            <field name="consultation_fee">180.00</field>
+            <field name="bio"><![CDATA[
+                <p>Dr. Michael Johnson is a dedicated pediatrician with 10 years of experience in child healthcare. He is passionate about providing comprehensive care for children from infancy to adolescence.</p>
+                <p><strong>Education:</strong></p>
+                <ul>
+                    <li>MBBS from University of California</li>
+                    <li>MD Pediatrics from Children's Hospital Boston</li>
+                    <li>Diploma in Child Health</li>
+                </ul>
+                <p><strong>Specialties:</strong> Child Development, Vaccination, Pediatric Emergency Care</p>
+            ]]></field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="demo_doctor_emily_davis" model="clinic.doctor">
+            <field name="name">Dr. Emily Davis</field>
+            <field name="qualification">MD Orthopedics, MBBS, MS Orthopedic Surgery</field>
+            <field name="license_no">MED24680</field>
+            <field name="mobile">+1-555-0104</field>
+            <field name="email">dr.emily.davis@clinic.com</field>
+            <field name="specialization_ids" eval="[(6, 0, [ref('demo_service_orthopedics'), ref('demo_service_general_consultation')])]"/>
+            <field name="available_days" eval="[(6, 0, [ref('clinic_management.days_monday'), ref('clinic_management.days_tuesday'), ref('clinic_management.days_wednesday'), ref('clinic_management.days_thursday')])]"/>
+            <field name="working_start_time">9.0</field>
+            <field name="working_end_time">17.0</field>
+            <field name="slot_duration">45</field>
+            <field name="max_patients_per_slot">1</field>
+            <field name="consultation_fee">250.00</field>
+            <field name="special_tag_ids" eval="[(6, 0, [ref('demo_tag_surgery_expert')])]"/>
+            <field name="bio"><![CDATA[
+                <p>Dr. Emily Davis is an experienced orthopedic surgeon with 14 years of practice. She specializes in joint replacement surgeries and sports medicine.</p>
+                <p><strong>Education:</strong></p>
+                <ul>
+                    <li>MBBS from UCLA Medical School</li>
+                    <li>MD Orthopedics from Hospital for Special Surgery</li>
+                    <li>MS Orthopedic Surgery</li>
+                </ul>
+                <p><strong>Specialties:</strong> Joint Replacement, Sports Medicine, Trauma Surgery</p>
+            ]]></field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="demo_doctor_robert_wilson" model="clinic.doctor">
+            <field name="name">Dr. Robert Wilson</field>
+            <field name="qualification">MD Neurology, MBBS, DM Neurology</field>
+            <field name="license_no">MED97531</field>
+            <field name="mobile">+1-555-0105</field>
+            <field name="email">dr.robert.wilson@clinic.com</field>
+            <field name="specialization_ids" eval="[(6, 0, [ref('demo_service_neurology'), ref('demo_service_general_consultation')])]"/>
+            <field name="available_days" eval="[(6, 0, [ref('clinic_management.days_monday'), ref('clinic_management.days_wednesday'), ref('clinic_management.days_friday')])]"/>
+            <field name="working_start_time">10.0</field>
+            <field name="working_end_time">16.0</field>
+            <field name="slot_duration">60</field>
+            <field name="max_patients_per_slot">1</field>
+            <field name="consultation_fee">280.00</field>
+            <field name="special_tag_ids" eval="[(6, 0, [ref('demo_tag_senior_consultant')])]"/>
+            <field name="bio"><![CDATA[
+                <p>Dr. Robert Wilson is a neurologist with 18 years of experience treating neurological disorders. He specializes in stroke treatment and epilepsy management.</p>
+                <p><strong>Education:</strong></p>
+                <ul>
+                    <li>MBBS from University of Pennsylvania</li>
+                    <li>MD Neurology from Mayo Clinic</li>
+                    <li>DM Neurology</li>
+                </ul>
+                <p><strong>Specialties:</strong> Stroke Treatment, Epilepsy, Parkinson's Disease</p>
+            ]]></field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="demo_doctor_lisa_garcia" model="clinic.doctor">
+            <field name="name">Dr. Lisa Garcia</field>
+            <field name="qualification">MD Ophthalmology, MBBS, Fellowship in Retinal Diseases</field>
+            <field name="license_no">MED86420</field>
+            <field name="mobile">+1-555-0106</field>
+            <field name="email">dr.lisa.garcia@clinic.com</field>
+            <field name="specialization_ids" eval="[(6, 0, [ref('demo_service_ophthalmology'), ref('demo_service_general_consultation')])]"/>
+            <field name="available_days" eval="[(6, 0, [ref('clinic_management.days_tuesday'), ref('clinic_management.days_thursday'), ref('clinic_management.days_saturday')])]"/>
+            <field name="working_start_time">9.0</field>
+            <field name="working_end_time">15.0</field>
+            <field name="slot_duration">30</field>
+            <field name="max_patients_per_slot">1</field>
+            <field name="consultation_fee">220.00</field>
+            <field name="special_tag_ids" eval="[(6, 0, [ref('demo_tag_fellowship_trained')])]"/>
+            <field name="bio"><![CDATA[
+                <p>Dr. Lisa Garcia is an ophthalmologist with 11 years of experience in eye care. She specializes in retinal diseases and cataract surgery.</p>
+                <p><strong>Education:</strong></p>
+                <ul>
+                    <li>MBBS from University of Miami</li>
+                    <li>MD Ophthalmology from Bascom Palmer Eye Institute</li>
+                    <li>Fellowship in Retinal Diseases</li>
+                </ul>
+                <p><strong>Specialties:</strong> Retinal Surgery, Cataract Surgery, Diabetic Eye Care</p>
+            ]]></field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="demo_doctor_david_martinez" model="clinic.doctor">
+            <field name="name">Dr. David Martinez</field>
+            <field name="qualification">MD Psychiatry, MBBS, Diploma in Psychological Medicine</field>
+            <field name="license_no">MED75319</field>
+            <field name="mobile">+1-555-0107</field>
+            <field name="email">dr.david.martinez@clinic.com</field>
+            <field name="specialization_ids" eval="[(6, 0, [ref('demo_service_psychiatry')])]"/>
+            <field name="available_days" eval="[(6, 0, [ref('clinic_management.days_monday'), ref('clinic_management.days_tuesday'), ref('clinic_management.days_wednesday'), ref('clinic_management.days_thursday'), ref('clinic_management.days_friday')])]"/>
+            <field name="working_start_time">11.0</field>
+            <field name="working_end_time">19.0</field>
+            <field name="slot_duration">60</field>
+            <field name="max_patients_per_slot">1</field>
+            <field name="consultation_fee">350.00</field>
+            <field name="bio"><![CDATA[
+                <p>Dr. David Martinez is a psychiatrist with 13 years of experience in mental health care. He specializes in anxiety disorders and depression treatment.</p>
+                <p><strong>Education:</strong></p>
+                <ul>
+                    <li>MBBS from University of Texas</li>
+                    <li>MD Psychiatry from McLean Hospital</li>
+                    <li>Diploma in Psychological Medicine</li>
+                </ul>
+                <p><strong>Specialties:</strong> Anxiety Disorders, Depression, PTSD Treatment</p>
+            ]]></field>
+            <field name="active">True</field>
+        </record>
+        
+    </data>
+</odoo>

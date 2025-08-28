@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_clinic_appointment_form" model="ir.ui.view">
+        <field name="name">clinic.appointment.form</field>
+        <field name="model">clinic.appointment</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_confirm" string="Confirm" type="object" 
+                            invisible="state != 'draft'" class="btn-primary"/>
+                    <button name="action_check_in" string="Check In" type="object" 
+                            invisible="state != 'confirmed'" class="btn-primary"/>
+                    <button name="action_start_consultation" string="Start Consultation" type="object" 
+                            invisible="state != 'checked_in'" class="btn-primary"/>
+                    <button name="action_complete" string="Complete" type="object" 
+                            invisible="state != 'in_consultation'" class="btn-success"/>
+                    <button name="action_mark_no_show" string="No Show" type="object" 
+                            invisible="state not in ('confirmed','draft')" class="btn-warning"/>
+                    <button name="action_cancel" string="Cancel" type="object" 
+                            invisible="state not in ('draft','confirmed','checked_in')" class="btn-danger"/>
+                    <button name="action_reschedule" string="Reschedule" type="object" 
+                            invisible="state not in ('cancelled')" class="btn-info"/>
+                    <field name="state" widget="statusbar" 
+                           statusbar_visible="draft,confirmed,checked_in,in_consultation,completed"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_create_prescription" type="object" 
+                                class="oe_stat_button" icon="fa-file-text-o"
+                                invisible="prescription_count > 0 or state in ('draft', 'cancelled', 'no_show')">
+                            <span>Create Prescription</span>
+                        </button>
+                        <button name="action_view_prescriptions" type="object" 
+                                class="oe_stat_button" icon="fa-file-text-o"
+                                invisible="prescription_count == 0">
+                            <field name="prescription_count" widget="statinfo" string="Prescriptions"/>
+                        </button>
+                        <button name="action_create_lab_test" type="object" 
+                                class="oe_stat_button" icon="fa-flask"
+                                invisible="not is_lab_test_required or lab_test_count > 0 or state in ('draft', 'cancelled', 'no_show')">
+                            <span>Create Lab Test</span>
+                        </button>
+                        <button name="action_view_lab_tests" type="object" 
+                                class="oe_stat_button" icon="fa-flask"
+                                invisible="lab_test_count == 0">
+                            <field name="lab_test_count" widget="statinfo" string="Lab Tests"/>
+                        </button>
+                        <button name="action_create_invoice" type="object" 
+                                class="oe_stat_button" icon="fa-dollar"
+                                invisible="state != 'completed'">
+                            <span>Create Invoice</span>
+                        </button>
+                        <button name="action_view_invoice" type="object" 
+                                class="oe_stat_button" icon="fa-dollar"
+                                invisible="not invoice_id">
+                            <span>View Invoice</span>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="patient_id"/>
+                            <field name="patient_age"/>
+                            <field name="patient_gender"/>
+                            <field name="patient_phone"/>
+                            <field name="patient_email"/>
+                            <field name="appointment_date"/>
+                        </group>
+                        <group>
+                            <field name="doctor_id"/>
+                            <field name="slot_id" 
+                                   domain="[('doctor_id', '=', doctor_id), ('status', '=', 'available')]"/>
+                            <field name="start_time" widget="float_time"/>
+                            <field name="end_time" widget="float_time"/>
+                            <field name="consulting_fee"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Symptoms &amp; Follow-up">
+                            <group>
+                                <field name="symptom" placeholder="Patient symptoms or problems"/>
+                                <field name="is_lab_test_required"/>
+                                <field name="next_visit_days"/>
+                                <field name="next_visit_date" readonly="1"/>
+                            </group>
+                        </page>
+                        <page string="Status Info" invisible="state in ('draft')">
+                            <group>
+                                <group>
+                                    <field name="checked_in_time" readonly="1"
+                                           invisible="not checked_in_time"/>
+                                    <field name="consultation_start_time" readonly="1"
+                                           invisible="not consultation_start_time"/>
+                                    <field name="consultation_end_time" readonly="1"
+                                           invisible="not consultation_end_time"/>
+                                </group>
+                                <group>
+                                    <field name="cancellation_reason" readonly="1"
+                                           invisible="state not in ('cancelled', 'rescheduled')"/>
+                                    <field name="original_appointment_id" readonly="1"
+                                           invisible="not original_appointment_id"/>
+                                    <field name="rescheduled_to_id" readonly="1"
+                                           invisible="not rescheduled_to_id"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_clinic_appointment_list" model="ir.ui.view">
+        <field name="name">clinic.appointment.list</field>
+        <field name="model">clinic.appointment</field>
+        <field name="arch" type="xml">
+            <list string="Appointments">
+                <field name="name"/>
+                <field name="patient_id"/>
+                <field name="doctor_id"/>
+                <field name="appointment_date"/>
+                <field name="start_time" widget="float_time"/>
+                <field name="end_time" widget="float_time"/>
+                <field name="consulting_fee"/>
+                <field name="state" decoration-success="state == 'completed'" 
+                       decoration-info="state == 'confirmed'" 
+                       decoration-danger="state in ('cancelled', 'no_show')"
+                       decoration-warning="state == 'in_consultation'"
+                       decoration-primary="state == 'checked_in'"
+                       widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_clinic_appointment_kanban" model="ir.ui.view">
+        <field name="name">clinic.appointment.kanban</field>
+        <field name="model">clinic.appointment</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" records_draggable="0" class="o_kanban_small_column">
+                <field name="patient_id"/>
+                <field name="doctor_id"/>
+                <field name="appointment_date"/>
+                <field name="start_time"/>
+                <field name="end_time"/>
+                <field name="state"/>
+                <field name="color"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div t-attf-class="oe_kanban_card oe_kanban_global_click #{color ? 'oe_kanban_color_' + color : ''}">
+                            <div class="oe_kanban_details">
+                                <strong class="o_kanban_record_title">
+                                    <field name="name"/>
+                                </strong>
+                                <div class="o_kanban_record_subtitle">
+                                    <field name="patient_id"/>
+                                </div>
+                                <div>
+                                    <strong>Doctor: </strong>
+                                    <field name="doctor_id"/>
+                                </div>
+                                <div>
+                                    <strong>Date: </strong>
+                                    <field name="appointment_date"/>
+                                </div>
+                                <div>
+                                    <strong>Time: </strong>
+                                    <field name="start_time" widget="float_time"/> - <field name="end_time" widget="float_time"/>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_clinic_appointment_calendar" model="ir.ui.view">
+        <field name="name">clinic.appointment.calendar</field>
+        <field name="model">clinic.appointment</field>
+        <field name="arch" type="xml">
+            <calendar string="Appointments" date_start="appointment_date" color="doctor_id" mode="month">
+                <field name="patient_id"/>
+                <field name="doctor_id"/>
+                <field name="state"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="view_clinic_appointment_search" model="ir.ui.view">
+        <field name="name">clinic.appointment.search</field>
+        <field name="model">clinic.appointment</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="patient_id"/>
+                <field name="doctor_id"/>
+                <field name="appointment_date"/>
+                <separator/>
+                <filter string="Today" name="today" domain="[('appointment_date', '=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter string="Tomorrow" name="tomorrow" domain="[('appointment_date', '=', (context_today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d'))]"/>
+                <filter string="This Week" name="this_week" domain="[('appointment_date', '>=', (context_today() - datetime.timedelta(days=context_today().weekday())).strftime('%Y-%m-%d')), ('appointment_date', '&lt;=', (context_today() + datetime.timedelta(days=6-context_today().weekday())).strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Confirmed" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
+                <filter string="Checked In" name="checked_in" domain="[('state', '=', 'checked_in')]"/>
+                <filter string="In Consultation" name="in_consultation" domain="[('state', '=', 'in_consultation')]"/>
+                <filter string="Completed" name="completed" domain="[('state', '=', 'completed')]"/>
+                <filter string="No Show" name="no_show" domain="[('state', '=', 'no_show')]"/>
+                <filter string="Cancelled" name="cancelled" domain="[('state', '=', 'cancelled')]"/>
+                <filter string="Rescheduled" name="rescheduled" domain="[('state', '=', 'rescheduled')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_by_patient" string="Patient" context="{'group_by': 'patient_id'}"/>
+                    <filter name="group_by_doctor" string="Doctor" context="{'group_by': 'doctor_id'}"/>
+                    <filter name="group_by_date" string="Date" context="{'group_by': 'appointment_date'}"/>
+                    <filter name="group_by_state" string="Status" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_clinic_appointment" model="ir.actions.act_window">
+        <field name="name">All Appointments</field>
+        <field name="res_model">clinic.appointment</field>
+        <field name="view_mode">kanban,list,form,calendar</field>
+        <field name="context">{'search_default_confirmed': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first appointment!
+            </p>
+            <p>
+                Schedule appointments between patients and doctors.
+            </p>
+        </field>
+    </record>
+
+    <record id="action_clinic_appointment_today" model="ir.actions.act_window">
+        <field name="name">Today's Appointments</field>
+        <field name="res_model">clinic.appointment</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="context">{'search_default_today': 1, 'search_default_group_by_state': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No appointments for today!
+            </p>
+            <p>
+                There are no appointments scheduled for today.
+            </p>
+        </field>
+    </record>
+</odoo>

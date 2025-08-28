@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Testimonial Form View -->
+    <record id="view_clinic_testimonial_form" model="ir.ui.view">
+        <field name="name">clinic.testimonial.form</field>
+        <field name="model">clinic.testimonial</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="toggle_active" type="object" class="oe_stat_button" icon="fa-archive">
+                            <field name="active" widget="boolean_button" options="{'terminology': 'archive'}"/>
+                        </button>
+                    </div>
+                    <field name="image" widget="image" class="oe_avatar"/>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Patient Name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="rating" widget="priority"/>
+                            <field name="date"/>
+                            <field name="sequence"/>
+                        </group>
+                        <group>
+                            <field name="doctor_id"/>
+                            <field name="service_id"/>
+                            <field name="display_on_website"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Testimonial">
+                            <field name="comment" placeholder="Patient's testimonial..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Testimonial Tree View -->
+    <record id="view_clinic_testimonial_tree" model="ir.ui.view">
+        <field name="name">clinic.testimonial.tree</field>
+        <field name="model">clinic.testimonial</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="rating"/>
+                <field name="doctor_id"/>
+                <field name="service_id"/>
+                <field name="date"/>
+                <field name="display_on_website"/>
+            </list>
+        </field>
+    </record>
+    
+    <!-- Testimonial Search View -->
+    <record id="view_clinic_testimonial_search" model="ir.ui.view">
+        <field name="name">clinic.testimonial.search</field>
+        <field name="model">clinic.testimonial</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="doctor_id"/>
+                <field name="service_id"/>
+                <filter string="Website Display" name="website" domain="[('display_on_website', '=', True)]"/>
+                <filter string="5 Stars" name="five_stars" domain="[('rating', '=', '5')]"/>
+                <separator/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Doctor" name="doctor" domain="[]" context="{'group_by': 'doctor_id'}"/>
+                    <filter string="Service" name="service" domain="[]" context="{'group_by': 'service_id'}"/>
+                    <filter string="Rating" name="rating" domain="[]" context="{'group_by': 'rating'}"/>
+                    <filter string="Date" name="date" domain="[]" context="{'group_by': 'date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    
+    <!-- Testimonial Action -->
+    <record id="action_clinic_testimonial" model="ir.actions.act_window">
+        <field name="name">Testimonials</field>
+        <field name="res_model">clinic.testimonial</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_clinic_testimonial_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first patient testimonial!
+            </p>
+            <p>
+                Patient testimonials help build trust and credibility for your clinic.
+            </p>
+        </field>
+    </record>
+</odoo>

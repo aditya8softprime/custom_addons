@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Demo Testimonials -->
+        <record id="demo_testimonial_001" model="clinic.testimonial">
+            <field name="name">Alice Cooper</field>
+            <field name="sequence">1</field>
+            <field name="rating">5</field>
+            <field name="comment">Dr. John Smith is an exceptional cardiologist. His thorough examination and clear explanations helped me understand my condition better. The treatment plan he provided has significantly improved my quality of life. I highly recommend him to anyone seeking expert cardiac care.</field>
+            <field name="service_id" ref="demo_service_cardiology"/>
+            <field name="doctor_id" ref="demo_doctor_john_smith"/>
+            <field name="date" eval="(datetime.date.today() - datetime.timedelta(days=10))"/>
+            <field name="display_on_website">True</field>
+            <field name="state">published</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="demo_testimonial_002" model="clinic.testimonial">
+            <field name="name">Bob Johnson</field>
+            <field name="sequence">2</field>
+            <field name="rating">5</field>
+            <field name="comment">Dr. Sarah Brown treated my skin condition with great expertise. Her approach was professional and caring. The treatment she prescribed worked perfectly, and my skin has never looked better. The clinic staff was also very accommodating and friendly.</field>
+            <field name="service_id" ref="demo_service_dermatology"/>
+            <field name="doctor_id" ref="demo_doctor_sarah_brown"/>
+            <field name="date" eval="(datetime.date.today() - datetime.timedelta(days=15))"/>
+            <field name="display_on_website">True</field>
+            <field name="state">published</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="demo_testimonial_003" model="clinic.testimonial">
+            <field name="name">Jennifer Thompson</field>
+            <field name="sequence">3</field>
+            <field name="rating">5</field>
+            <field name="comment">Dr. Michael Johnson is wonderful with children. My daughter was initially scared, but he made her feel comfortable and at ease. His gentle approach and child-friendly manner made the entire visit pleasant. We couldn't ask for a better pediatrician.</field>
+            <field name="service_id" ref="demo_service_pediatrics"/>
+            <field name="doctor_id" ref="demo_doctor_michael_johnson"/>
+            <field name="date" eval="(datetime.date.today() - datetime.timedelta(days=8))"/>
+            <field name="display_on_website">True</field>
+            <field name="state">published</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="demo_testimonial_004" model="clinic.testimonial">
+            <field name="name">David Brown</field>
+            <field name="sequence">4</field>
+            <field name="rating">4</field>
+            <field name="comment">Dr. Emily Davis helped me recover from my back injury. Her expertise in orthopedics is evident, and the physical therapy recommendations she provided were very effective. I'm now pain-free and back to my normal activities. Great doctor!</field>
+            <field name="service_id" ref="demo_service_orthopedics"/>
+            <field name="doctor_id" ref="demo_doctor_emily_davis"/>
+            <field name="date" eval="(datetime.date.today() - datetime.timedelta(days=20))"/>
+            <field name="display_on_website">True</field>
+            <field name="state">published</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="demo_testimonial_005" model="clinic.testimonial">
+            <field name="name">Eva Wilson</field>
+            <field name="sequence">5</field>
+            <field name="rating">5</field>
+            <field name="comment">Dr. Robert Wilson is an outstanding neurologist. He diagnosed my condition accurately and provided comprehensive treatment. His knowledge and patient care are exceptional. The headaches that plagued me for months are now completely gone.</field>
+            <field name="service_id" ref="demo_service_neurology"/>
+            <field name="doctor_id" ref="demo_doctor_robert_wilson"/>
+            <field name="date" eval="(datetime.date.today() - datetime.timedelta(days=12))"/>
+            <field name="display_on_website">True</field>
+            <field name="state">published</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="demo_testimonial_006" model="clinic.testimonial">
+            <field name="name">Frank Davis</field>
+            <field name="sequence">6</field>
+            <field name="rating">5</field>
+            <field name="comment">Dr. Lisa Garcia saved my vision. Her quick diagnosis and treatment of my retinal problem prevented further complications. She explained everything clearly and made sure I understood the treatment process. Highly skilled and compassionate doctor.</field>
+            <field name="service_id" ref="demo_service_ophthalmology"/>
+            <field name="doctor_id" ref="demo_doctor_lisa_garcia"/>
+            <field name="date" eval="(datetime.date.today() - datetime.timedelta(days=25))"/>
+            <field name="display_on_website">True</field>
+            <field name="state">published</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="demo_testimonial_007" model="clinic.testimonial">
+            <field name="name">Grace Miller</field>
+            <field name="sequence">7</field>
+            <field name="rating">5</field>
+            <field name="comment">Dr. David Martinez helped me through a difficult period in my life. His understanding and professional approach to mental health treatment made all the difference. I feel much better now and have learned valuable coping strategies.</field>
+            <field name="service_id" ref="demo_service_psychiatry"/>
+            <field name="doctor_id" ref="demo_doctor_david_martinez"/>
+            <field name="date" eval="(datetime.date.today() - datetime.timedelta(days=18))"/>
+            <field name="display_on_website">True</field>
+            <field name="state">published</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="demo_testimonial_008" model="clinic.testimonial">
+            <field name="name">Henry Garcia</field>
+            <field name="sequence">8</field>
+            <field name="rating">4</field>
+            <field name="comment">The clinic provides excellent healthcare services. The staff is professional, and the doctors are knowledgeable. My general consultation was thorough, and I received comprehensive health advice. The facility is clean and well-maintained.</field>
+            <field name="service_id" ref="demo_service_general_consultation"/>
+            <field name="doctor_id" ref="demo_doctor_john_smith"/>
+            <field name="date" eval="(datetime.date.today() - datetime.timedelta(days=5))"/>
+            <field name="display_on_website">True</field>
+            <field name="state">published</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="demo_testimonial_009" model="clinic.testimonial">
+            <field name="name">Isabel Martinez</field>
+            <field name="sequence">9</field>
+            <field name="rating">5</field>
+            <field name="comment">Amazing experience with Dr. Sarah Brown for my acne treatment. She was patient, understanding, and provided a treatment plan that actually worked. My skin has improved dramatically, and I feel much more confident now.</field>
+            <field name="service_id" ref="demo_service_dermatology"/>
+            <field name="doctor_id" ref="demo_doctor_sarah_brown"/>
+            <field name="date" eval="(datetime.date.today() - datetime.timedelta(days=30))"/>
+            <field name="display_on_website">True</field>
+            <field name="state">published</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="demo_testimonial_010" model="clinic.testimonial">
+            <field name="name">Susan White</field>
+            <field name="sequence">10</field>
+            <field name="rating">5</field>
+            <field name="comment">Dr. Michael Johnson is fantastic with children. My son Max always feels comfortable during visits. The doctor's patience and gentle approach make medical visits stress-free for both parent and child. Highly recommended!</field>
+            <field name="service_id" ref="demo_service_pediatrics"/>
+            <field name="doctor_id" ref="demo_doctor_michael_johnson"/>
+            <field name="date" eval="(datetime.date.today() - datetime.timedelta(days=22))"/>
+            <field name="display_on_website">True</field>
+            <field name="state">published</field>
+            <field name="active">True</field>
+        </record>
+        
+        <!-- Draft Testimonials (Pending Approval) -->
+        <record id="demo_testimonial_011" model="clinic.testimonial">
+            <field name="name">Jack Anderson</field>
+            <field name="sequence">11</field>
+            <field name="rating">4</field>
+            <field name="comment">Good service overall. The appointment scheduling was easy, and the consultation was informative. The doctor was professional and answered all my questions. Would recommend to others.</field>
+            <field name="service_id" ref="demo_service_general_consultation"/>
+            <field name="doctor_id" ref="demo_doctor_john_smith"/>
+            <field name="date" eval="(datetime.date.today() - datetime.timedelta(days=2))"/>
+            <field name="display_on_website">True</field>
+            <field name="state">draft</field>
+            <field name="active">True</field>
+        </record>
+        
+        <record id="demo_testimonial_012" model="clinic.testimonial">
+            <field name="name">Carol Smith</field>
+            <field name="sequence">12</field>
+            <field name="rating">5</field>
+            <field name="comment">Dr. Emily Davis provided excellent care for my knee injury. Her treatment approach was comprehensive, and the recovery plan was very effective. I'm back to running again!</field>
+            <field name="service_id" ref="demo_service_orthopedics"/>
+            <field name="doctor_id" ref="demo_doctor_emily_davis"/>
+            <field name="date" eval="(datetime.date.today() - datetime.timedelta(days=1))"/>
+            <field name="display_on_website">True</field>
+            <field name="state">draft</field>
+            <field name="active">True</field>
+        </record>
+        
+        <!-- Rejected Testimonial -->
+        <record id="demo_testimonial_013" model="clinic.testimonial">
+            <field name="name">Anonymous User</field>
+            <field name="sequence">13</field>
+            <field name="rating">2</field>
+            <field name="comment">Not satisfied with the waiting time and service quality. Needs improvement.</field>
+            <field name="service_id" ref="demo_service_general_consultation"/>
+            <field name="date" eval="(datetime.date.today() - datetime.timedelta(days=7))"/>
+            <field name="display_on_website">False</field>
+            <field name="state">rejected</field>
+            <field name="active">True</field>
+        </record>
+        
+    </data>
+</odoo>

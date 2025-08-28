@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Demo Holidays/Leaves -->
+        <record id="demo_holiday_john_vacation" model="clinic.holiday">
+            <field name="doctor_id" ref="demo_doctor_john_smith"/>
+            <field name="leave_type">full_day</field>
+            <field name="from_date" eval="(datetime.date.today() + datetime.timedelta(days=15))"/>
+            <field name="to_date" eval="(datetime.date.today() + datetime.timedelta(days=19))"/>
+            <field name="reason">Annual vacation - Family trip to Europe</field>
+            <field name="state">approved</field>
+        </record>
+        
+        <record id="demo_holiday_sarah_conference" model="clinic.holiday">
+            <field name="doctor_id" ref="demo_doctor_sarah_brown"/>
+            <field name="leave_type">full_day</field>
+            <field name="from_date" eval="(datetime.date.today() + datetime.timedelta(days=25))"/>
+            <field name="to_date" eval="(datetime.date.today() + datetime.timedelta(days=27))"/>
+            <field name="reason">Medical conference - Dermatology advances symposium</field>
+            <field name="state">approved</field>
+        </record>
+        
+        <record id="demo_holiday_michael_sick" model="clinic.holiday">
+            <field name="doctor_id" ref="demo_doctor_michael_johnson"/>
+            <field name="leave_type">full_day</field>
+            <field name="from_date" eval="(datetime.date.today() + datetime.timedelta(days=3))"/>
+            <field name="to_date" eval="(datetime.date.today() + datetime.timedelta(days=3))"/>
+            <field name="reason">Sick leave - Flu symptoms</field>
+            <field name="state">approved</field>
+        </record>
+        
+        <record id="demo_holiday_emily_half_day" model="clinic.holiday">
+            <field name="doctor_id" ref="demo_doctor_emily_davis"/>
+            <field name="leave_type">half_day</field>
+            <field name="from_date" eval="(datetime.date.today() + datetime.timedelta(days=8))"/>
+            <field name="to_date" eval="(datetime.date.today() + datetime.timedelta(days=8))"/>
+            <field name="reason">Personal appointment - Medical check-up</field>
+            <field name="state">approved</field>
+        </record>
+        
+        <record id="demo_holiday_robert_training" model="clinic.holiday">
+            <field name="doctor_id" ref="demo_doctor_robert_wilson"/>
+            <field name="leave_type">full_day</field>
+            <field name="from_date" eval="(datetime.date.today() + datetime.timedelta(days=30))"/>
+            <field name="to_date" eval="(datetime.date.today() + datetime.timedelta(days=32))"/>
+            <field name="reason">Professional training - Advanced neurology techniques workshop</field>
+            <field name="state">approved</field>
+        </record>
+        
+        <record id="demo_holiday_lisa_emergency" model="clinic.holiday">
+            <field name="doctor_id" ref="demo_doctor_lisa_garcia"/>
+            <field name="leave_type">full_day</field>
+            <field name="from_date" eval="(datetime.date.today() + datetime.timedelta(days=12))"/>
+            <field name="to_date" eval="(datetime.date.today() + datetime.timedelta(days=12))"/>
+            <field name="reason">Family emergency</field>
+            <field name="state">approved</field>
+        </record>
+        
+        <record id="demo_holiday_david_research" model="clinic.holiday">
+            <field name="doctor_id" ref="demo_doctor_david_martinez"/>
+            <field name="leave_type">full_day</field>
+            <field name="from_date" eval="(datetime.date.today() + datetime.timedelta(days=20))"/>
+            <field name="to_date" eval="(datetime.date.today() + datetime.timedelta(days=21))"/>
+            <field name="reason">Research presentation - Mental health conference</field>
+            <field name="state">approved</field>
+        </record>
+        
+        <!-- Draft Leave Requests -->
+        <record id="demo_holiday_john_draft" model="clinic.holiday">
+            <field name="doctor_id" ref="demo_doctor_john_smith"/>
+            <field name="leave_type">half_day</field>
+            <field name="from_date" eval="(datetime.date.today() + datetime.timedelta(days=45))"/>
+            <field name="to_date" eval="(datetime.date.today() + datetime.timedelta(days=45))"/>
+            <field name="reason">Dental appointment</field>
+            <field name="state">draft</field>
+        </record>
+        
+        <record id="demo_holiday_sarah_draft" model="clinic.holiday">
+            <field name="doctor_id" ref="demo_doctor_sarah_brown"/>
+            <field name="leave_type">full_day</field>
+            <field name="from_date" eval="(datetime.date.today() + datetime.timedelta(days=60))"/>
+            <field name="to_date" eval="(datetime.date.today() + datetime.timedelta(days=62))"/>
+            <field name="reason">Continuing education course - Advanced skin cancer treatment</field>
+            <field name="state">draft</field>
+        </record>
+        
+        <!-- Past Leave (Completed) -->
+        <record id="demo_holiday_michael_past" model="clinic.holiday">
+            <field name="doctor_id" ref="demo_doctor_michael_johnson"/>
+            <field name="leave_type">full_day</field>
+            <field name="from_date" eval="(datetime.date.today() - datetime.timedelta(days=30))"/>
+            <field name="to_date" eval="(datetime.date.today() - datetime.timedelta(days=28))"/>
+            <field name="reason">Vacation - Child's school break</field>
+            <field name="state">approved</field>
+        </record>
+        
+        <record id="demo_holiday_emily_past" model="clinic.holiday">
+            <field name="doctor_id" ref="demo_doctor_emily_davis"/>
+            <field name="leave_type">full_day</field>
+            <field name="from_date" eval="(datetime.date.today() - datetime.timedelta(days=15))"/>
+            <field name="to_date" eval="(datetime.date.today() - datetime.timedelta(days=15))"/>
+            <field name="reason">Surgery - Personal medical procedure</field>
+            <field name="state">approved</field>
+        </record>
+        
+        <!-- Cancelled Leave -->
+        <record id="demo_holiday_robert_cancelled" model="clinic.holiday">
+            <field name="doctor_id" ref="demo_doctor_robert_wilson"/>
+            <field name="leave_type">full_day</field>
+            <field name="from_date" eval="(datetime.date.today() + datetime.timedelta(days=50))"/>
+            <field name="to_date" eval="(datetime.date.today() + datetime.timedelta(days=51))"/>
+            <field name="reason">Conference cancelled due to scheduling conflicts</field>
+            <field name="state">cancelled</field>
+        </record>
+        
+    </data>
+</odoo>
