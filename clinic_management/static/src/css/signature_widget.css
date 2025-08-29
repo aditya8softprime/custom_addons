@@ -1,0 +1,9 @@
+.o_field_extended_signature canvas {
+    width: 600px !important;   /* enlarge width */
+    height: 300px !important;  /* enlarge height */
+    border: 2px solid #444;    /* optional: make boundary visible */
+    border-radius: 8px;        /* optional: rounded corners */
+}
+.o_field_extended_signature .o_clear_signature {
+    margin-top: 10px;          /* space above clear button */
+}

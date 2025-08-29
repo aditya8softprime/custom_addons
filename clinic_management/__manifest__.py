@@ -58,7 +58,7 @@
         'views/clinic_error_template.xml',
         
         # Menus (must be last)
-        'views/clinic_menus.xml',
+        'menu/clinic_menus.xml',
     ],
     'demo': [
         # 'demo/demo_medicines.xml',
@@ -83,12 +83,14 @@
             # JS Components
             'clinic_management/static/src/js/views/**/*.js',
             'clinic_management/static/src/js/**/*',
-            
+    
             # XML Templates
             'clinic_management/static/src/xml/**/*',
             
             # SCSS Styles
             'clinic_management/static/src/scss/**/*',
+            'clinic_management/static/src/css',
+
         ],
         'web.assets_frontend': [
             # Website JS
@@ -101,6 +103,7 @@
             # Website XML Templates
             'clinic_management/static/src/xml/website/**/*',
         ],
+        
     },
     'sequence': 1,
 }

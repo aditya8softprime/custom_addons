@@ -57,60 +57,16 @@
                         </page>
                         
                         <page string="Handwritten/Stylus" invisible="prescription_type != 'handwritten'">
+
                             <group>
-                                <field name="stylus_notes" widget="html" placeholder="Write prescription notes here using stylus..."/>
-                                <field name="prescription_image" widget="image" class="oe_avatar"/>
+                                <field name="prescription_notes" widget="html" placeholder="Write prescription notes here using stylus..."/>
+                                <field name="prescription_image" widget="signature" filename="prescription_image_filename"/>
                                 <field name="prescription_image_filename" invisible="1"/>
                             </group>
-                            <field name="medication_ids">
-                                <list editable="bottom">
-                                    <field name="product_id" 
-                                           domain="[('type', '=', 'consu')]"
-                                           options="{'no_create': True}"/>
-                                    <field name="medicine_name"/>
-                                    <field name="dosage"/>
-                                    <field name="frequency"/>
-                                    <field name="duration"/>
-                                    <field name="quantity"/>
-                                    <field name="unit_price" widget="monetary"/>
-                                    <field name="subtotal" widget="monetary" readonly="1"/>
-                                    <field name="currency_id" invisible="1"/>
-                                </list>
-                            </field>
                         </page>
-                        
-                        <page string="Scanned Document" invisible="prescription_type != 'scan'">
-                            <group>
-                                <field name="prescription_image" widget="image" class="oe_avatar"/>
-                                <field name="prescription_image_filename" invisible="1"/>
-                            </group>
-                            <field name="medication_ids">
-                                <list editable="bottom">
-                                    <field name="product_id" 
-                                           domain="[('type', '=', 'consu')]"
-                                           options="{'no_create': True}"/>
-                                    <field name="medicine_name"/>
-                                    <field name="dosage"/>
-                                    <field name="frequency"/>
-                                    <field name="duration"/>
-                                    <field name="quantity"/>
-                                    <field name="unit_price" widget="monetary"/>
-                                    <field name="subtotal" widget="monetary" readonly="1"/>
-                                    <field name="currency_id" invisible="1"/>
-                                </list>
-                            </field>
-                        </page>
-                        
-                        <page string="Notes">
-                            <field name="notes" placeholder="Additional prescription notes..."/>
-                        </page>
+                          
                     </notebook>
                 </sheet>
-                <div class="oe_chatter">
-                    <field name="message_follower_ids"/>
-                    <field name="activity_ids"/>
-                    <field name="message_ids"/>
-                </div>
             </form>
         </field>
     </record>

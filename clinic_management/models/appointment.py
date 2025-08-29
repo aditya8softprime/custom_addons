@@ -2,7 +2,6 @@ from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 from datetime import timedelta
 
-from odoo.odoo.tools.view_validation import validate
 
 
 class ClinicAppointment(models.Model):
@@ -33,7 +32,7 @@ class ClinicAppointment(models.Model):
                                  default=lambda self: self.env.company)
     
     symptom = fields.Text(string='Symptoms/Problem', tracking=True)
-    
+
     # Follow-up information
     next_visit_days = fields.Integer(string='Next Visit in Days', tracking=True)
     next_visit_date = fields.Date(string='Next Visit Date', compute='_compute_next_visit_date', store=True)

@@ -20,11 +20,12 @@ class ClinicPrescription(models.Model):
         ('handwritten', 'Handwritten/Stylus'),
         ('scan', 'Scanned Document')
     ], string='Prescription Type', default='digital', required=True)
-    
+
     prescription_image = fields.Binary(string='Handwritten/Scanned Prescription')
     prescription_image_filename = fields.Char(string='Prescription Image Filename')
-    stylus_notes = fields.Html(string='Stylus Notes', help='Notes written with stylus input')
-    
+    prescription_notes = fields.Text(string='Prescription Notes',
+                                     help='Text notes for the prescription, including transcribed handwritten notes')
+
     medication_ids = fields.One2many('clinic.prescription.medication', 'prescription_id', 
                                     string='Medications')
     
@@ -41,6 +42,7 @@ class ClinicPrescription(models.Model):
         ('cancelled', 'Cancelled')
     ], string='Status', default='draft', tracking=True)
     
+  
     company_id = fields.Many2one('res.company', string='Company', 
                                  default=lambda self: self.env.company)
     
