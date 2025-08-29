@@ -20,14 +20,10 @@
                     </div>
                     <group>
                         <group>
-                            <field name="price"/>
                             <field name="currency_id" invisible="1"/>
                             <field name="company_id" groups="base.group_multi_company"/>
                             <field name="active"/>
                             <field name="color" widget="color_picker"/>
-                        </group>
-                        <group>
-                            <field name="doctor_ids" widget="many2many_tags"/>
                         </group>
                     </group>
                     <notebook>
@@ -47,8 +43,6 @@
         <field name="arch" type="xml">
             <list string="Services/Treatments">
                 <field name="name"/>
-                <field name="price" widget="monetary" options="{'currency_field': 'currency_id'}"/>
-                <field name="doctor_ids" widget="many2many_tags"/>
                 <field name="color" widget="color"/>
                 <field name="active" invisible="1"/>
             </list>
@@ -63,8 +57,6 @@
                 <field name="id"/>
                 <field name="name"/>
                 <field name="icon"/>
-                <field name="price"/>
-                <field name="currency_id"/>
                 <field name="color"/>
                 <templates>
                     <t t-name="kanban-box">
@@ -74,12 +66,6 @@
                                 <strong class="o_kanban_record_title">
                                     <field name="name"/>
                                 </strong>
-                                <div t-if="record.price.raw_value">
-                                    <field name="price" widget="monetary" options="{'currency_field': 'currency_id'}"/>
-                                </div>
-                                <div t-if="record.doctor_ids.raw_value &amp;&amp; record.doctor_ids.raw_value.length > 0">
-                                    <strong>Doctors: </strong><field name="doctor_ids" widget="many2many_tags"/>
-                                </div>
                             </div>
                         </div>
                     </t>
@@ -94,10 +80,9 @@
         <field name="arch" type="xml">
             <search>
                 <field name="name" string="Service"/>
-                <field name="doctor_ids"/>
                 <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
                 <group expand="0" string="Group By">
-                    <filter name="group_by_doctor" string="Doctor" context="{'group_by': 'doctor_ids'}"/>
+                    <filter name="group_by_name" string="Name" context="{'group_by': 'name'}"/>
                 </group>
             </search>
         </field>

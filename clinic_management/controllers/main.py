@@ -75,10 +75,6 @@ class ClinicWebsite(http.Controller):
                 'id': service.id,
                 'name': service.name,
                 'description': service.description or '',
-                'price': service.price,
-                'currency_id': service.currency_id.id,
-                'currency_symbol': service.currency_id.symbol,
-                'doctor_ids': [(doc.id, doc.name) for doc in service.doctor_ids] if service.doctor_ids else [],
             })
             
         return request.render('clinic_management.services_page', {
@@ -97,7 +93,10 @@ class ClinicWebsite(http.Controller):
         clinic_settings = self._get_clinic_settings()
         
         # Get doctors who offer this service
-        doctors = service.doctor_ids
+        doctors = request.env['clinic.doctor'].sudo().search([
+            ('specialization_ids', 'in', service.id),
+            ('active', '=', True)
+        ])
         
         return request.render('clinic_management.service_detail', {
             'service': service,
@@ -109,14 +108,45 @@ class ClinicWebsite(http.Controller):
     @http.route(['/clinic/booking'], type='http', auth='public', website=True)
     def booking_form(self, **kw):
         """Display the appointment booking form"""
-        doctors = request.env['clinic.doctor'].sudo().search([('active', '=', True)])
+        services = request.env['clinic.service'].sudo().search([('active', '=', True)])
         clinic_settings = self._get_clinic_settings()
         return request.render('clinic_management.booking_form', {
-            'doctors': doctors,
+            'services': services,
             'clinic_settings': clinic_settings,
             'page_name': 'booking_form',
             'datetime': datetime,
         })
+    
+    @http.route(['/clinic/booking/doctors'], type='json', auth='public', website=True)
+    def get_doctors_for_service(self, service_id, **kw):
+        """AJAX endpoint to get doctors who offer a specific service"""
+        try:
+            _logger.info(f"Getting doctors for service_id: {service_id}")
+            
+            if not service_id:
+                return []
+            
+            # Find doctors who have this service in their specializations
+            doctors = request.env['clinic.doctor'].sudo().search([
+                ('specialization_ids', 'in', int(service_id)),
+                ('active', '=', True)
+            ])
+            
+            doctor_list = []
+            for doctor in doctors:
+                specializations = ', '.join(doctor.specialization_ids.mapped('name'))
+                doctor_list.append({
+                    'id': doctor.id,
+                    'name': doctor.name,
+                    'specializations': specializations,
+                })
+            
+            _logger.info(f"Found {len(doctor_list)} doctors for service {service_id}")
+            return doctor_list
+            
+        except Exception as e:
+            _logger.exception("Error getting doctors for service: %s", str(e))
+            return []
     
     @http.route(['/clinic/booking/slots'], type='json', auth='public', website=True)
     def get_available_slots(self, doctor_id, date_str, **kw):
@@ -185,7 +215,7 @@ class ClinicWebsite(http.Controller):
             _logger.info("Booking form submitted with data: %s", {k: v for k, v in post.items() if k not in ['csrf_token']})
             
             # Validate required fields
-            required_fields = ['patient_name', 'gender', 'age', 'phone', 'doctor_id', 'appointment_date', 'symptom']
+            required_fields = ['patient_name', 'gender', 'age', 'phone', 'service_id', 'doctor_id', 'appointment_date', 'symptom']
             missing_fields = []
             
             for field in required_fields:
@@ -196,7 +226,7 @@ class ClinicWebsite(http.Controller):
             if missing_fields:
                 _logger.warning(f"Validation failed. Missing fields: {missing_fields}")
                 return request.render('clinic_management.booking_form', {
-                    'doctors': request.env['clinic.doctor'].sudo().search([('active', '=', True)]),
+                    'services': request.env['clinic.service'].sudo().search([('active', '=', True)]),
                     'error_message': 'Please fill in all required fields.',
                     'form_data': post
                 })
@@ -224,6 +254,7 @@ class ClinicWebsite(http.Controller):
                 patient = request.env['clinic.patient'].sudo().create(patient_data)
             
             # Create appointment
+            service_id = int(post.get('service_id'))
             doctor_id = int(post.get('doctor_id'))
             appointment_date = post.get('appointment_date')
             
@@ -231,12 +262,13 @@ class ClinicWebsite(http.Controller):
             
             appointment_vals = {
                 'patient_id': patient.id,
+                'service_id': service_id,
                 'doctor_id': doctor.id,
                 'appointment_date': appointment_date,
                 'consulting_fee': doctor.consultation_fee,
                 'currency_id': doctor.currency_id.id,
                 'symptom': post.get('symptom') or False,
-                'state': 'draft',
+                'state': 'confirm',
             }
             
             # Handle slot if provided
@@ -262,7 +294,7 @@ class ClinicWebsite(http.Controller):
                         })
                     else:
                         return request.render('clinic_management.booking_form', {
-                            'doctors': request.env['clinic.doctor'].sudo().search([('active', '=', True)]),
+                            'services': request.env['clinic.service'].sudo().search([('active', '=', True)]),
                             'error_message': 'Selected time slot is no longer available.',
                             'form_data': post
                         })
@@ -288,7 +320,7 @@ class ClinicWebsite(http.Controller):
         except Exception as e:
             _logger.exception("Error during booking submission: %s", str(e))
             return request.render('clinic_management.booking_form', {
-                'doctors': request.env['clinic.doctor'].sudo().search([('active', '=', True)]),
+                'services': request.env['clinic.service'].sudo().search([('active', '=', True)]),
                 'error_message': 'An error occurred while processing your booking. Please try again.',
                 'form_data': post
             })

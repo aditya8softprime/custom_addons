@@ -205,9 +205,6 @@
                                             <div class="card-body">
                                                 <h5 class="card-title" t-esc="service.name"/>
                                                 <p class="card-text" t-esc="service.description"/>
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <span class="text-primary font-weight-bold">₹<span t-esc="service.price"/></span>
-                                                </div>
                                                 <div class="mt-3">
                                                     <a t-attf-href="/clinic/service/#{service.id}" class="btn btn-outline-primary btn-sm mr-2">Learn More</a>
                                                     <a href="/clinic/booking" class="btn btn-primary btn-sm">Book Now</a>
@@ -275,12 +272,21 @@
                                                         </select>
                                                     </div>
                                                     <div class="form-group col-md-6 mb-3">
+                                                        <label for="service_id">Service Required *</label>
+                                                        <select class="form-control" id="service_id" name="service_id" required="required">
+                                                            <option value="">Select Service</option>
+                                                            <t t-foreach="services" t-as="service">
+                                                                <option t-att-value="service.id" t-esc="service.name"/>
+                                                            </t>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="row">
+                                                    <div class="form-group col-md-6 mb-3">
                                                         <label for="doctor_id">Preferred Doctor *</label>
                                                         <select class="form-control" id="doctor_id" name="doctor_id" required="required">
-                                                            <option value="">Select Doctor</option>
-                                                            <t t-foreach="doctors" t-as="doctor">
-                                                                <option t-att-value="doctor.id">Dr. <span t-esc="doctor.name"/> - <span t-esc="', '.join(doctor.specialization_ids.mapped('name'))"/></option>
-                                                            </t>
+                                                            <option value="">First select a service</option>
                                                         </select>
                                                     </div>
                                                 </div>
@@ -322,9 +328,57 @@
             <script>
                 // Add JavaScript for dynamic slot loading
                 document.addEventListener('DOMContentLoaded', function() {
+                    const serviceSelect = document.getElementById('service_id');
                     const doctorSelect = document.getElementById('doctor_id');
                     const dateInput = document.getElementById('appointment_date');
                     const slotSelect = document.getElementById('slot_id');
+                    
+                    // Load doctors when service is selected
+                    function loadDoctors() {
+                        const serviceId = serviceSelect.value;
+                        
+                        if (serviceId) {
+                            doctorSelect.innerHTML = '<option value="">Loading...</option>';
+                            slotSelect.innerHTML = '<option value="">First select doctor and date</option>';
+                            
+                            // Make AJAX request to get doctors for this service
+                            fetch('/clinic/booking/doctors', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                },
+                                body: JSON.stringify({
+                                    jsonrpc: '2.0',
+                                    method: 'call',
+                                    params: {
+                                        service_id: serviceId
+                                    }
+                                })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                doctorSelect.innerHTML = '<option value="">Select Doctor</option>';
+                                if (data.result &amp;&amp; data.result.length > 0) {
+                                    data.result.forEach(doctor => {
+                                        const option = document.createElement('option');
+                                        option.value = doctor.id;
+                                        option.textContent = 'Dr. ' + doctor.name + ' - ' + doctor.specializations;
+                                        doctorSelect.appendChild(option);
+                                    });
+                                } else {
+                                    doctorSelect.innerHTML = '<option value="">No doctors available for this service</option>';
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error loading doctors:', error);
+                                doctorSelect.innerHTML = '<option value="">Error loading doctors</option>';
+                            });
+                        } else {
+                            doctorSelect.innerHTML = '<option value="">First select a service</option>';
+                            slotSelect.innerHTML = '<option value="">First select doctor and date</option>';
+                        }
+                    }
                     
                     function loadSlots() {
                         const doctorId = doctorSelect.value;
@@ -373,6 +427,7 @@
                         }
                     }
                     
+                    serviceSelect.addEventListener('change', loadDoctors);
                     doctorSelect.addEventListener('change', loadSlots);
                     dateInput.addEventListener('change', loadSlots);
                     
@@ -490,7 +545,7 @@
             <div id="wrap">
                 <div class="container mt-5">
                     <div class="row">
-                        <div class="col-md-8">
+                        <div class="col-md-12">
                             <nav aria-label="breadcrumb">
                                 <ol class="breadcrumb">
                                     <li class="breadcrumb-item"><a href="/clinic">Home</a></li>
@@ -499,38 +554,11 @@
                                 </ol>
                             </nav>
                             
-                            <h1 class="mb-4" t-esc="service.name"/>
-                            <div class="service-description mb-4" t-raw="service.description"/>
+                            <h1 class="mb-4 text-center" t-esc="service.name"/>
+                            <div class="service-description mb-4 text-center" t-raw="service.description"/>
                             
-                            <div class="service-price mb-4">
-                                <h4 class="text-primary">Price: ₹<span t-esc="service.price"/></h4>
-                            </div>
-                            
-                            <div class="service-actions mb-4">
+                            <div class="service-actions mb-4 text-center">
                                 <a href="/clinic/booking" class="btn btn-primary btn-lg">Book Appointment</a>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5>Available Doctors</h5>
-                                </div>
-                                <div class="card-body">
-                                    <t t-if="doctors">
-                                        <t t-foreach="doctors" t-as="doctor">
-                                            <div class="doctor-item mb-3">
-                                                <h6>Dr. <span t-esc="doctor.name"/></h6>
-                                                <p class="text-muted mb-1" t-esc="doctor.qualification"/>
-                                                <p class="text-success">Fee: ₹<span t-esc="doctor.consultation_fee"/></p>
-                                                <a t-attf-href="/clinic/doctor/#{doctor.id}" class="btn btn-sm btn-outline-primary">View Profile</a>
-                                            </div>
-                                        </t>
-                                    </t>
-                                    <t t-else="">
-                                        <p class="text-muted">No doctors available for this service currently.</p>
-                                    </t>
-                                </div>
                             </div>
                         </div>
                     </div>

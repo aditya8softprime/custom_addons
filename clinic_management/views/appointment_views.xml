@@ -63,30 +63,31 @@
                     </div>
                     <group>
                         <group>
-                            <field name="patient_id"/>
+                            <field name="patient_id" readonly="state != 'draft'"/>
                             <field name="patient_age"/>
                             <field name="patient_gender"/>
                             <field name="patient_phone"/>
                             <field name="patient_email"/>
-                            <field name="appointment_date"/>
+                            <field name="appointment_date" readonly="state != 'draft'"/>
                         </group>
                         <group>
-                            <field name="doctor_id"/>
-                            <field name="slot_id" 
-                                   domain="[('doctor_id', '=', doctor_id), ('status', '=', 'available')]"/>
+                            <field name="service_id" readonly="state != 'draft'"/>
+                            <field name="doctor_id" readonly="state != 'draft'"/>
+                            <field name="slot_id" readonly="state != 'draft'"
+                                   domain="[('id', 'in', slots)]"/>
                             <field name="start_time" widget="float_time"/>
                             <field name="end_time" widget="float_time"/>
-                            <field name="consulting_fee"/>
+                            <field name="consulting_fee" readonly="1" />
                             <field name="currency_id" invisible="1"/>
-                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="company_id" groups="base.group_multi_company" invisible="1"/>
                         </group>
                     </group>
                     <notebook>
                         <page string="Symptoms &amp; Follow-up">
                             <group>
-                                <field name="symptom" placeholder="Patient symptoms or problems"/>
-                                <field name="is_lab_test_required"/>
-                                <field name="next_visit_days"/>
+                                <field name="symptom" placeholder="Patient symptoms or problems" readonly="state in ('completed', 'cancelled', 'no_show')"/>
+                                <field name="is_lab_test_required" readonly="state in ('completed', 'cancelled', 'no_show')"/>
+                                <field name="next_visit_days" readonly="state in ('completed', 'cancelled', 'no_show')"/>
                                 <field name="next_visit_date" readonly="1"/>
                             </group>
                         </page>
@@ -124,6 +125,7 @@
             <list string="Appointments">
                 <field name="name"/>
                 <field name="patient_id"/>
+                <field name="service_id"/>
                 <field name="doctor_id"/>
                 <field name="appointment_date"/>
                 <field name="start_time" widget="float_time"/>
@@ -145,6 +147,7 @@
         <field name="arch" type="xml">
             <kanban default_group_by="state" records_draggable="0" class="o_kanban_small_column">
                 <field name="patient_id"/>
+                <field name="service_id"/>
                 <field name="doctor_id"/>
                 <field name="appointment_date"/>
                 <field name="start_time"/>
@@ -160,6 +163,10 @@
                                 </strong>
                                 <div class="o_kanban_record_subtitle">
                                     <field name="patient_id"/>
+                                </div>
+                                <div>
+                                    <strong>Service: </strong>
+                                    <field name="service_id"/>
                                 </div>
                                 <div>
                                     <strong>Doctor: </strong>
@@ -200,6 +207,7 @@
             <search>
                 <field name="name"/>
                 <field name="patient_id"/>
+                <field name="service_id"/>
                 <field name="doctor_id"/>
                 <field name="appointment_date"/>
                 <separator/>
@@ -217,6 +225,7 @@
                 <filter string="Rescheduled" name="rescheduled" domain="[('state', '=', 'rescheduled')]"/>
                 <group expand="0" string="Group By">
                     <filter name="group_by_patient" string="Patient" context="{'group_by': 'patient_id'}"/>
+                    <filter name="group_by_service" string="Service" context="{'group_by': 'service_id'}"/>
                     <filter name="group_by_doctor" string="Doctor" context="{'group_by': 'doctor_id'}"/>
                     <filter name="group_by_date" string="Date" context="{'group_by': 'appointment_date'}"/>
                     <filter name="group_by_state" string="Status" context="{'group_by': 'state'}"/>

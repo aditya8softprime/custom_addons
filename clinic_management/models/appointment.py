@@ -18,8 +18,11 @@ class ClinicAppointment(models.Model):
     patient_phone = fields.Char(related='patient_id.phone', string='Phone', store=True)
     patient_email = fields.Char(related='patient_id.email', string='Email', store=True)
     
+    service_id = fields.Many2one('clinic.service', string='Service', required=True, tracking=True)
     doctor_id = fields.Many2one('clinic.doctor', string='Doctor', required=True, tracking=True)
-    slot_id = fields.Many2one('clinic.slot', string='Slot', required=True, tracking=True)
+    slot_id = fields.Many2one('clinic.slot', string='Slot', required=True, tracking=True,)
+    slots = fields.Many2many('clinic.slot', string='Slots')
+
     appointment_date = fields.Date(string='Appointment Date', required=True, tracking=True)
     
     # Start and end time are computed from the slot
@@ -124,6 +127,24 @@ class ClinicAppointment(models.Model):
                     rec.patient_id._get_symptoms_from_appointments()
         return result
 
+    @api.onchange('service_id')
+    def _onchange_service_id(self):
+        """Filter doctors based on selected service"""
+        self.doctor_id = False  # reset doctor selection
+        self.slot_id = False  # reset slot selection
+        
+        if not self.service_id:
+            return {'domain': {'doctor_id': []}}
+        
+        # Find doctors who have this service in their specializations
+        doctors = self.env['clinic.doctor'].search([
+            ('specialization_ids', 'in', self.service_id.id),
+            ('active', '=', True)
+        ])
+        
+        domain = [('id', 'in', doctors.ids)]
+        return {'domain': {'doctor_id': domain}}
+
     @api.onchange('doctor_id', 'appointment_date')
     def _onchange_doctor_appointment_date(self):
         self.slot_id = False  # reset previous selection
@@ -164,14 +185,15 @@ class ClinicAppointment(models.Model):
                     'message': f"Doctor {self.doctor_id.name} is on leave on {self.appointment_date.strftime('%Y-%m-%d')}"
                 }
             }
-
-        # Set dynamic domain for slot_id
-        domain = [
+        slots = self.env['clinic.slot'].search([
             ('doctor_id', '=', self.doctor_id.id),
             ('day_id', '=', day.id),
             ('status', '=', 'available')
-        ]
-        return {'domain': {'slot_id': domain}}
+        ])
+        self.slots = slots
+        return {'domain': {'slot_id': [('id', 'in', slots.ids)]}}
+
+
 
     def action_confirm(self):
         """Confirm the appointment"""
@@ -400,13 +422,13 @@ class ClinicAppointment(models.Model):
         # ------------------------
         # 1. Add consultation fee line
         # ------------------------
-        if self.doctor_id.consultation_fee:
+        if self.consulting_fee:
             doctor_vals = self.doctor_id.get_consultation_product_vals()
             consultation_line = (0, 0, {
                 'product_id': doctor_vals['product'].id,
                 'name': doctor_vals['description'],
                 'quantity': 1,
-                'price_unit': doctor_vals['price_unit'],
+                'price_unit': self.consulting_fee,
                 'account_id': doctor_vals['product'].property_account_income_id.id,
             })
             invoice_vals['invoice_line_ids'].append(consultation_line)
@@ -438,6 +460,7 @@ class ClinicAppointment(models.Model):
         # 4. Create invoice
         # ------------------------
         invoice = self.env['account.move'].create(invoice_vals)
+        invoice.action_post()
         self.invoice_id = invoice.id
 
         return {
@@ -445,6 +468,7 @@ class ClinicAppointment(models.Model):
             'res_model': 'account.move',
             'res_id': invoice.id,
             'view_mode': 'form',
+            'context': {'create': False, 'edit': False},
             'target': 'current',
         }
     def action_view_invoice(self):
