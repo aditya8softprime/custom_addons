@@ -47,6 +47,7 @@
         'views/holiday_views.xml',
         'views/testimonial_views.xml',
         'views/clinic_website_settings_views.xml',
+        'views/prescription_dashboard_actions.xml',
         
         # Wizards
         'wizard/reschedule_appointment_views.xml',
@@ -80,18 +81,12 @@
     'auto_install': False,
     'assets': {
         'web.assets_backend': [
-            # JS Components
-            'clinic_management/static/src/js/views/**/*.js',
-            'clinic_management/static/src/js/**/*',
-    
-            # XML Templates
-            'clinic_management/static/src/xml/**/*',
-            
-            # SCSS Styles
-            'clinic_management/static/src/scss/**/*',
-            'clinic_management/static/src/css',
-
+            # Dashboard files
+            'clinic_management/static/src/js/appointment_dashboard.js',
+            'clinic_management/static/src/css/appointment_dashboard.css',
+            'clinic_management/static/src/xml/appointment_dashboard_template.xml',
         ],
+
         'web.assets_frontend': [
             # Website JS
             'clinic_management/static/src/js/website/**/*',

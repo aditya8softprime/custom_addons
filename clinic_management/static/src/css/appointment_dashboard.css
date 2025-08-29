@@ -1,0 +1,124 @@
+/* Dashboard Container */
+.container-fluid {
+    overflow-y: auto;
+    height: 100vh;
+    padding-bottom: 20px;
+}
+
+/* Clickable Cards */
+.clickable-card {
+    cursor: pointer !important;
+    transition: transform 0.2s ease-in-out;
+    margin-bottom: 10px;
+}
+
+.clickable-card:hover {
+    transform: scale(1.05);
+}
+
+/* Table Styling */
+.table-container {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-top: 20px;
+    border: none;
+}
+
+.table-card {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+.table-header {
+    background-color: #0056b3;
+    color: #fff;
+}
+
+.table-header th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: 12px;
+    font-weight: 600;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: #f8f9fa;
+}
+
+.table td {
+    padding: 12px;
+    vertical-align: middle;
+}
+
+.table-card table tbody tr {
+    transition: background 0.18s, box-shadow 0.18s;
+    cursor: pointer;
+}
+
+.table-card table tbody tr:hover {
+    background: #e8f0fe !important;
+    box-shadow: 0 2px 12px rgba(37,99,235,0.08);
+    z-index: 2;
+}
+
+/* Chart Styling */
+.chart-card {
+    background-color: #fff;
+    border-radius: 14px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    padding: 32px 24px;
+    margin-bottom: 2rem;
+}
+
+.chart-frame {
+    border: 1px solid #e0e7ef;
+    border-radius: 12px;
+    padding: 20px 10px 10px 10px;
+    background-color: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 320px;
+    min-width: 0;
+}
+
+.chart-frame canvas {
+    max-width: 100%;
+    width: 100%;
+    height: 300px;
+}
+
+.chart-flex {
+    display: flex;
+    flex-direction: row;
+    gap: 2rem;
+    justify-content: center;
+    align-items: stretch;
+}
+
+/* Badge Styling */
+.badge {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .chart-frame {
+        max-width: 100%;
+    }
+
+    .table-card, .chart-card {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 900px) {
+    .chart-flex {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}

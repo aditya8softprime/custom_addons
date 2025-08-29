@@ -1,6 +1,7 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
-from datetime import timedelta
+from datetime import timedelta, datetime
+import pytz
 
 
 
@@ -508,3 +509,149 @@ class ClinicAppointment(models.Model):
                 ('account_type', '=', 'income')
             ], limit=1)
         return account
+
+    @api.model
+    def get_appointment_dashboard_data(self, doctor_id=None, time_filter=None):
+        """Return data for the appointment dashboard tiles"""
+        company_id = self.env.company.id
+        
+        # Build dynamic domain for appointments
+        domain = [('company_id', '=', company_id)]
+        if doctor_id:
+            domain.append(('doctor_id', '=', int(doctor_id)))
+            
+        # Apply time filter
+        if time_filter:
+            user_tz = self.env.user.tz or 'UTC'
+            tz = pytz.timezone(user_tz)
+            now = datetime.now(tz)
+            
+            if time_filter == 'today':
+                start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+                end_date = now.replace(hour=23, minute=59, second=59)
+            elif time_filter == 'week':
+                start_date = now - timedelta(days=now.weekday())
+                start_date = start_date.replace(hour=0, minute=0, second=0)
+                end_date = start_date + timedelta(days=6, hours=23, minutes=59)
+            elif time_filter == 'month':
+                start_date = now.replace(day=1, hour=0, minute=0, second=0)
+                next_month = (start_date + timedelta(days=31)).replace(day=1)
+                end_date = next_month - timedelta(seconds=1)
+            elif time_filter == 'year':
+                start_date = now.replace(month=1, day=1, hour=0, minute=0, second=0)
+                end_date = now.replace(month=12, day=31, hour=23, minute=59)
+            
+            if start_date and end_date:
+                utc_tz = pytz.UTC
+                start_date_utc = start_date.astimezone(utc_tz)
+                end_date_utc = end_date.astimezone(utc_tz)
+                domain.append(('appointment_date', '>=', start_date_utc.date()))
+                domain.append(('appointment_date', '<=', end_date_utc.date()))
+        
+        # Fetch appointments
+        appointments = self.env['clinic.appointment'].search(domain)
+        
+        # Filter by state
+        draft = appointments.filtered(lambda r: r.state == 'draft')
+        confirmed = appointments.filtered(lambda r: r.state == 'confirmed')
+        checked_in = appointments.filtered(lambda r: r.state == 'checked_in')
+        in_consultation = appointments.filtered(lambda r: r.state == 'in_consultation')
+        completed = appointments.filtered(lambda r: r.state == 'completed')
+        no_show = appointments.filtered(lambda r: r.state == 'no_show')
+        cancelled = appointments.filtered(lambda r: r.state == 'cancelled')
+        rescheduled = appointments.filtered(lambda r: r.state == 'rescheduled')
+        
+        # Calculate revenue from completed appointments
+        total_revenue = sum(completed.mapped('consulting_fee'))
+        
+        # Count prescriptions and lab tests
+        total_prescriptions = sum(len(a.prescription_ids) for a in appointments)
+        total_lab_tests = sum(len(a.lab_test_ids) for a in appointments)
+        
+        return {
+            'total_appointments': len(appointments),
+            'total_draft': len(draft),
+            'total_confirmed': len(confirmed),
+            'total_checked_in': len(checked_in),
+            'total_in_consultation': len(in_consultation),
+            'total_completed': len(completed),
+            'total_no_show': len(no_show),
+            'total_cancelled': len(cancelled),
+            'total_rescheduled': len(rescheduled),
+            'total_revenue': total_revenue,
+            'total_prescriptions': total_prescriptions,
+            'total_lab_tests': total_lab_tests,
+        }
+    
+    @api.model
+    def get_appointment_list_data(self, doctor_id=None, time_filter=None, state=None, offset=0, limit=15):
+        """Fetch appointment data for the dashboard table"""
+        company_id = self.env.company.id
+        
+        # Build domain
+        domain = [('company_id', '=', company_id)]
+        if doctor_id:
+            domain.append(('doctor_id', '=', int(doctor_id)))
+        if state:
+            domain.append(('state', '=', state))
+            
+        # Apply time filter
+        if time_filter and time_filter != 'till_now':
+            user_tz = self.env.user.tz or 'UTC'
+            tz = pytz.timezone(user_tz)
+            now = datetime.now(tz)
+            
+            if time_filter == 'today':
+                start_date = now.replace(hour=0, minute=0, second=0)
+                end_date = now.replace(hour=23, minute=59, second=59)
+            elif time_filter == 'week':
+                start_date = now - timedelta(days=now.weekday())
+                start_date = start_date.replace(hour=0, minute=0, second=0)
+                end_date = start_date + timedelta(days=6, hours=23, minutes=59)
+            elif time_filter == 'month':
+                start_date = now.replace(day=1, hour=0, minute=0, second=0)
+                next_month = (start_date + timedelta(days=31)).replace(day=1)
+                end_date = next_month - timedelta(seconds=1)
+            elif time_filter == 'year':
+                start_date = now.replace(month=1, day=1, hour=0, minute=0, second=0)
+                end_date = now.replace(month=12, day=31, hour=23, minute=59)
+                
+            if start_date and end_date:
+                utc_tz = pytz.UTC
+                start_date_utc = start_date.astimezone(utc_tz)
+                end_date_utc = end_date.astimezone(utc_tz)
+                domain.append(('appointment_date', '>=', start_date_utc.date()))
+                domain.append(('appointment_date', '<=', end_date_utc.date()))
+        
+        # Get total count
+        total_records = self.env['clinic.appointment'].search_count(domain)
+        
+        # Fetch records
+        fields = ['id', 'name', 'patient_id', 'doctor_id', 'appointment_date', 'start_time', 'end_time', 'state', 'consulting_fee']
+        appointments = self.env['clinic.appointment'].search_read(
+            domain, fields, offset=offset, limit=limit, order='appointment_date desc'
+        )
+        
+        # Process records for display
+        appointment_records = [{
+            'id': appointment['id'],
+            'name': appointment['name'],
+            'patient_name': appointment['patient_id'][1] if appointment['patient_id'] else '-',
+            'doctor_name': appointment['doctor_id'][1] if appointment['doctor_id'] else '-',
+            'appointment_date': appointment['appointment_date'].strftime('%d/%m/%Y') if appointment['appointment_date'] else '-',
+            'time_slot': f"{self._float_to_time(appointment['start_time'])} - {self._float_to_time(appointment['end_time'])}",
+            'state': appointment['state'],
+            'consulting_fee': appointment['consulting_fee'],
+        } for appointment in appointments]
+        
+        return {
+            'total_records': total_records,
+            'records': appointment_records,
+        }
+    
+    @api.model
+    def _float_to_time(self, float_time):
+        """Convert float time to HH:MM format"""
+        hours = int(float_time)
+        minutes = int((float_time - hours) * 60)
+        return f"{hours:02d}:{minutes:02d}"

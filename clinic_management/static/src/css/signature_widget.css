@@ -1,9 +1,78 @@
-.o_field_extended_signature canvas {
-    width: 600px !important;   /* enlarge width */
-    height: 300px !important;  /* enlarge height */
-    border: 2px solid #444;    /* optional: make boundary visible */
-    border-radius: 8px;        /* optional: rounded corners */
+/* Signature Widget Styles */
+.signature-widget {
+    max-width: 100%;
+    margin: 10px 0;
 }
-.o_field_extended_signature .o_clear_signature {
-    margin-top: 10px;          /* space above clear button */
+
+.signature-container {
+    position: relative;
+    display: inline-block;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    background-color: #fff;
+    min-width: 300px;
+    max-width: 100%;
+}
+
+.signature-canvas {
+    display: block;
+    cursor: crosshair;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fafafa;
+    max-width: 100%;
+    height: 200px;
+}
+
+.signature-canvas.o_readonly {
+    cursor: default;
+    border-color: #e9ecef;
+    background-color: #f8f9fa;
+}
+
+.signature-controls {
+    margin-top: 8px;
+    text-align: right;
+}
+
+.signature-placeholder {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #6c757d;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.signature-placeholder i {
+    font-size: 24px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.signature-placeholder span {
+    font-size: 14px;
+    font-style: italic;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .signature-container {
+        min-width: 250px;
+    }
+    
+    .signature-canvas {
+        height: 150px;
+    }
+}
+
+/* Touch device optimizations */
+@media (pointer: coarse) {
+    .signature-canvas {
+        touch-action: none;
+        cursor: default;
+    }
 }
