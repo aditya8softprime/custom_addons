@@ -425,7 +425,7 @@ class ClinicWebsite(http.Controller):
         """About us page"""
         clinic_settings = self._get_clinic_settings()
         
-        return request.render('clinic_management.clinic_about', {
+        return request.render('clinic_management.about_page', {
             'clinic_settings': clinic_settings,
             'page_name': 'about_us',
         })
@@ -435,7 +435,7 @@ class ClinicWebsite(http.Controller):
         """Contact us page"""
         clinic_settings = self._get_clinic_settings()
         
-        return request.render('clinic_management.clinic_contact', {
+        return request.render('clinic_management.contact_page', {
             'clinic_settings': clinic_settings,
             'page_name': 'contact_us',
         })
@@ -450,7 +450,7 @@ class ClinicWebsite(http.Controller):
             message = post.get('message', '').strip()
             
             if not all([name, email, message]):
-                return request.render('clinic_management.clinic_contact', {
+                return request.render('clinic_management.contact_page', {
                     'error_message': 'Please fill in all required fields.',
                     'name': name,
                     'email': email,
@@ -460,13 +460,13 @@ class ClinicWebsite(http.Controller):
             
             # Create contact record (you would need a contact model)
             # For now, just return success
-            return request.render('clinic_management.clinic_contact', {
+            return request.render('clinic_management.contact_page', {
                 'success_message': 'Thank you for your message. We will get back to you soon!',
             })
             
         except Exception as e:
             _logger.exception("Error during contact form submission: %s", str(e))
-            return request.render('clinic_management.clinic_contact', {
+            return request.render('clinic_management.contact_page', {
                 'error_message': 'An error occurred while sending your message. Please try again.',
             })
             

@@ -24,6 +24,12 @@
               action="action_clinic_appointment"
               sequence="20"/>
     
+    <menuitem id="menu_clinic_appointment_calendar"
+              name="Appointments Calendar"
+              parent="menu_clinic_appointments"
+              action="action_clinic_appointment_calendar"
+              sequence="30"/>
+    
     <!-- Other Records Menu -->
     <menuitem id="menu_clinic_other"
               name="Prescription and Labtest"

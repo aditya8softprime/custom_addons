@@ -10,6 +10,7 @@ class ClinicPatient(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
     
     name = fields.Char(string='Patient Name', required=True, tracking=True)
+    lang = fields.Selection('_get_language_list', string='Language', default='en_US')
     gender = fields.Selection([
         ('male', 'Male'),
         ('female', 'Female'),
@@ -42,6 +43,10 @@ class ClinicPatient(models.Model):
 
     # ticket reports
 
+    @api.model
+    def _get_language_list(self):
+        """Get available languages from the system"""
+        return self.env['res.lang'].get_installed()
     
     @api.depends('appointment_ids', 'prescription_ids', 'lab_test_ids')
     def _compute_counts(self):

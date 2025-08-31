@@ -6,6 +6,8 @@ class ClinicSlot(models.Model):
     _name = 'clinic.slot'
     _description = 'Clinic Appointment Slots'
     _inherit = ['mail.thread', 'mail.activity.mixin']
+    _rec_name = 'display_name'  # use our computed label everywhere
+
 
     doctor_id = fields.Many2one('clinic.doctor', string='Doctor', required=True, ondelete='cascade')
     day_id = fields.Many2one('clinic.days', string='Day', required=True)
@@ -34,26 +36,21 @@ class ClinicSlot(models.Model):
         ('slot_number_doctor_uniq', 'unique(slot_number, doctor_id)', 
          'Slot Number must be unique per doctor!')
     ]
-    
-    def name_get(self):
-        """Show 'Start - End (Day)' in Many2one dropdown"""
-        result = []
+    display_name = fields.Char(compute='_compute_display_name', store=False)
+
+    @api.depends('start_time', 'end_time', 'day_id.name')
+    def _compute_display_name(self):
+        def fmt(t):
+            h = int(t or 0)
+            m = int(round(((t or 0) - h) * 60))
+            return f"{h:02d}:{m:02d}"
+
         for rec in self:
             if rec.start_time is not None and rec.end_time is not None:
-                start_hours = int(rec.start_time)
-                start_minutes = int(round((rec.start_time % 1) * 60))
-                end_hours = int(rec.end_time)
-                end_minutes = int(round((rec.end_time % 1) * 60))
-
-                start = "%02d:%02d" % (start_hours, start_minutes)
-                end = "%02d:%02d" % (end_hours, end_minutes)
-                name = f"{start} - {end} ({rec.day_id.name or ''})"
+                rec.display_name = f"{fmt(rec.start_time)} - {fmt(rec.end_time)} ({rec.day_id.name or ''})"
             else:
-                name = rec.day_id.name or "Slot"
+                rec.display_name = rec.day_id.name or "Slot"
 
-            result.append((rec.id, name))
-        return result
-        
     @api.depends('status')
     def _compute_color(self):
         """Set color based on status for kanban view"""

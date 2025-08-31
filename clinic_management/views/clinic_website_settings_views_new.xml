@@ -124,25 +124,6 @@
                                 <field name="whatsapp_number" placeholder="+91XXXXXXXXXX"/>
                             </group>
                         </page>
-
-
-                        
-
-                        <page>
-                            <!-- Social Media Links -->
-                            <group string="Social Media Links" col="1">
-                                <field name="show_social_media"/>
-                                <field name="social_media_location" invisible="not show_social_media"/>
-                            </group>
-                            <group invisible="not show_social_media" col="3">
-                                <field name="facebook_url" placeholder="https://facebook.com/yourclinic"/>
-                                <field name="instagram_url" placeholder="https://instagram.com/yourclinic"/>
-                                <field name="twitter_url" placeholder="https://twitter.com/yourclinic"/>
-                                <field name="linkedin_url" placeholder="https://linkedin.com/company/yourclinic"/>
-                                <field name="youtube_url" placeholder="https://youtube.com/yourclinic"/>
-                                <field name="whatsapp_number" placeholder="+91XXXXXXXXXX"/>
-                            </group>
-                        </page>
                         
                         <!-- IMAGE GALLERIES -->
                         <page string="🏥 Clinic and Treatment Images" name="image_galleries">
@@ -266,7 +247,7 @@
         <field name="name">clinic.website.settings.tree</field>
         <field name="model">clinic.website.settings</field>
         <field name="arch" type="xml">
-            <list string="Website Settings" create="false" delete="false">
+            <tree string="Website Settings" create="false" delete="false">
                 <field name="name"/>
                 <field name="clinic_name"/>
                 <field name="theme_name"/>
@@ -275,7 +256,7 @@
                 <field name="show_doctors_section"/>
                 <field name="show_services_section"/>
                 <field name="auto_fetch_company_details"/>
-            </list>
+            </tree>
         </field>
     </record>
 
@@ -300,7 +281,7 @@
     <record id="action_clinic_website_settings" model="ir.actions.act_window">
         <field name="name">Website Configuration</field>
         <field name="res_model">clinic.website.settings</field>
-        <field name="view_mode">list,form</field>
+        <field name="view_mode">tree,form</field>
         <field name="target">current</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">

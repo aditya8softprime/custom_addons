@@ -124,25 +124,6 @@
                                 <field name="whatsapp_number" placeholder="+91XXXXXXXXXX"/>
                             </group>
                         </page>
-
-
-                        
-
-                        <page>
-                            <!-- Social Media Links -->
-                            <group string="Social Media Links" col="1">
-                                <field name="show_social_media"/>
-                                <field name="social_media_location" invisible="not show_social_media"/>
-                            </group>
-                            <group invisible="not show_social_media" col="3">
-                                <field name="facebook_url" placeholder="https://facebook.com/yourclinic"/>
-                                <field name="instagram_url" placeholder="https://instagram.com/yourclinic"/>
-                                <field name="twitter_url" placeholder="https://twitter.com/yourclinic"/>
-                                <field name="linkedin_url" placeholder="https://linkedin.com/company/yourclinic"/>
-                                <field name="youtube_url" placeholder="https://youtube.com/yourclinic"/>
-                                <field name="whatsapp_number" placeholder="+91XXXXXXXXXX"/>
-                            </group>
-                        </page>
                         
                         <!-- IMAGE GALLERIES -->
                         <page string="🏥 Clinic and Treatment Images" name="image_galleries">
@@ -178,7 +159,7 @@
                         </page>
                         
                         <!-- AUTO-POPULATED SECTIONS -->
-                        <page string="👨‍⚕️ Doctors and Services (Auto)" name="auto_sections">
+                        <page string="👨‍⚕️ Doctors &amp; Services (Auto)" name="auto_sections">
                             <div class="alert alert-success" role="alert">
                                 <strong>Auto-Populated Sections:</strong> These sections are automatically populated from your Doctor and Services masters.
                             </div>
@@ -240,11 +221,11 @@
                         </page>
                         
                         <!-- FOOTER and SEO -->
-                        <page string="🔍 Footer and SEO" name="footer_seo">
+                        <page string="🔍 Footer &amp; SEO" name="footer_seo">
                             <!-- Footer Settings -->
                             <group string="Footer Content" col="1">
                                 <field name="footer_about" placeholder="Brief description about your clinic for footer..." options="{'collaborative': true, 'resizable': true}"/>
-                                <field name="footer_quick_links" placeholder="Quick links HTML..." options="{'collaborative': true, 'resizable': true}"/>
+                                <field name="footer_quick_links" placeholder="Quick links HTML (e.g., &lt;a href='/services'&gt;Services&lt;/a&gt;)..." options="{'collaborative': true, 'resizable': true}"/>
                                 <field name="copyright_text" placeholder="© 2025 Your Clinic Name. All Rights Reserved."/>
                             </group>
                             
@@ -260,13 +241,61 @@
             </form>
         </field>
     </record>
+                            <group>
+                                <field name="enable_online_booking"/>
+                                <field name="booking_email_template_id" 
+                                       options="{'no_create': True, 'no_open': True}"
+                                       domain="[('model_id.model', '=', 'clinic.appointment')]"/>
+                            </group>
+                            <group string="Booking Confirmation Message">
+                                <field name="booking_confirmation_message" nolabel="1" 
+                                       placeholder="Thank you for booking an appointment with us..." 
+                                       options="{'collaborative': true, 'resizable': true}"/>
+                            </group>
+                        </page>
+                        <page string="SEO Settings" name="seo_settings">
+                            <group>
+                                <field name="meta_title"/>
+                                <field name="meta_description"/>
+                                <field name="meta_keywords"/>
+                            </group>
+                        </page>
+                        <page string="Footer Information" name="footer_info">
+                            <group>
+                                <field name="footer_text" nolabel="1" options="{'collaborative': true, 'resizable': true}"/>
+                                <field name="copyright_text"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Updated Website Settings Action -->
+    <record id="action_clinic_website_settings" model="ir.actions.act_window">
+        <field name="name">Clinic Website Settings</field>
+        <field name="res_model">clinic.website.settings</field>
+        <field name="view_mode">form</field>
+        <field name="res_id" eval="False"/>
+        <field name="target">current</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Configure your clinic website settings
+            </p>
+            <p>
+                Set up your clinic's information, booking options, and appearance settings
+                for the website.
+            </p>
+        </field>
+    </record>
 
     <!-- Tree View -->
     <record id="view_clinic_website_settings_tree" model="ir.ui.view">
         <field name="name">clinic.website.settings.tree</field>
         <field name="model">clinic.website.settings</field>
         <field name="arch" type="xml">
-            <list string="Website Settings" create="false" delete="false">
+            <tree string="Website Settings" create="false" delete="false">
                 <field name="name"/>
                 <field name="clinic_name"/>
                 <field name="theme_name"/>
@@ -275,7 +304,7 @@
                 <field name="show_doctors_section"/>
                 <field name="show_services_section"/>
                 <field name="auto_fetch_company_details"/>
-            </list>
+            </tree>
         </field>
     </record>
 
@@ -300,7 +329,7 @@
     <record id="action_clinic_website_settings" model="ir.actions.act_window">
         <field name="name">Website Configuration</field>
         <field name="res_model">clinic.website.settings</field>
-        <field name="view_mode">list,form</field>
+        <field name="view_mode">tree,form</field>
         <field name="target">current</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">

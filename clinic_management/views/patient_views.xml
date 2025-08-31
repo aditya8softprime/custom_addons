@@ -32,6 +32,7 @@
                             <field name="age"/>
                             <field name="phone"/>
                             <field name="email"/>
+                            <field name="lang"/>
                         </group>
                         <group>
                             <field name="address"/>

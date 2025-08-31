@@ -6,7 +6,7 @@
             <field name="name">Prescription Notification</field>
             <field name="model_id" ref="model_clinic_prescription"/>
             <field name="subject">Your Prescription from {{object.doctor_id.name}} - {{object.name}}</field>
-            <field name="email_from">{{(object.company_id.email or user.email)|safe}}</field>
+            <field name="email_from">{{(object.company_id.email)}}</field>
             <field name="email_to">{{object.patient_id.email}}</field>
             <field name="auto_delete" eval="True"/>
             <field name="body_html" type="html">
