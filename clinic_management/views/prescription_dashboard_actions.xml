@@ -5,11 +5,5 @@
             <field name="name">Appointment Dashboard</field>
             <field name="tag">appointment_dashboard_tag</field>
         </record>
-
-        <menuitem id="menu_appointment_dashboard" 
-                  name="Appointment Dashboard" 
-                  parent="menu_clinic_root"
-                  action="action_appointment_dashboard" 
-                  sequence="5"/>
     </data>
 </odoo>

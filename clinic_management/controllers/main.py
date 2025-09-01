@@ -268,7 +268,7 @@ class ClinicWebsite(http.Controller):
                 'consulting_fee': doctor.consultation_fee,
                 'currency_id': doctor.currency_id.id,
                 'symptom': post.get('symptom') or False,
-                'state': 'confirm',
+                'state': 'confirmed',  # Fixed: use 'confirmed' instead of 'confirm'
             }
             
             # Handle slot if provided

@@ -90,10 +90,10 @@
         
         <!-- Nurse can see appointments from their assigned doctors -->
         <record id="rule_appointment_nurse" model="ir.rule">
-            <field name="name">Nurse can see appointments from assigned doctors</field>
+            <field name="name">Nurse can see all appointments</field>
             <field name="model_id" ref="model_clinic_appointment"/>
             <field name="groups" eval="[(4, ref('group_clinic_nurse'))]"/>
-            <field name="domain_force">['|', ('doctor_id.user_id', '=', user.id), ('doctor_id.department', '=', user.employee_id.department_id.id)]</field>
+            <field name="domain_force">[(1, '=', 1)]</field>
             <field name="perm_read" eval="True"/>
             <field name="perm_write" eval="True"/>
             <field name="perm_create" eval="True"/>

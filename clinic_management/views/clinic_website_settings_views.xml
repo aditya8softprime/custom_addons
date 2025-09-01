@@ -313,11 +313,5 @@
         </field>
     </record>
 
-    <!-- Menu Item -->
-    <menuitem id="menu_clinic_website_settings"
-              name="Website Configuration"
-              parent="menu_clinic_configuration"
-              action="action_clinic_website_settings"
-              sequence="30"/>
 
 </odoo>

@@ -3,7 +3,7 @@
     <!-- Paracetamol -->
     <record id="product_paracetamol" model="product.template">
         <field name="name">Paracetamol 500mg</field>
-        <field name="type">product</field>
+        <field name="type">consu</field>
         <field name="categ_id" ref="product.product_category_all"/>
         <field name="list_price">5.00</field>
         <field name="standard_price">3.00</field>
@@ -17,7 +17,7 @@
     <!-- Amoxicillin -->
     <record id="product_amoxicillin" model="product.template">
         <field name="name">Amoxicillin 250mg</field>
-        <field name="type">product</field>
+        <field name="type">consu</field>
         <field name="categ_id" ref="product.product_category_all"/>
         <field name="list_price">10.00</field>
         <field name="standard_price">6.00</field>
@@ -31,7 +31,7 @@
     <!-- Ibuprofen -->
     <record id="product_ibuprofen" model="product.template">
         <field name="name">Ibuprofen 400mg</field>
-        <field name="type">product</field>
+        <field name="type">consu</field>
         <field name="categ_id" ref="product.product_category_all"/>
         <field name="list_price">8.00</field>
         <field name="standard_price">4.00</field>

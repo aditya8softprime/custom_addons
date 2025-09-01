@@ -14,7 +14,6 @@
                     <li>Prescription if needed</li>
                 </ul>
             ]]></field>
-            <field name="price">150.00</field>
             <field name="active">True</field>
             <field name="color">1</field>
         </record>
@@ -30,7 +29,6 @@
                     <li>Cardiovascular health assessment</li>
                 </ul>
             ]]></field>
-            <field name="price">300.00</field>
             <field name="active">True</field>
             <field name="color">2</field>
         </record>
@@ -46,7 +44,6 @@
                     <li>Cosmetic dermatology</li>
                 </ul>
             ]]></field>
-            <field name="price">200.00</field>
             <field name="active">True</field>
             <field name="color">3</field>
         </record>
@@ -62,7 +59,6 @@
                     <li>Developmental assessments</li>
                 </ul>
             ]]></field>
-            <field name="price">180.00</field>
             <field name="active">True</field>
             <field name="color">4</field>
         </record>
@@ -78,7 +74,6 @@
                     <li>Rehabilitation planning</li>
                 </ul>
             ]]></field>
-            <field name="price">250.00</field>
             <field name="active">True</field>
             <field name="color">5</field>
         </record>
@@ -94,7 +89,6 @@
                     <li>Sleep disorder evaluation</li>
                 </ul>
             ]]></field>
-            <field name="price">280.00</field>
             <field name="active">True</field>
             <field name="color">6</field>
         </record>
@@ -110,7 +104,6 @@
                     <li>Eye surgery consultation</li>
                 </ul>
             ]]></field>
-            <field name="price">220.00</field>
             <field name="active">True</field>
             <field name="color">7</field>
         </record>
@@ -126,7 +119,6 @@
                     <li>Counseling services</li>
                 </ul>
             ]]></field>
-            <field name="price">350.00</field>
             <field name="active">True</field>
             <field name="color">8</field>
         </record>
