@@ -36,6 +36,7 @@
         # Data
         'data/days_master_data.xml',
         'data/website_menu_data.xml',
+        'data/email_templates_appointment_complete.xml',
         
         # Views
         'views/days_views.xml',

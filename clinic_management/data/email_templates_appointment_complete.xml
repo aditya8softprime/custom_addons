@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- <data noupdate="0">
+        <record id="email_template_appointment_complete" model="mail.template">
+            <field name="name">Appointment Completed with Prescription PDF</field>
+            <field name="model_id" ref="model_clinic_appointment"/>
+            <field name="subject">Your Appointment Summary - {{ object.name }}</field>
+            <field name="email_from">{{ (object.doctor_id.email_formatted or object.company_id.email_formatted or user.email_formatted) }}</field>
+            <field name="email_to">{{ object.patient_id.email }}</field>
+            <field name="auto_delete" eval="True"/>
+            <field name="body_html" type="html"><![CDATA[
+                <p>Dear {{ object.patient_id.name }},</p>
+                <p>Your appointment <strong>{{ object.name }}</strong> with Dr. {{ object.doctor_id.name }} on {{ object.appointment_date }} has been completed.</p>
+                <p>Please find your prescription attached as a PDF (or image if conversion failed).</p>
+                <p>Summary:</p>
+                <ul>
+                    <li>Doctor: Dr. {{ object.doctor_id.name }}</li>
+                    <li>Date: {{ object.appointment_date }}</li>
+                    <li>Consultation Fee: {{ object.consulting_fee }}</li>
+                </ul>
+                <p>Regards,<br/>{{ object.company_id.name or 'Clinic' }}</p>
+            ]]></field>
+        </record>
+    </data> -->
+</odoo>

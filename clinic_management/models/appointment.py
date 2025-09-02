@@ -2,6 +2,9 @@ from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 from datetime import timedelta, datetime
 import pytz
+import io
+import base64
+import logging
 
 
 
@@ -46,7 +49,7 @@ class ClinicAppointment(models.Model):
     
     # Related records
     # medicine_image replaces the old prescription model; store handwritten image per appointment
-    medicine_image = fields.Binary(string='Medicine / Prescription Image')
+    medicine_image = fields.Binary(string='Medicine / Prescription Image',attachment=True)
     medicine_image_filename = fields.Char(string='Medicine Image Filename')
     lab_test_ids = fields.One2many('clinic.lab.test', 'appointment_id', string='Lab Tests')
     invoice_id = fields.Many2one('account.move', string='Invoice')
@@ -226,15 +229,94 @@ class ClinicAppointment(models.Model):
         })
     
     def action_complete(self):
-        """Complete the appointment"""
-        self.write({
-            'state': 'completed',
-            'consultation_end_time': fields.Datetime.now()
-        })
-        
-        # Create follow-up appointment if needed
-        if self.next_visit_days and self.next_visit_date:
-            self._create_followup_appointment()
+        """Complete the appointment: set state, optionally create follow-up, generate PDF from medicine_image,
+        attach it and send completion email to patient."""
+        for appointment in self:
+            appointment.write({
+                'state': 'completed',
+                'consultation_end_time': fields.Datetime.now()
+            })
+
+            # Create follow-up appointment if needed
+            if appointment.next_visit_days and appointment.next_visit_date:
+                appointment._create_followup_appointment()
+
+            # Prepare attachments list
+            attachment_ids = []
+
+            # If a handwritten medicine image exists, try to convert it to PDF
+            if appointment.medicine_image:
+                try:
+                    image_b = base64.b64decode(appointment.medicine_image)
+                    pdf_bytes = None
+
+                    # Try img2pdf first (fast, preserves size)
+                    try:
+                        import img2pdf
+                        pdf_bytes = img2pdf.convert(image_b)
+                    except Exception:
+                        # Fall back to Pillow
+                        try:
+                            from PIL import Image
+                            img_buf = io.BytesIO(image_b)
+                            img = Image.open(img_buf)
+                            # Ensure RGB for PDF
+                            if img.mode in ('RGBA', 'LA'):
+                                background = Image.new('RGB', img.size, (255, 255, 255))
+                                background.paste(img, mask=img.split()[-1])
+                                img = background
+                            else:
+                                img = img.convert('RGB')
+                            out_buf = io.BytesIO()
+                            img.save(out_buf, format='PDF')
+                            pdf_bytes = out_buf.getvalue()
+                        except Exception:
+                            pdf_bytes = None
+
+                    if pdf_bytes:
+                        pdf_datas = base64.b64encode(pdf_bytes)
+                        pdf_name = f"Prescription_{appointment.name or ''}.pdf"
+                        if appointment.medicine_image_filename:
+                            # Replace extension with .pdf
+                            base_name = appointment.medicine_image_filename.rsplit('.', 1)[0]
+                            pdf_name = f"{base_name}.pdf"
+                        attachment = self.env['ir.attachment'].create({
+                            'name': pdf_name,
+                            'type': 'binary',
+                            'datas': pdf_datas,
+                            'res_model': 'clinic.appointment',
+                            'res_id': appointment.id,
+                            'mimetype': 'application/pdf',
+                        })
+                        attachment_ids.append(attachment.id)
+                    else:
+                        # Fallback: attach original image
+                        img_name = appointment.medicine_image_filename or f"Prescription_{appointment.name or ''}.png"
+                        attachment = self.env['ir.attachment'].create({
+                            'name': img_name,
+                            'type': 'binary',
+                            'datas': appointment.medicine_image,
+                            'res_model': 'clinic.appointment',
+                            'res_id': appointment.id,
+                            'mimetype': 'image/png',
+                        })
+                        attachment_ids.append(attachment.id)
+
+                except Exception:
+                    logging.getLogger(__name__).exception('Failed to convert/attach medicine_image for appointment %s', appointment.id)
+
+            # Send completion email with attachments (if patient has email)
+            try:
+                if appointment.patient_id and appointment.patient_id.email:
+                    template = self.env.ref('clinic_management.email_template_appointment_complete', False)
+                    if template:
+                        # If attachments exist, pass them via context
+                        ctx = {}
+                        if attachment_ids:
+                            ctx = {'attachment_ids': attachment_ids}
+                        template.with_context(**ctx).send_mail(appointment.id, force_send=True)
+            except Exception:
+                logging.getLogger(__name__).exception('Failed to send completion email for appointment %s', appointment.id)
     
     def action_cancel(self):
         """Cancel the appointment"""
