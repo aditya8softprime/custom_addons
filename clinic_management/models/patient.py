@@ -33,12 +33,10 @@ class ClinicPatient(models.Model):
                                  default=lambda self: self.env.company)
     
     # Related records
-    prescription_ids = fields.One2many('clinic.prescription', 'patient_id', string='Prescriptions')
     lab_test_ids = fields.One2many('clinic.lab.test', 'patient_id', string='Lab Tests')
     appointment_ids = fields.One2many('clinic.appointment', 'patient_id', string='Appointments')
     
     appointment_count = fields.Integer(string='Appointment Count', compute='_compute_counts')
-    prescription_count = fields.Integer(string='Prescription Count', compute='_compute_counts')
     lab_test_count = fields.Integer(string='Lab Test Count', compute='_compute_counts')
 
     # ticket reports
@@ -48,11 +46,11 @@ class ClinicPatient(models.Model):
         """Get available languages from the system"""
         return self.env['res.lang'].get_installed()
     
-    @api.depends('appointment_ids', 'prescription_ids', 'lab_test_ids')
+    @api.depends('appointment_ids', 'lab_test_ids')
     def _compute_counts(self):
         for patient in self:
             patient.appointment_count = len(patient.appointment_ids)
-            patient.prescription_count = len(patient.prescription_ids)
+            patient.lab_test_count = len(patient.lab_test_ids)
             patient.lab_test_count = len(patient.lab_test_ids)
     
     def _get_symptoms_from_appointments(self):
@@ -69,17 +67,6 @@ class ClinicPatient(models.Model):
             'type': 'ir.actions.act_window',
             'res_model': 'clinic.appointment',
             'view_mode': 'list,form,calendar',
-            'domain': [('patient_id', '=', self.id)],
-            'context': {'default_patient_id': self.id},
-        }
-    
-    def action_view_prescriptions(self):
-        self.ensure_one()
-        return {
-            'name': _('Prescriptions'),
-            'type': 'ir.actions.act_window',
-            'res_model': 'clinic.prescription',
-            'view_mode': 'list,form',
             'domain': [('patient_id', '=', self.id)],
             'context': {'default_patient_id': self.id},
         }

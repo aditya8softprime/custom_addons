@@ -25,16 +25,6 @@
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
-                        <button name="action_create_prescription" type="object" 
-                                class="oe_stat_button" icon="fa-file-text-o"
-                                invisible="prescription_count > 0 or state in ('draft', 'cancelled', 'no_show')">
-                            <span>Create Prescription</span>
-                        </button>
-                        <button name="action_view_prescriptions" type="object" 
-                                class="oe_stat_button" icon="fa-file-text-o"
-                                invisible="prescription_count == 0">
-                            <field name="prescription_count" widget="statinfo" string="Prescriptions"/>
-                        </button>
                         <button name="action_create_lab_test" type="object" 
                                 class="oe_stat_button" icon="fa-flask"
                                 invisible="not is_lab_test_required or lab_test_count > 0 or state in ('draft', 'cancelled', 'no_show')">
@@ -89,6 +79,12 @@
                                 <field name="is_lab_test_required" readonly="state in ('completed', 'cancelled', 'no_show')"/>
                                 <field name="next_visit_days" readonly="state in ('completed', 'cancelled', 'no_show')"/>
                                 <field name="next_visit_date" readonly="1"/>
+                            </group>
+                        </page>
+                        <page string="Prescription">
+                            <group>
+                                <field name="medicine_image" widget="draw_canvas"/>
+                                <field name="medicine_image_filename" invisible="1"/>
                             </group>
                         </page>
                         <page string="Status Info" invisible="state in ('draft')">

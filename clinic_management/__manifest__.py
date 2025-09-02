@@ -35,9 +35,7 @@
         
         # Data
         'data/days_master_data.xml',
-        'data/sequence_data.xml',
-        'data/website_menu_data.xml',
-        'data/email_templates.xml',
+    'data/website_menu_data.xml',
         
         # Views
         'views/days_views.xml',
@@ -45,12 +43,12 @@
         'views/slot_views.xml',
         'views/doctor_views.xml',
         'views/patient_views.xml',
-        'views/prescription_views.xml',
+    # prescription views removed; functionality moved into appointment
         'views/appointment_views.xml',
         'views/holiday_views.xml',
         'views/testimonial_views.xml',
         'views/clinic_website_settings_views.xml',
-        'views/prescription_dashboard_actions.xml',
+    # prescription dashboard actions removed
         
         # Wizards
         'wizard/reschedule_appointment_views.xml',

@@ -29,22 +29,11 @@
               action="action_clinic_appointment"
               sequence="20"/>
 
-    <!-- Other Records Menu -->
-    <menuitem id="menu_clinic_other"
-              name="Prescription and Labtest"
-              parent="menu_clinic_root"
-              sequence="30"/>
-    
-
-    <menuitem id="menu_clinic_prescription_new"
-              name="Prescriptions"
-              parent="menu_clinic_other"
-              action="action_clinic_prescription"
-              sequence="1"/>
+ 
     
     <menuitem id="menu_clinic_lab_test"
               name="Lab Tests"
-              parent="menu_clinic_other"
+              parent="menu_clinic_root"
               action="action_clinic_lab_test"
               sequence="2"/>
 

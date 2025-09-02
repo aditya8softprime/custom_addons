@@ -144,46 +144,8 @@
             <field name="domain_force">[(1, '=', 1)]</field>
         </record>
 
-        <!-- Multi-company rule for Prescription -->
-        <record id="rule_clinic_prescription_company" model="ir.rule">
-            <field name="name">Clinic Prescription: Multi-company Rule</field>
-            <field name="model_id" ref="model_clinic_prescription"/>
-            <field name="global" eval="True"/>
-            <field name="domain_force">[('doctor_id.company_id', 'in', company_ids)]</field>
-        </record>
 
-        <!-- Doctor can only see and modify their own prescriptions -->
-        <!-- <record id="rule_prescription_doctor" model="ir.rule">
-            <field name="name">Doctor can only see their own prescriptions</field>
-            <field name="model_id" ref="model_clinic_prescription"/>
-            <field name="groups" eval="[(4, ref('group_clinic_doctor'))]"/>
-            <field name="domain_force">[('doctor_id.user_id', '=', user.id)]</field>
-            <field name="perm_create" eval="True"/>
-        </record> -->
-
-        <!-- Multi-company rule for Prescription Medication -->
-        <record id="rule_clinic_prescription_medication_company" model="ir.rule">
-            <field name="name">Clinic Prescription Medication: Multi-company Rule</field>
-            <field name="model_id" ref="model_clinic_prescription_medication"/>
-            <field name="global" eval="True"/>
-            <field name="domain_force">[('prescription_id.doctor_id.company_id', 'in', company_ids)]</field>
-        </record>
-
-        <!-- Doctor can only see and modify their own prescription medications -->
-        <record id="rule_prescription_medication_doctor" model="ir.rule">
-            <field name="name">Doctor can only see their own prescription medications</field>
-            <field name="model_id" ref="model_clinic_prescription_medication"/>
-            <field name="groups" eval="[(4, ref('group_clinic_doctor'))]"/>
-            <field name="domain_force">[('prescription_id.doctor_id.user_id', '=', user.id)]</field>
-        </record>
-
-        <!-- Base admin user access for prescription medication -->
-        <record id="rule_prescription_medication_base_admin" model="ir.rule">
-            <field name="name">Base admin can access all prescription medications</field>
-            <field name="model_id" ref="model_clinic_prescription_medication"/>
-            <field name="groups" eval="[(4, ref('base.group_system'))]"/>
-            <field name="domain_force">[(1, '=', 1)]</field>
-        </record>
+    <!-- Prescription rules removed: prescription model migrated into appointment -->
 
         <!-- Patient record access rules -->
         <!-- <record id="rule_patient_doctor" model="ir.rule">

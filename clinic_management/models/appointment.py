@@ -45,7 +45,9 @@ class ClinicAppointment(models.Model):
     is_lab_test_required = fields.Boolean(string='Lab Test Required', tracking=True)
     
     # Related records
-    prescription_ids = fields.One2many('clinic.prescription', 'appointment_id', string='Prescriptions')
+    # medicine_image replaces the old prescription model; store handwritten image per appointment
+    medicine_image = fields.Binary(string='Medicine / Prescription Image')
+    medicine_image_filename = fields.Char(string='Medicine Image Filename')
     lab_test_ids = fields.One2many('clinic.lab.test', 'appointment_id', string='Lab Tests')
     invoice_id = fields.Many2one('account.move', string='Invoice')
     
@@ -71,7 +73,6 @@ class ClinicAppointment(models.Model):
     
     color = fields.Integer(string='Color', compute='_compute_color')
     
-    prescription_count = fields.Integer(compute='_compute_counts')
     lab_test_count = fields.Integer(compute='_compute_counts')
     
     @api.depends('state')
@@ -97,10 +98,9 @@ class ClinicAppointment(models.Model):
             else:
                 appointment.color = 0
     
-    @api.depends('prescription_ids', 'lab_test_ids')
+    @api.depends('lab_test_ids')
     def _compute_counts(self):
         for record in self:
-            record.prescription_count = len(record.prescription_ids)
             record.lab_test_count = len(record.lab_test_ids)
     
     @api.depends('next_visit_days', 'appointment_date')
@@ -283,7 +283,8 @@ class ClinicAppointment(models.Model):
         return {
             'name': _('Create Prescription'),
             'type': 'ir.actions.act_window',
-            'res_model': 'clinic.prescription',
+            # Previously opened the prescription form; removed as prescription model deprecated
+            'res_model': 'clinic.appointment',
             'view_mode': 'form',
             'target': 'current',
             'context': {
@@ -299,9 +300,10 @@ class ClinicAppointment(models.Model):
         return {
             'name': _('Prescriptions'),
             'type': 'ir.actions.act_window',
-            'res_model': 'clinic.prescription',
-            'view_mode': 'list,form',
-            'domain': [('appointment_id', '=', self.id)],
+            # Prescription model removed; show appointment form instead as placeholder
+            'res_model': 'clinic.appointment',
+            'view_mode': 'form',
+            'res_id': self.id,
             'context': {
                 'default_patient_id': self.patient_id.id,
                 'default_doctor_id': self.doctor_id.id,
@@ -433,22 +435,10 @@ class ClinicAppointment(models.Model):
             })
             invoice_vals['invoice_line_ids'].append(consultation_line)
 
-        # ------------------------
-        # 2. Add prescription medication lines
-        # ------------------------
-        for prescription in self.prescription_ids:
-            for medication in prescription.medication_ids:
-                if medication.product_id and medication.quantity > 0:
-                    account = medication.product_id.property_account_income_id or \
-                              medication.product_id.categ_id.property_account_income_categ_id
-                    med_line = (0, 0, {
-                        'product_id': medication.product_id.id,
-                        'name': f'{medication.product_id.name} - {medication.dosage or ""} - {medication.frequency or ""}',
-                        'quantity': medication.quantity,
-                        'price_unit': medication.unit_price,
-                        'account_id': account.id,
-                    })
-                    invoice_vals['invoice_line_ids'].append(med_line)
+    # ------------------------
+    # 2. (Deprecated) Prescription medication lines were stored on prescription model.
+    # If you migrate medications to appointment, add them here.
+    # ------------------------
 
         # ------------------------
         # 3. Validate lines exist
@@ -587,11 +577,10 @@ class ClinicAppointment(models.Model):
         
         # Calculate revenue from completed appointments
         total_revenue = sum(completed.mapped('consulting_fee'))
-        
-        # Count prescriptions and lab tests
-        total_prescriptions = sum(len(a.prescription_ids) for a in appointments)
+
+        # Count lab tests (prescription model removed; handwritten image stored on appointment)
         total_lab_tests = sum(len(a.lab_test_ids) for a in appointments)
-        
+
         return {
             'total_appointments': len(appointments),
             'total_draft': len(draft),
@@ -603,7 +592,6 @@ class ClinicAppointment(models.Model):
             'total_cancelled': len(cancelled),
             'total_rescheduled': len(rescheduled),
             'total_revenue': total_revenue,
-            'total_prescriptions': total_prescriptions,
             'total_lab_tests': total_lab_tests,
         }
     

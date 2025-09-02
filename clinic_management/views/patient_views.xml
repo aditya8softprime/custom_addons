@@ -12,10 +12,6 @@
                                 class="oe_stat_button" icon="fa-calendar">
                             <field name="appointment_count" widget="statinfo" string="Appointments"/>
                         </button>
-                        <button name="action_view_prescriptions" type="object" 
-                                class="oe_stat_button" icon="fa-file-text-o">
-                            <field name="prescription_count" widget="statinfo" string="Prescriptions"/>
-                        </button>
                         <button name="action_view_lab_tests" type="object" 
                                 class="oe_stat_button" icon="fa-flask">
                             <field name="lab_test_count" widget="statinfo" string="Lab Tests"/>
@@ -56,16 +52,7 @@
                                 </list>
                             </field>
                         </page>
-                        <page string="Prescriptions">
-                            <field name="prescription_ids">
-                                <list>
-                                    <field name="name"/>
-                                    <field name="doctor_id"/>
-                                    <field name="prescription_date"/>
-                                    <field name="state"/>
-                                </list>
-                            </field>
-                        </page>
+                        <!-- Prescriptions moved to appointment record as medicine_image; page removed -->
                         <page string="Lab Tests" invisible="not lab_test_ids">
                             <field name="lab_test_ids">
                                 <list>
