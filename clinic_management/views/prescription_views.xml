@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<odoo>
-    <data>
-        <!-- Prescription views removed: functionality migrated into the appointment model. -->
-        <!-- This file is kept as a marker to preserve VCS history and avoid missing-file errors. -->
-    </data>
-</odoo>

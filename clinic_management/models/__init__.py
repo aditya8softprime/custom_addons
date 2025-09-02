@@ -3,7 +3,7 @@ from . import service
 from . import days_master
 from . import slot
 from . import patient
-from . import prescription
+from . import labtest
 from . import appointment
 from . import holiday
 from . import res_config_settings

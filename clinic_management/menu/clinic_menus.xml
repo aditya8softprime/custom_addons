@@ -7,102 +7,99 @@
               sequence="10"/>
 
     <menuitem id="menu_appointment_dashboard"
-                  name="Appointment Dashboard"
-                  parent="menu_clinic_root"
-                  action="action_appointment_dashboard"
-                  sequence="5"/>
-    <!-- Appointments Menu -->
+              name="Appointment Dashboard"
+              parent="menu_clinic_root"
+              action="action_appointment_dashboard"
+              sequence="0"/>
+
+    <!-- Appointments Menu (Main Group) -->
     <menuitem id="menu_clinic_appointments"
               name="Appointments"
               parent="menu_clinic_root"
-              sequence="20"/>
+              sequence="1"/>
     
     <menuitem id="menu_clinic_appointment_today"
               name="Today's Appointments"
               parent="menu_clinic_appointments"
               action="action_clinic_appointment_today"
-              sequence="10"/>
+              sequence="2"/>
     
     <menuitem id="menu_clinic_appointment_all"
               name="All Appointments"
               parent="menu_clinic_appointments"
               action="action_clinic_appointment"
-              sequence="20"/>
+              sequence="3"/>
 
- 
-    
+    <!-- Lab Tests -->
     <menuitem id="menu_clinic_lab_test"
               name="Lab Tests"
               parent="menu_clinic_root"
               action="action_clinic_lab_test"
               sequence="2"/>
 
-      <!-- Configuration Menu -->
-    <menuitem id="menu_clinic_configuration"
-              name="Configuration"
-              parent="menu_clinic_root"
-              sequence="100"/>
-    
-    <menuitem id="menu_clinic_holiday"
-              name="Doctor Leaves"
-              parent="menu_clinic_configuration"
-              action="action_clinic_holiday"
-              sequence="30"/>
-    
-    <menuitem id="menu_clinic_special_tag"
-              name="Doctor Special Tags"
-              parent="menu_clinic_configuration"
-              action="action_clinic_doctor_special_tag"
-              sequence="40"/>
-    
     <!-- Website Menu -->
     <menuitem id="menu_clinic_website_root"
               name="Website"
               parent="menu_clinic_root"
-              sequence="50"/>
+              sequence="3"/>
     
     <menuitem id="menu_clinic_website_settings"
               name="Website Settings"
               parent="menu_clinic_website_root"
               action="action_clinic_website_settings"
-              sequence="10"/>
-
+              sequence="1"/>
     
     <menuitem id="menu_clinic_testimonial"
               name="Testimonials"
               parent="menu_clinic_website_root"
               action="action_clinic_testimonial"
-              sequence="20"/>
+              sequence="2"/>
+
+    <!-- Configuration Menu -->
+    <menuitem id="menu_clinic_configuration"
+              name="Configuration"
+              parent="menu_clinic_root"
+              sequence="4"/>
     
-
-
     <menuitem id="menu_clinic_doctor"
               name="Doctors"
               parent="menu_clinic_configuration"
               action="action_clinic_doctor"
-              sequence="10"/>
+              sequence="1"/>
 
     <menuitem id="menu_clinic_patient"
               name="Patients"
               parent="menu_clinic_configuration"
               action="action_clinic_patient"
-              sequence="20"/>
+              sequence="2"/>
 
     <menuitem id="menu_clinic_service"
               name="Services/Treatments"
               parent="menu_clinic_configuration"
               action="action_clinic_service"
-              sequence="30"/>
+              sequence="3"/>
 
     <menuitem id="menu_clinic_slot"
               name="Slots"
               parent="menu_clinic_configuration"
               action="action_clinic_slot"
-              sequence="40"/>
+              sequence="4"/>
 
     <menuitem id="menu_clinic_days"
               name="Days"
               parent="menu_clinic_configuration"
               action="action_clinic_days"
-              sequence="50"/>
+              sequence="5"/>
+
+    <menuitem id="menu_clinic_holiday"
+              name="Doctor Leaves"
+              parent="menu_clinic_configuration"
+              action="action_clinic_holiday"
+              sequence="6"/>
+    
+    <menuitem id="menu_clinic_special_tag"
+              name="Doctor Special Tags"
+              parent="menu_clinic_configuration"
+              action="action_clinic_doctor_special_tag"
+              sequence="7"/>
 </odoo>
