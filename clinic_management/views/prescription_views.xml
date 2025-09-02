@@ -60,7 +60,7 @@
 
                             <group>
                                 <field name="prescription_notes" widget="html" placeholder="Write prescription notes here using stylus..."/>
-                                <field name="prescription_image" widget="signature" filename="prescription_image_filename"/>
+                                <field name="prescription_image"  widget="draw_canvas"/>
                                 <field name="prescription_image_filename" invisible="1"/>
                             </group>
                         </page>

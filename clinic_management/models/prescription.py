@@ -13,6 +13,15 @@ class ClinicPrescription(models.Model):
     appointment_id = fields.Many2one('clinic.appointment', string='Appointment')
     prescription_date = fields.Date(string='Date', default=fields.Date.context_today)
     notes = fields.Text(string='Notes')
+
+    # expose patient age on prescription for templates/widgets
+    patient_age = fields.Integer(related='patient_id.age', string='Patient Age', store=False)
+    # expose company/clinic info for templates/widgets
+    company_name = fields.Char(related='company_id.name', string='Company Name', store=False)
+    company_street = fields.Char(related='company_id.partner_id.street', string='Company Street', store=False)
+    company_city = fields.Char(related='company_id.partner_id.city', string='Company City', store=False)
+    company_zip = fields.Char(related='company_id.partner_id.zip', string='Company ZIP', store=False)
+    company_phone = fields.Char(related='company_id.phone', string='Company Phone', store=False)
     
     # Enhanced prescription input methods
     prescription_type = fields.Selection([
@@ -20,6 +29,7 @@ class ClinicPrescription(models.Model):
         ('handwritten', 'Handwritten/Stylus'),
         ('scan', 'Scanned Document')
     ], string='Prescription Type', default='digital', required=True)
+
 
     prescription_image = fields.Binary(string='Handwritten/Scanned Prescription')
     prescription_image_filename = fields.Char(string='Prescription Image Filename')
@@ -74,7 +84,25 @@ class ClinicPrescription(models.Model):
         
         template = self.env.ref('clinic_management.email_template_prescription', False)
         if template:
-            template.send_mail(self.id, force_send=True)
+            # Create attachment for handwritten/scanned prescriptions
+            attachment_ids = []
+            if self.prescription_type in ['handwritten', 'scan'] and self.prescription_image:
+                attachment_name = f"Prescription_{self.name}.png"
+                if self.prescription_image_filename:
+                    attachment_name = self.prescription_image_filename
+
+                attachment = self.env['ir.attachment'].create({
+                    'name': attachment_name,
+                    'type': 'binary',
+                    'datas': self.prescription_image,
+                    'res_model': 'clinic.prescription',
+                    'res_id': self.id,
+                    'mimetype': 'image/png',
+                })
+                attachment_ids.append(attachment.id)
+
+            # Send email with attachments
+            template.with_context(attachment_ids=attachment_ids).send_mail(self.id, force_send=True)
             self.write({'state': 'sent'})
         
         return True

@@ -88,6 +88,8 @@
             'clinic_management/static/src/js/appointment_dashboard.js',
             'clinic_management/static/src/css/appointment_dashboard.css',
             'clinic_management/static/src/xml/appointment_dashboard_template.xml',
+            'clinic_management/static/src/js/signature_widget.js',
+            'clinic_management/static/src/xml/signature_widget.xml',
         ],
 
         'web.assets_frontend': [
