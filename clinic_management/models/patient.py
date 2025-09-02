@@ -51,7 +51,6 @@ class ClinicPatient(models.Model):
         for patient in self:
             patient.appointment_count = len(patient.appointment_ids)
             patient.lab_test_count = len(patient.lab_test_ids)
-            patient.lab_test_count = len(patient.lab_test_ids)
     
     def _get_symptoms_from_appointments(self):
         """Update symptom field based on appointment data"""
@@ -70,6 +69,8 @@ class ClinicPatient(models.Model):
             'domain': [('patient_id', '=', self.id)],
             'context': {'default_patient_id': self.id},
         }
+    
+
     
     def action_view_lab_tests(self):
         self.ensure_one()

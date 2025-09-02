@@ -16,18 +16,21 @@
     <menuitem id="menu_clinic_appointments"
               name="Appointments"
               parent="menu_clinic_root"
-              sequence="1"/>
+              sequence="1"
+              groups="group_clinic_receptionist,group_clinic_doctor,group_clinic_admin"/>
     
     <menuitem id="menu_clinic_appointment_today"
               name="Today's Appointments"
               parent="menu_clinic_appointments"
               action="action_clinic_appointment_today"
+              groups="group_clinic_receptionist,group_clinic_doctor,group_clinic_admin"
               sequence="2"/>
     
     <menuitem id="menu_clinic_appointment_all"
               name="All Appointments"
               parent="menu_clinic_appointments"
               action="action_clinic_appointment"
+              groups="group_clinic_receptionist,group_clinic_doctor,group_clinic_admin"
               sequence="3"/>
 
     <!-- Lab Tests -->
@@ -41,65 +44,76 @@
     <menuitem id="menu_clinic_website_root"
               name="Website"
               parent="menu_clinic_root"
-              sequence="3"/>
+              sequence="3"
+              groups="group_clinic_admin"/>
     
     <menuitem id="menu_clinic_website_settings"
               name="Website Settings"
               parent="menu_clinic_website_root"
               action="action_clinic_website_settings"
-              sequence="1"/>
+              sequence="1"
+              groups="group_clinic_admin"/>
     
     <menuitem id="menu_clinic_testimonial"
               name="Testimonials"
               parent="menu_clinic_website_root"
               action="action_clinic_testimonial"
-              sequence="2"/>
+              sequence="2"
+              groups="group_clinic_admin"/>
 
     <!-- Configuration Menu -->
     <menuitem id="menu_clinic_configuration"
               name="Configuration"
               parent="menu_clinic_root"
-              sequence="4"/>
+              sequence="4"
+              groups="group_clinic_admin"/>
     
     <menuitem id="menu_clinic_doctor"
               name="Doctors"
               parent="menu_clinic_configuration"
               action="action_clinic_doctor"
-              sequence="1"/>
+              sequence="1"
+              groups="group_clinic_admin"/>
 
     <menuitem id="menu_clinic_patient"
               name="Patients"
               parent="menu_clinic_configuration"
               action="action_clinic_patient"
-              sequence="2"/>
+              sequence="2"
+              groups="group_clinic_admin,group_clinic_receptionist"/>
 
     <menuitem id="menu_clinic_service"
               name="Services/Treatments"
               parent="menu_clinic_configuration"
               action="action_clinic_service"
-              sequence="3"/>
+              sequence="3"
+              groups="group_clinic_admin"/>
 
     <menuitem id="menu_clinic_slot"
               name="Slots"
               parent="menu_clinic_configuration"
               action="action_clinic_slot"
-              sequence="4"/>
+              sequence="4"
+              groups="group_clinic_admin"/>
 
     <menuitem id="menu_clinic_days"
               name="Days"
               parent="menu_clinic_configuration"
               action="action_clinic_days"
-              sequence="5"/>
+              sequence="5"
+              groups="group_clinic_admin"/>
 
     <menuitem id="menu_clinic_holiday"
               name="Doctor Leaves"
               parent="menu_clinic_configuration"
               action="action_clinic_holiday"
-              sequence="6"/>
+              sequence="6"
+              groups="group_clinic_admin,group_clinic_doctor"/>
     
     <menuitem id="menu_clinic_special_tag"
               name="Doctor Special Tags"
               parent="menu_clinic_configuration"
               action="action_clinic_doctor_special_tag"
-              sequence="7"/>
+              sequence="7"
+              groups="group_clinic_admin,group_clinic_receptionist"/>
 </odoo>

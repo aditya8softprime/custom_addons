@@ -206,7 +206,7 @@ class ClinicAppointment(models.Model):
                 raise ValidationError(_("The selected slot is no longer available"))
             
             # Update slot status
-            appointment.slot_id.status = 'booked'
+            appointment.slot_id.sudo().status = 'booked'
             
             # Set consulting fee if not set
             if not appointment.consulting_fee and appointment.doctor_id:
@@ -484,6 +484,12 @@ class ClinicAppointment(models.Model):
     def action_create_invoice(self):
         """Create invoice for consultation fee and prescription medicines"""
         self.ensure_one()
+
+        # Only receptionist and admins are allowed to create invoices from appointments
+        allowed_groups = [self.env.ref('clinic_management.group_clinic_receptionist').id, self.env.ref('clinic_management.group_clinic_admin').id]
+        user_group_ids = self.env.user.groups_id.ids
+        if not (set(allowed_groups) & set(user_group_ids)) and not self.env.user.has_group('base.group_system'):
+            raise ValidationError(_('You do not have permission to create invoices.'))
 
         if self.invoice_id:
             # If invoice already exists, open it

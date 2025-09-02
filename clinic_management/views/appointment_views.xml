@@ -7,17 +7,17 @@
             <form>
                 <header>
                     <button name="action_confirm" string="Confirm" type="object" 
-                            invisible="state != 'draft'" class="btn-primary"/>
+                        invisible="state != 'draft'" class="btn-primary" groups="clinic_management.group_clinic_receptionist,clinic_management.group_clinic_admin"/>
                     <button name="action_check_in" string="Check In" type="object" 
-                            invisible="state != 'confirmed'" class="btn-primary"/>
+                        invisible="state != 'confirmed'" class="btn-primary" groups="clinic_management.group_clinic_receptionist,clinic_management.group_clinic_admin"/>
                     <button name="action_start_consultation" string="Start Consultation" type="object" 
-                            invisible="state != 'checked_in'" class="btn-primary"/>
+                        invisible="state != 'checked_in'" class="btn-primary" groups="clinic_management.group_clinic_doctor,clinic_management.group_clinic_admin"/>
                     <button name="action_complete" string="Complete" type="object" 
-                            invisible="state != 'in_consultation'" class="btn-success"/>
+                        invisible="state != 'in_consultation'" class="btn-success" groups="clinic_management.group_clinic_doctor,clinic_management.group_clinic_admin"/>
                     <button name="action_mark_no_show" string="No Show" type="object" 
-                            invisible="state not in ('confirmed','draft')" class="btn-warning"/>
+                        invisible="state not in ('confirmed','draft')" class="btn-warning" groups="clinic_management.group_clinic_receptionist,clinic_management.group_clinic_admin"/>
                     <button name="action_cancel" string="Cancel" type="object" 
-                            invisible="state not in ('draft','confirmed','checked_in')" class="btn-danger"/>
+                        invisible="state not in ('draft','confirmed','checked_in')" class="btn-danger" groups="clinic_management.group_clinic_receptionist,clinic_management.group_clinic_admin"/>
                     <button name="action_reschedule" string="Reschedule" type="object" 
                             invisible="state not in ('cancelled')" class="btn-info"/>
                     <field name="state" widget="statusbar" 
@@ -36,10 +36,10 @@
                             <field name="lab_test_count" widget="statinfo" string="Lab Tests"/>
                         </button>
                         <button name="action_create_invoice" type="object" 
-                                class="oe_stat_button" icon="fa-dollar"
-                                invisible="state != 'completed'">
-                            <span>Create Invoice</span>
-                        </button>
+                            class="oe_stat_button" icon="fa-dollar"
+                            invisible="state != 'completed'"
+                            groups="group_clinic_admin,group_clinic_receptionist"/>
+
                         <button name="action_view_invoice" type="object" 
                                 class="oe_stat_button" icon="fa-dollar"
                                 invisible="not invoice_id">
@@ -62,7 +62,7 @@
                         </group>
                         <group>
                             <field name="service_id" readonly="state != 'draft'"/>
-                            <field name="doctor_id" readonly="state != 'draft'"/>
+                                <field name="doctor_id" readonly="state != 'draft'" />
                             <field name="slot_id" readonly="state != 'draft'"
                                    domain="[('id', 'in', slots)]"/>
                             <field name="start_time" widget="float_time"/>
@@ -75,15 +75,16 @@
                     <notebook>
                         <page string="Symptoms &amp; Follow-up">
                             <group>
-                                <field name="symptom" placeholder="Patient symptoms or problems" readonly="state in ('completed', 'cancelled', 'no_show')"/>
-                                <field name="is_lab_test_required" readonly="state in ('completed', 'cancelled', 'no_show')"/>
-                                <field name="next_visit_days" readonly="state in ('completed', 'cancelled', 'no_show')"/>
-                                <field name="next_visit_date" readonly="1"/>
-                            </group>
+                                    <field name="symptom" placeholder="Patient symptoms or problems" readonly="state in ('completed', 'cancelled', 'no_show')"/>
+                                    <field name="is_lab_test_required" readonly="state in ('completed', 'cancelled', 'no_show')"/>
+                                    <field name="next_visit_days" readonly="state in ('completed', 'cancelled', 'no_show')"/>
+                                    <field name="next_visit_date" readonly="1"/>
+                                </group>
                         </page>
                         <page string="Prescription">
                             <group>
-                                <field name="medicine_image" widget="draw_canvas"/>
+                                <field name="medicine_image" widget="draw_canvas" readonly="state != 'in_consultation'" groups="clinic_management.group_clinic_doctor"/>
+                                <field name="medicine_image" widget="draw_canvas" groups="clinic_management.group_clinic_receptionist" readonly="1"/>
                                 <field name="medicine_image_filename" invisible="1"/>
                             </group>
                         </page>

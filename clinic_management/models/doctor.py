@@ -207,7 +207,10 @@ class ClinicDoctor(models.Model):
             'name': self.name,
             'login': self.email,
             'email': self.email,
-            'groups_id': [(4, self.env.ref('clinic_management.group_clinic_doctor').id)],
+            'groups_id': [(6, 0, [
+                self.env.ref('base.group_user').id,  # Internal user mandatory
+                self.env.ref('clinic_management.group_clinic_doctor').id,  # Custom doctor group
+            ])],
             'company_ids': [(4, self.company_id.id)],
             'company_id': self.company_id.id,
         })

@@ -262,23 +262,12 @@
         </field>
     </record>
 
-    <record id="view_clinic_doctor_calendar" model="ir.ui.view">
-        <field name="name">clinic.doctor.calendar</field>
-        <field name="model">clinic.doctor</field>
-        <field name="arch" type="xml">
-            <calendar string="Doctors Calendar" date_start="working_start_time" date_stop="working_end_time" mode="week" color="name">
-                <field name="name"/>
-                <field name="specialization_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
-                <field name="consultation_fee" widget="monetary" options="{'currency_field': 'currency_id'}"/>
-            </calendar>
-        </field>
-    </record>
 
-    <!-- Update the action to include the calendar view -->
+
     <record id="action_clinic_doctor" model="ir.actions.act_window">
         <field name="name">Doctors</field>
         <field name="res_model">clinic.doctor</field>
-        <field name="view_mode">kanban,list,calendar,form</field>
+        <field name="view_mode">kanban,list,form</field>
         <field name="context">{'search_default_active': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
