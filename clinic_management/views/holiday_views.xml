@@ -7,9 +7,9 @@
             <form>
                 <header>
                     <button name="action_approve" string="Approve" type="object" 
-                            invisible="state != 'draft'" class="btn-primary"/>
+                            invisible="state != 'draft'" class="btn-primary" groups="clinic_management.group_clinic_admin"/>
                     <button name="action_cancel" string="Cancel" type="object" 
-                            invisible="state not in ('draft','approved')" class="btn-danger"/>
+                            invisible="state != 'draft'" class="btn-danger" groups="clinic_management.group_clinic_admin"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,approved,cancelled"/>
                 </header>
                 <sheet>

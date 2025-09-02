@@ -1,13 +1,13 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
-
+from datetime import timedelta
 
 class ClinicHoliday(models.Model):
     _name = 'clinic.holiday'
     _description = 'Doctor Leave/Holiday'
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'from_date desc'
-    
+
     name = fields.Char(string='Reference', compute='_compute_name', store=True)
     doctor_id = fields.Many2one('clinic.doctor', string='Doctor', required=True, tracking=True)
     leave_type = fields.Selection([
@@ -22,10 +22,8 @@ class ClinicHoliday(models.Model):
         ('approved', 'Approved'),
         ('cancelled', 'Cancelled')
     ], string='Status', default='draft', tracking=True)
-    
-    company_id = fields.Many2one('res.company', string='Company', 
-                                 default=lambda self: self.env.company)
-    
+    company_id = fields.Many2one('res.company', string='Company', default=lambda self: self.env.company)
+
     @api.depends('doctor_id', 'from_date', 'to_date')
     def _compute_name(self):
         for record in self:
@@ -36,90 +34,67 @@ class ClinicHoliday(models.Model):
                     record.name = f"{record.doctor_id.name} - {record.from_date} to {record.to_date}"
             else:
                 record.name = 'New'
-    
+
     @api.constrains('from_date', 'to_date')
     def _check_dates(self):
         for record in self:
             if record.from_date > record.to_date:
                 raise ValidationError(_("End date cannot be before start date"))
-    
+
     def action_approve(self):
         """Approve leave and block slots"""
         self.write({'state': 'approved'})
         self._block_slots()
-    
+
     def action_cancel(self):
         """Cancel leave and unblock slots"""
         self.write({'state': 'cancelled'})
         self._unblock_slots()
-    
+
     def _block_slots(self):
         """Block all slots in the leave period"""
         for holiday in self:
-            # Get all affected days
             current_date = holiday.from_date
-            affected_days = []
-            
             while current_date <= holiday.to_date:
                 day_name = current_date.strftime('%A')
                 day = self.env['clinic.days'].search([('name', '=', day_name)], limit=1)
                 if day:
-                    affected_days.append((current_date, day))
-                current_date = current_date + fields.Date.to_timedelta(1)
-            
-            # Find and block slots
-            for date_day in affected_days:
-                date, day = date_day
-                slots = self.env['clinic.slot'].search([
-                    ('doctor_id', '=', holiday.doctor_id.id),
-                    ('day_id', '=', day.id),
-                    ('status', 'in', ['available']),
-                ])
-                
-                # Block slots
-                slots.write({'status': 'blocked'})
-                
-                # Handle existing appointments
-                appointments = self.env['clinic.appointment'].search([
-                    ('doctor_id', '=', holiday.doctor_id.id),
-                    ('appointment_date', '=', date),
-                    ('state', 'in', ['draft', 'confirmed']),
-                ])
-                
-                if appointments:
-                    # You could auto-reschedule here, but for now we'll just mark them
-                    # as needing rescheduling
+                    # Block available slots for this doctor on this day
+                    slots = self.env['clinic.slot'].search([
+                        ('doctor_id', '=', holiday.doctor_id.id),
+                        ('day_id', '=', day.id),
+                        ('status', '=', 'available')
+                    ])
+                    slots.write({'status': 'blocked'})
+
+                    # Cancel affected appointments
+                    appointments = self.env['clinic.appointment'].search([
+                        ('doctor_id', '=', holiday.doctor_id.id),
+                        ('appointment_date', '=', current_date),
+                        ('state', 'in', ['draft', 'confirmed'])
+                    ])
                     appointments.write({
                         'state': 'cancelled',
                         'cancellation_reason': 'Doctor unavailable due to leave'
                     })
-    
+                current_date += timedelta(days=1)
+
     def _unblock_slots(self):
         """Unblock slots if leave is cancelled"""
         for holiday in self:
-            # Get all affected days
             current_date = holiday.from_date
-            affected_days = []
-            
             while current_date <= holiday.to_date:
                 day_name = current_date.strftime('%A')
                 day = self.env['clinic.days'].search([('name', '=', day_name)], limit=1)
                 if day:
-                    affected_days.append((current_date, day))
-                current_date = current_date + fields.Date.to_timedelta(1)
-            
-            # Find and unblock slots
-            for date_day in affected_days:
-                date, day = date_day
-                slots = self.env['clinic.slot'].search([
-                    ('doctor_id', '=', holiday.doctor_id.id),
-                    ('day_id', '=', day.id),
-                    ('status', '=', 'blocked'),
-                ])
-                
-                # Unblock slots
-                slots.write({'status': 'available'})
-    
+                    slots = self.env['clinic.slot'].search([
+                        ('doctor_id', '=', holiday.doctor_id.id),
+                        ('day_id', '=', day.id),
+                        ('status', '=', 'blocked')
+                    ])
+                    slots.write({'status': 'available'})
+                current_date += timedelta(days=1)
+
     @api.model
     def _cron_unblock_expired_leaves(self):
         """Cron job to unblock slots for expired leaves"""
@@ -127,13 +102,9 @@ class ClinicHoliday(models.Model):
             ('to_date', '<', fields.Date.today()),
             ('state', '=', 'approved')
         ])
-        
         for leave in expired_leaves:
-            # Find blocked slots for this leave
             slots = self.env['clinic.slot'].search([
                 ('doctor_id', '=', leave.doctor_id.id),
                 ('status', '=', 'blocked')
             ])
-            
-            # Unblock slots
             slots.write({'status': 'available'})

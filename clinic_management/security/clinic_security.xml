@@ -18,10 +18,6 @@
             <field name="name">Clinic Administrator</field>
             <field name="comment">Full access including master data, website, reports</field>
             <field name="category_id" ref="base.module_category_services"/>
-            <field name="implied_ids" eval="[
-                (4, ref('clinic_management.group_clinic_receptionist')), 
-                (4, ref('clinic_management.group_clinic_doctor'))
-            ]"/>
         </record>
 
         <!-- ================== Access Rights ================== -->
@@ -97,7 +93,7 @@
             <field name="perm_create" eval="True"/>
             <field name="perm_unlink" eval="True"/>
         </record>
-        
+
         <record id="access_clinic_appointment_receptionist" model="ir.model.access">
             <field name="name">Appointment Receptionist Access</field>
             <field name="model_id" ref="model_clinic_appointment"/>
@@ -116,6 +112,24 @@
             <field name="perm_create" eval="False"/>
             <field name="perm_unlink" eval="False"/>
         </record>
+
+        <record id="rule_clinic_appointment_doctor_own" model="ir.rule">
+            <field name="name">Doctor: Own Appointments Only</field>
+            <field name="model_id" ref="model_clinic_appointment"/>
+            <field name="domain_force">[('doctor_id.user_id','=',user.id)]</field>
+            <field name="groups" eval="[(4, ref('clinic_management.group_clinic_doctor'))]"/>
+        
+        </record>
+
+        <record id="rule_clinic_holiday_doctor_own" model="ir.rule">
+            <field name="name">Doctor: Own Holidays Only</field>
+            <field name="model_id" ref="model_clinic_holiday"/>
+            <field name="domain_force">[('doctor_id.user_id','=',user.id)]</field>
+            <field name="groups" eval="[(4, ref('clinic_management.group_clinic_doctor'))]"/>
+         
+        </record>
+
+
 
         <!-- Holiday / Leave -->
         <record id="access_clinic_holiday_admin" model="ir.model.access">
