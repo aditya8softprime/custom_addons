@@ -98,6 +98,52 @@
                     text-decoration: none;
                 }
                 
+                /* Smooth scrolling for section navigation */
+                html {
+                    scroll-behavior: smooth;
+                }
+                
+                /* Section padding for better navigation */
+                section {
+                    padding-top: 80px;
+                    margin-top: -80px;
+                }
+                
+                /* Smooth scroll class for buttons */
+                .smooth-scroll {
+                    transition: all 0.3s ease;
+                }
+                
+                /* Contact info styling */
+                .contact-info p, .opening-hours div {
+                    margin-bottom: 0.5rem;
+                    padding: 0.25rem 0;
+                }
+                
+                .contact-info i {
+                    width: 20px;
+                    margin-right: 10px;
+                    color: var(--primary-color);
+                }
+                
+                /* Section titles styling */
+                .section-title {
+                    position: relative;
+                    margin-bottom: 2rem;
+                    padding-bottom: 1rem;
+                }
+                
+                .section-title:after {
+                    content: '';
+                    position: absolute;
+                    bottom: 0;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 50px;
+                    height: 3px;
+                    background: var(--primary-color);
+                }
+                
                 .service-tile a:hover, .doctor-tile a:hover {
                     color: inherit;
                     text-decoration: none;
@@ -184,63 +230,78 @@
         <t t-call="website.layout">
             <div id="wrap">
                 <!-- Banner Section with Dynamic Content -->
-                <t t-if="clinic_settings and clinic_settings.banner_image">
-                    <div class="hero-banner" style="background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('data:image/png;base64,#{clinic_settings.banner_image}'); background-size: cover; background-position: center; height: 400px;">
-                        <div class="container h-100 d-flex align-items-center justify-content-center text-white text-center">
-                            <div>
-                                <h1 class="display-4 mb-3" t-esc="clinic_settings.clinic_name or 'Welcome to Our Clinic'"/>
-                                <p class="lead mb-4" t-esc="clinic_settings.tagline or 'Quality Healthcare Services You Can Trust'"/>
-                                <div class="mt-4">
-                                    <a t-if="clinic_settings.enable_online_booking" href="/clinic/booking" class="btn btn-primary btn-lg mr-3">Book Appointment</a>
-                                    <a href="/clinic/services" class="btn btn-outline-light btn-lg">Our Services</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </t>
-                
-                <!-- Default Hero Section if no banner image -->
-                <t t-if="not clinic_settings or not clinic_settings.banner_image">
-                    <div class="container mt-5">
-                        <div class="row mb-5">
-                            <div class="col-md-12 text-center">
-                                <h1 class="display-4 text-primary" t-esc="clinic_settings.clinic_name if clinic_settings else 'Welcome to Our Clinic'"/>
-                                <p class="lead" t-esc="clinic_settings.tagline if clinic_settings else 'Quality Healthcare Services You Can Trust'"/>
-                                <div class="mt-4">
-                                    <a t-if="clinic_settings and clinic_settings.enable_online_booking" href="/clinic/booking" class="btn btn-primary btn-lg mr-3">Book Appointment</a>
-                                    <a href="/clinic/services" class="btn btn-outline-primary btn-lg">Our Services</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </t>
-                
-                <div class="container mt-5">
-                    <!-- About Us Section -->
-                    <t t-if="clinic_settings and clinic_settings.about_us_content">
-                        <div class="row mb-5">
-                            <div class="col-md-12">
-                                <h2 class="text-center section-title" t-esc="clinic_settings.about_us_title or 'About Us'"/>
-                                <div class="text-center">
-                                    <div t-field="clinic_settings.about_us_content" class="lead"/>
+                <section id="home">
+                    <t t-if="clinic_settings and clinic_settings.banner_image">
+                        <div class="hero-banner" style="background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('data:image/png;base64,#{clinic_settings.banner_image}'); background-size: cover; background-position: center; height: 400px;">
+                            <div class="container h-100 d-flex align-items-center justify-content-center text-white text-center">
+                                <div>
+                                    <h1 class="display-4 mb-3" t-esc="clinic_settings.clinic_name or 'Welcome to Our Clinic'"/>
+                                    <p class="lead mb-4" t-esc="clinic_settings.tagline or 'Quality Healthcare Services You Can Trust'"/>
+                                    <div class="mt-4">
+                                        <a t-if="clinic_settings.enable_online_booking" href="#booking" class="btn btn-primary btn-lg mr-3 smooth-scroll">Book Appointment</a>
+                                        <a href="#services" class="btn btn-outline-light btn-lg smooth-scroll">Our Services</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </t>
                     
+                    <!-- Default Hero Section if no banner image -->
+                    <t t-if="not clinic_settings or not clinic_settings.banner_image">
+                        <div class="container mt-5">
+                            <div class="row mb-5">
+                                <div class="col-md-12 text-center">
+                                    <h1 class="display-4 text-primary" t-esc="clinic_settings.clinic_name if clinic_settings else 'Welcome to Our Clinic'"/>
+                                    <p class="lead" t-esc="clinic_settings.tagline if clinic_settings else 'Quality Healthcare Services You Can Trust'"/>
+                                    <div class="mt-4">
+                                        <a t-if="clinic_settings and clinic_settings.enable_online_booking" href="#booking" class="btn btn-primary btn-lg mr-3 smooth-scroll">Book Appointment</a>
+                                        <a href="#services" class="btn btn-outline-primary btn-lg smooth-scroll">Our Services</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </section>
+                
+                <div class="container mt-5">
+                    <!-- About Us Section -->
+                    <section id="about">
+                        <t t-if="clinic_settings and clinic_settings.about_us_content">
+                            <div class="row mb-5">
+                                <div class="col-md-12">
+                                    <h2 class="text-center section-title" t-esc="clinic_settings.about_us_title or 'About Us'"/>
+                                    <div class="text-center">
+                                        <div t-field="clinic_settings.about_us_content" class="lead"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                        <t t-if="not clinic_settings or not clinic_settings.about_us_content">
+                            <div class="row mb-5">
+                                <div class="col-md-12">
+                                    <h2 class="text-center section-title">About Us</h2>
+                                    <div class="text-center">
+                                        <p class="lead">We are committed to providing high-quality healthcare services with compassion and excellence. Our experienced team of medical professionals is dedicated to your health and well-being.</p>
+                                        <p>With state-of-the-art facilities and advanced medical technology, we ensure that our patients receive the best possible care in a comfortable and welcoming environment.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </section>
+                    
                     <!-- Services Section -->
-                    <t t-if="clinic_settings and clinic_settings.show_services_section and services">
-                        <div class="row mb-5">
-                            <div class="col-md-12">
-                                <h2 class="text-center section-title" t-esc="clinic_settings.services_section_title or 'Our Services'"/>
-                                <t t-if="clinic_settings.services_section_subtitle">
-                                    <p class="text-center text-muted mb-4" t-esc="clinic_settings.services_section_subtitle"/>
-                                </t>
-                                <div class="row">
-                                    <t t-foreach="services[:clinic_settings.max_services_display or 8]" t-as="service">
-                                        <div class="col-md-3 col-sm-6 mb-4">
-                                            <div class="card h-100 service-tile">
-                                                <a t-attf-href="/clinic/service/#{service.id}" class="text-decoration-none">
+                    <section id="services">
+                        <t t-if="services">
+                            <div class="row mb-5">
+                                <div class="col-md-12">
+                                    <h2 class="text-center section-title" t-esc="clinic_settings.services_section_title if clinic_settings else 'Our Services'"/>
+                                    <t t-if="clinic_settings and clinic_settings.services_section_subtitle">
+                                        <p class="text-center text-muted mb-4" t-esc="clinic_settings.services_section_subtitle"/>
+                                    </t>
+                                    <div class="row">
+                                        <t t-foreach="services[:clinic_settings.max_services_display if clinic_settings else 8]" t-as="service">
+                                            <div class="col-md-3 col-sm-6 mb-4">
+                                                <div class="card h-100 service-tile">
                                                     <div class="card-body text-center p-4">
                                                         <div class="service-icon mb-3">
                                                             <img t-if="service.icon" t-attf-src="data:image/png;base64,#{service.icon}" 
@@ -253,29 +314,30 @@
                                                             </div>
                                                         </div>
                                                         <h5 class="card-title text-dark" t-esc="service.name"/>
+                                                        <p t-if="service.description" class="card-text text-muted" t-esc="service.description"/>
                                                     </div>
-                                                </a>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </t>
+                                        </t>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </t>
+                        </t>
+                    </section>
                     
                     <!-- Doctors Section -->
-                    <t t-if="clinic_settings and clinic_settings.show_doctors_section and doctors">
-                        <div class="row mb-5">
-                            <div class="col-md-12">
-                                <h2 class="text-center section-title" t-esc="clinic_settings.doctors_section_title or 'Our Doctors'"/>
-                                <t t-if="clinic_settings.doctors_section_subtitle">
-                                    <p class="text-center text-muted mb-4" t-esc="clinic_settings.doctors_section_subtitle"/>
-                                </t>
-                                <div class="row">
-                                    <t t-foreach="doctors[:clinic_settings.max_doctors_display or 8]" t-as="doctor">
-                                        <div class="col-md-3 col-sm-6 mb-4">
-                                            <div class="card h-100 doctor-tile">
-                                                <a t-attf-href="/clinic/doctor/#{doctor.id}" class="text-decoration-none">
+                    <section id="doctors">
+                        <t t-if="doctors">
+                            <div class="row mb-5">
+                                <div class="col-md-12">
+                                    <h2 class="text-center section-title" t-esc="clinic_settings.doctors_section_title if clinic_settings else 'Our Doctors'"/>
+                                    <t t-if="clinic_settings and clinic_settings.doctors_section_subtitle">
+                                        <p class="text-center text-muted mb-4" t-esc="clinic_settings.doctors_section_subtitle"/>
+                                    </t>
+                                    <div class="row">
+                                        <t t-foreach="doctors[:clinic_settings.max_doctors_display if clinic_settings else 8]" t-as="doctor">
+                                            <div class="col-md-3 col-sm-6 mb-4">
+                                                <div class="card h-100 doctor-tile">
                                                     <div class="card-body text-center p-4">
                                                         <div class="doctor-image mb-3">
                                                             <img t-if="doctor.image" t-attf-src="data:image/png;base64,#{doctor.image}" 
@@ -288,15 +350,158 @@
                                                             </div>
                                                         </div>
                                                         <h6 class="card-title text-dark mb-0">Dr. <span t-esc="doctor.name"/></h6>
+                                                        <p t-if="doctor.specialization_ids" class="text-muted small mt-1">
+                                                            <span t-esc="', '.join(doctor.specialization_ids.mapped('name'))"/>
+                                                        </p>
+                                                        <p t-if="doctor.qualification" class="text-muted small" t-esc="doctor.qualification"/>
                                                     </div>
-                                                </a>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </t>
+                                        </t>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </section>
+
+                    <!-- Booking Section -->
+                    <section id="booking">
+                        <div class="row mb-5">
+                            <div class="col-md-12">
+                                <h2 class="text-center section-title">Book an Appointment</h2>
+                                <p class="text-center text-muted mb-4">Schedule your appointment with our experienced doctors</p>
+                                <div class="row justify-content-center">
+                                    <div class="col-md-8">
+                                        <form action="/clinic/booking/submit" method="post" enctype="multipart/form-data">
+                                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="patient_name" class="form-label">Full Name *</label>
+                                                    <input type="text" class="form-control" id="patient_name" name="patient_name" required=""/>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="phone" class="form-label">Phone Number *</label>
+                                                    <input type="tel" class="form-control" id="phone" name="phone" required=""/>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="email" class="form-label">Email</label>
+                                                    <input type="email" class="form-control" id="email" name="email"/>
+                                                </div>
+                                                <div class="col-md-3 mb-3">
+                                                    <label for="age" class="form-label">Age *</label>
+                                                    <input type="number" class="form-control" id="age" name="age" min="1" max="120" required=""/>
+                                                </div>
+                                                <div class="col-md-3 mb-3">
+                                                    <label for="gender" class="form-label">Gender *</label>
+                                                    <select class="form-control" id="gender" name="gender" required="">
+                                                        <option value="">Select Gender</option>
+                                                        <option value="male">Male</option>
+                                                        <option value="female">Female</option>
+                                                        <option value="other">Other</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="service_id" class="form-label">Service *</label>
+                                                    <select class="form-control" id="service_id" name="service_id" required="">
+                                                        <option value="">Select Service</option>
+                                                        <t t-foreach="services" t-as="service">
+                                                            <option t-att-value="service.id" t-esc="service.name"/>
+                                                        </t>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="doctor_id" class="form-label">Doctor *</label>
+                                                    <select class="form-control" id="doctor_id" name="doctor_id" required="">
+                                                        <option value="">Select Doctor</option>
+                                                        <t t-foreach="doctors" t-as="doctor">
+                                                            <option t-att-value="doctor.id" t-esc="doctor.name"/>
+                                                        </t>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="appointment_date" class="form-label">Preferred Date *</label>
+                                                    <input type="date" class="form-control" id="appointment_date" name="appointment_date" required=""/>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="symptom" class="form-label">Symptoms/Reason for Visit *</label>
+                                                <textarea class="form-control" id="symptom" name="symptom" rows="3" required=""></textarea>
+                                            </div>
+                                            <div class="text-center">
+                                                <button type="submit" class="btn btn-primary btn-lg">Book Appointment</button>
+                                            </div>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </t>
+                    </section>
+
+                    <!-- Contact Us Section -->
+                    <section id="contact">
+                        <div class="row mb-5">
+                            <div class="col-md-12">
+                                <h2 class="text-center section-title">Contact Us</h2>
+                                <p class="text-center text-muted mb-4">Get in touch with us for any inquiries</p>
+                                <div class="row">
+                                    <div class="col-md-6 mb-4">
+                                        <h5>Contact Information</h5>
+                                        <div class="contact-info">
+                                            <p t-if="clinic_settings and clinic_settings.address"><i class="fa fa-map-marker"></i> <span t-esc="clinic_settings.address"/></p>
+                                            <p t-if="clinic_settings and clinic_settings.phone"><i class="fa fa-phone"></i> <span t-esc="clinic_settings.phone"/></p>
+                                            <p t-if="clinic_settings and clinic_settings.email"><i class="fa fa-envelope"></i> <span t-esc="clinic_settings.email"/></p>
+                                            <t t-if="clinic_settings and clinic_settings.show_emergency_contact and clinic_settings.emergency_phone">
+                                                <p><i class="fa fa-exclamation-triangle"></i> <strong>Emergency:</strong> <span t-esc="clinic_settings.emergency_phone"/></p>
+                                            </t>
+                                        </div>
+                                        
+                                        <!-- Opening Hours -->
+                                        <t t-if="clinic_settings and clinic_settings.show_opening_hours">
+                                            <h5 class="mt-4">Opening Hours</h5>
+                                            <div class="opening-hours">
+                                                <div class="d-flex justify-content-between"><strong>Monday:</strong> <span t-esc="clinic_settings.monday_hours or 'Closed'"/></div>
+                                                <div class="d-flex justify-content-between"><strong>Tuesday:</strong> <span t-esc="clinic_settings.tuesday_hours or 'Closed'"/></div>
+                                                <div class="d-flex justify-content-between"><strong>Wednesday:</strong> <span t-esc="clinic_settings.wednesday_hours or 'Closed'"/></div>
+                                                <div class="d-flex justify-content-between"><strong>Thursday:</strong> <span t-esc="clinic_settings.thursday_hours or 'Closed'"/></div>
+                                                <div class="d-flex justify-content-between"><strong>Friday:</strong> <span t-esc="clinic_settings.friday_hours or 'Closed'"/></div>
+                                                <div class="d-flex justify-content-between"><strong>Saturday:</strong> <span t-esc="clinic_settings.saturday_hours or 'Closed'"/></div>
+                                                <div class="d-flex justify-content-between"><strong>Sunday:</strong> <span t-esc="clinic_settings.sunday_hours or 'Closed'"/></div>
+                                            </div>
+                                        </t>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h5>Send us a Message</h5>
+                                        <form action="/clinic/contact/submit" method="post">
+                                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                            <div class="mb-3">
+                                                <label for="contact_name" class="form-label">Name *</label>
+                                                <input type="text" class="form-control" id="contact_name" name="name" required=""/>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="contact_email" class="form-label">Email *</label>
+                                                <input type="email" class="form-control" id="contact_email" name="email" required=""/>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="contact_phone" class="form-label">Phone</label>
+                                                <input type="tel" class="form-control" id="contact_phone" name="phone"/>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="contact_message" class="form-label">Message *</label>
+                                                <textarea class="form-control" id="contact_message" name="message" rows="4" required=""></textarea>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">Send Message</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
                     
                     <!-- Clinic Images Gallery -->
                     <t t-if="clinic_settings and clinic_settings.show_clinic_gallery">

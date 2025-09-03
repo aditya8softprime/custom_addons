@@ -9,6 +9,11 @@ _logger = logging.getLogger(__name__)
 
 class ClinicWebsite(http.Controller):
     
+    @http.route(['/'], type='http', auth='public', website=True)
+    def website_root_redirect(self, **kw):
+        """Redirect root URL to clinic homepage"""
+        return request.redirect('/clinic')
+    
     def _get_clinic_settings(self):
         """Get clinic website settings"""
         settings = request.env['clinic.website.settings'].sudo().get_settings()
