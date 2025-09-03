@@ -1,0 +1,96 @@
+/* Dashboard Styles */
+.o_dashboard_container {
+    padding: 20px;
+    background-color: #f8f9fa;
+    min-height: 100vh;
+}
+
+.o_dashboard_header {
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.o_dashboard_title {
+    color: #2c3e50;
+    font-size: 2.5rem;
+    font-weight: 300;
+    margin-bottom: 10px;
+}
+
+.o_dashboard_subtitle {
+    color: #6c757d;
+    font-size: 1.1rem;
+}
+
+/* Card Enhancements */
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease-in-out;
+    margin-bottom: 20px;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 10px 10px 0 0 !important;
+    padding: 15px 20px;
+}
+
+.card-header h5 {
+    margin: 0;
+    font-weight: 500;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+/* Button Styles */
+.btn {
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Badge Styles */
+.badge {
+    border-radius: 20px;
+    font-size: 0.75rem;
+    padding: 5px 10px;
+}
+
+/* Progress Bar */
+.progress {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    border-radius: 10px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .o_dashboard_container {
+        padding: 10px;
+    }
+    
+    .o_dashboard_title {
+        font-size: 2rem;
+    }
+    
+    .card-body {
+        padding: 15px;
+    }
+}

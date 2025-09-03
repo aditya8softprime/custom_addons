@@ -1,0 +1,452 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!-- Receptionist Dashboard Template -->
+    <t t-name="clinic_management.ReceptionistDashboardTemplate" owl="1">
+        <div class="o_dashboard_container">
+            <div class="o_dashboard_header">
+                <h2 class="o_dashboard_title">Receptionist Dashboard</h2>
+                <div class="o_dashboard_subtitle">Manage patient flow, booking, and appointment confirmations</div>
+            </div>
+
+            <div t-if="state.loading" class="text-center p-5">
+                <i class="fa fa-spinner fa-spin fa-3x"/>
+                <div class="mt-3">Loading dashboard...</div>
+            </div>
+
+            <div t-if="!state.loading" class="row">
+                <!-- Today's Appointments -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Today's Appointments</h5>
+                            <button class="btn btn-primary btn-sm" t-on-click="openTodayAppointments">
+                                View All
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div t-if="!state.today_appointments.length" class="text-muted text-center py-3">
+                                No appointments for today
+                            </div>
+                            <div t-else="">
+                                <t t-foreach="state.today_appointments.slice(0, 5)" t-as="appointment" t-key="appointment.id">
+                                    <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                        <div>
+                                            <strong t-esc="appointment.patient_name"/>
+                                            <br/>
+                                            <small class="text-muted">
+                                                <t t-esc="appointment.doctor_name"/> - <t t-esc="appointment.service_name"/>
+                                                <br/>
+                                                <t t-esc="appointment.appointment_time"/>
+                                            </small>
+                                        </div>
+                                        <div class="btn-group btn-group-sm">
+                                            <button t-if="appointment.state === 'confirmed'" 
+                                                    class="btn btn-success btn-sm"
+                                                    t-on-click="() => this.checkInPatient(appointment.id)">
+                                                Check-In
+                                            </button>
+                                            <button class="btn btn-outline-warning btn-sm">Reschedule</button>
+                                            <button class="btn btn-outline-danger btn-sm"
+                                                    t-on-click="() => this.cancelAppointment(appointment.id)">
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Appointment Booking -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Quick Appointment Booking</h5>
+                        </div>
+                        <div class="card-body text-center">
+                            <i class="fa fa-plus-circle fa-3x text-primary mb-3"/>
+                            <div class="mb-3">Book a new appointment quickly</div>
+                            <button class="btn btn-primary btn-lg" t-on-click="openQuickBooking">
+                                <i class="fa fa-plus"/> New Appointment
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pending Appointments -->
+                <div class="col-md-6 mt-3">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Pending Appointments</h5>
+                            <span class="badge badge-warning" t-esc="state.pending_appointments.length"/>
+                        </div>
+                        <div class="card-body">
+                            <div t-if="!state.pending_appointments.length" class="text-muted text-center py-3">
+                                No pending appointments
+                            </div>
+                            <div t-else="">
+                                <t t-foreach="state.pending_appointments.slice(0, 5)" t-as="appointment" t-key="appointment.id">
+                                    <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                        <div>
+                                            <strong t-esc="appointment.patient_name"/>
+                                            <br/>
+                                            <small class="text-muted">
+                                                <t t-esc="appointment.doctor_name"/> - <t t-esc="appointment.appointment_date"/>
+                                            </small>
+                                        </div>
+                                        <span class="badge badge-warning" t-esc="appointment.state"/>
+                                    </div>
+                                </t>
+                                <button class="btn btn-outline-primary btn-sm mt-2" t-on-click="openPendingAppointments">
+                                    View All Pending
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Doctor Schedule -->
+                <div class="col-md-6 mt-3">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Doctor Schedule (Today)</h5>
+                        </div>
+                        <div class="card-body">
+                            <div t-if="!state.doctor_schedules.length" class="text-muted text-center py-3">
+                                No schedules available
+                            </div>
+                            <div t-else="">
+                                <t t-foreach="state.doctor_schedules" t-as="schedule" t-key="schedule.doctor_name">
+                                    <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                        <div>
+                                            <strong t-esc="schedule.doctor_name"/>
+                                        </div>
+                                        <div class="text-muted">
+                                            <t t-esc="schedule.start_time"/> - <t t-esc="schedule.end_time"/>
+                                        </div>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+
+    <!-- Doctor Dashboard Template -->
+    <t t-name="clinic_management.DoctorDashboardTemplate" owl="1">
+        <div class="o_dashboard_container">
+            <div class="o_dashboard_header">
+                <h2 class="o_dashboard_title">Doctor Dashboard</h2>
+                <div class="o_dashboard_subtitle" t-if="state.doctor_info.name">
+                    Welcome, Dr. <t t-esc="state.doctor_info.name"/> 
+                    <span t-if="state.doctor_info.specialization" class="text-muted">
+                        (<t t-esc="state.doctor_info.specialization"/>)
+                    </span>
+                </div>
+            </div>
+
+            <div t-if="state.loading" class="text-center p-5">
+                <i class="fa fa-spinner fa-spin fa-3x"/>
+                <div class="mt-3">Loading dashboard...</div>
+            </div>
+
+            <div t-if="!state.loading" class="row">
+                <!-- One-Tap Consultation Mode -->
+                <div class="col-12 mb-4">
+                    <div class="card bg-primary text-white text-center">
+                        <div class="card-body">
+                            <i class="fa fa-stethoscope fa-3x mb-3"/>
+                            <h4>Start Consultation</h4>
+                            <p>Begin consultation with your next patient</p>
+                            <button class="btn btn-light btn-lg" t-on-click="startConsultation">
+                                <i class="fa fa-play"/> Start Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Today's Patient List -->
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Today's Patients</h5>
+                            <button class="btn btn-primary btn-sm" t-on-click="openTodayPatients">
+                                View All
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div t-if="!state.today_patients.length" class="text-muted text-center py-3">
+                                No patients scheduled for today
+                            </div>
+                            <div t-else="">
+                                <t t-foreach="state.today_patients" t-as="patient" t-key="patient.id">
+                                    <div class="d-flex justify-content-between align-items-center border-bottom py-3">
+                                        <div class="flex-grow-1">
+                                            <strong t-esc="patient.patient_name"/>
+                                            <span class="text-muted">(<t t-esc="patient.patient_age"/> years)</span>
+                                            <br/>
+                                            <small class="text-muted">
+                                                <t t-esc="patient.service_name"/> - <t t-esc="patient.appointment_time"/>
+                                            </small>
+                                        </div>
+                                        <div>
+                                            <span class="badge" 
+                                                  t-attf-class="badge-#{patient.state === 'completed' ? 'success' : patient.state === 'confirmed' ? 'info' : patient.state === 'waiting' ? 'warning' : 'secondary'}"
+                                                  t-esc="patient.state"/>
+                                        </div>
+                                        <div class="btn-group btn-group-sm ml-2">
+                                            <button t-if="patient.state === 'confirmed'" 
+                                                    class="btn btn-success btn-sm"
+                                                    t-on-click="() => this.markCheckedIn(patient.id)">
+                                                Check-In
+                                            </button>
+                                            <button t-if="patient.state === 'in_progress'" 
+                                                    class="btn btn-primary btn-sm"
+                                                    t-on-click="() => this.completeConsultation(patient.id)">
+                                                Complete
+                                            </button>
+                                        </div>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Doctor Schedule -->
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">My Schedule</h5>
+                        </div>
+                        <div class="card-body">
+                            <div t-if="!state.doctor_schedule.length" class="text-muted text-center py-3">
+                                No schedule for today
+                            </div>
+                            <div t-else="">
+                                <t t-foreach="state.doctor_schedule" t-as="slot" t-key="slot.start_time">
+                                    <div class="d-flex justify-content-between align-items-center py-2">
+                                        <div class="text-center">
+                                            <div class="font-weight-bold">
+                                                <t t-esc="slot.start_time"/> - <t t-esc="slot.end_time"/>
+                                            </div>
+                                            <small class="text-muted"><t t-esc="slot.day"/></small>
+                                        </div>
+                                    </div>
+                                </t>
+                                <button class="btn btn-outline-primary btn-sm mt-2" t-on-click="openSchedule">
+                                    View Full Schedule
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Missed Patients -->
+                    <div class="card mt-3" t-if="state.missed_patients.length">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0 text-warning">
+                                <i class="fa fa-exclamation-triangle"/> Missed Patients
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <t t-foreach="state.missed_patients.slice(0, 3)" t-as="patient" t-key="patient.id">
+                                <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                    <div>
+                                        <strong t-esc="patient.patient_name"/>
+                                        <br/>
+                                        <small class="text-muted">
+                                            <t t-esc="patient.appointment_date"/> - <t t-esc="patient.appointment_time"/>
+                                        </small>
+                                    </div>
+                                </div>
+                            </t>
+                            <button class="btn btn-outline-warning btn-sm mt-2" t-on-click="openMissedPatients">
+                                View All Missed
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+
+    <!-- Admin Dashboard Template -->
+    <t t-name="clinic_management.AdminDashboardTemplate" owl="1">
+        <div class="o_dashboard_container">
+            <div class="o_dashboard_header">
+                <h2 class="o_dashboard_title">Admin Dashboard</h2>
+                <div class="o_dashboard_subtitle">Business overview, doctor performance, and financial analytics</div>
+            </div>
+
+            <div t-if="state.loading" class="text-center p-5">
+                <i class="fa fa-spinner fa-spin fa-3x"/>
+                <div class="mt-3">Loading dashboard...</div>
+            </div>
+
+            <div t-if="!state.loading" class="row">
+                <!-- Appointments Summary -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Appointments Summary</h5>
+                            <button class="btn btn-primary btn-sm" t-on-click="openAppointmentsSummary">
+                                View Details
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="h3 text-primary" t-esc="state.appointments_summary.total"/>
+                                    <div class="text-muted">Total</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="h3 text-success" t-esc="state.appointments_summary.by_status.completed || 0"/>
+                                    <div class="text-muted">Completed</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="h3 text-warning" t-esc="state.appointments_summary.by_status.pending || 0"/>
+                                    <div class="text-muted">Pending</div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <t t-foreach="Object.entries(state.appointments_summary.by_status)" t-as="status" t-key="status[0]">
+                                    <div class="d-flex justify-content-between py-1">
+                                        <span class="text-capitalize" t-esc="status[0]"/>
+                                        <span t-esc="status[1]"/>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Revenue Overview -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Revenue Overview</h5>
+                            <button class="btn btn-primary btn-sm" t-on-click="openRevenueOverview">
+                                View Details
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-3">
+                                <div class="h2 text-success">$<t t-esc="state.revenue_overview.total_revenue || 0"/></div>
+                                <div class="text-muted" t-esc="state.revenue_overview.period"/>
+                            </div>
+                            <div class="mb-3">
+                                <strong>Top Services:</strong>
+                                <t t-foreach="Object.entries(state.revenue_overview.by_service || {}).slice(0, 3)" t-as="service" t-key="service[0]">
+                                    <div class="d-flex justify-content-between py-1">
+                                        <span t-esc="service[0]"/>
+                                        <span>$<t t-esc="service[1]"/></span>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Doctor Utilization -->
+                <div class="col-md-6 mt-3">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Doctor Utilization</h5>
+                            <button class="btn btn-primary btn-sm" t-on-click="openDoctorUtilization">
+                                View Details
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <t t-foreach="state.doctor_utilization.slice(0, 5)" t-as="doctor" t-key="doctor.doctor_name">
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span t-esc="doctor.doctor_name"/>
+                                        <span><t t-esc="doctor.utilization_percent"/>%</span>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar" 
+                                             t-attf-style="width: #{doctor.utilization_percent}%"
+                                             t-attf-class="progress-bar #{doctor.utilization_percent > 80 ? 'bg-success' : doctor.utilization_percent > 50 ? 'bg-warning' : 'bg-danger'}"/>
+                                    </div>
+                                    <small class="text-muted">
+                                        <t t-esc="doctor.booked_slots"/>/<t t-esc="doctor.total_slots"/> slots filled
+                                    </small>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upcoming Doctor Leaves -->
+                <div class="col-md-6 mt-3">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Upcoming Doctor Leaves</h5>
+                            <span class="badge badge-info" t-esc="state.upcoming_leaves.length"/>
+                        </div>
+                        <div class="card-body">
+                            <div t-if="!state.upcoming_leaves.length" class="text-muted text-center py-3">
+                                No upcoming leaves
+                            </div>
+                            <div t-else="">
+                                <t t-foreach="state.upcoming_leaves.slice(0, 5)" t-as="leave" t-key="leave.doctor_name + leave.start_date">
+                                    <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                        <div>
+                                            <strong t-esc="leave.doctor_name"/>
+                                            <br/>
+                                            <small class="text-muted" t-esc="leave.reason"/>
+                                        </div>
+                                        <div class="text-right">
+                                            <div t-esc="leave.start_date"/>
+                                            <div t-if="leave.end_date !== leave.start_date" class="text-muted">
+                                                to <t t-esc="leave.end_date"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </t>
+                                <button class="btn btn-outline-primary btn-sm mt-2" t-on-click="openUpcomingLeaves">
+                                    View All Leaves
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service Popularity -->
+                <div class="col-md-12 mt-3">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Service Popularity</h5>
+                            <button class="btn btn-primary btn-sm" t-on-click="openServicePopularity">
+                                View Chart
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <t t-foreach="Object.entries(state.service_popularity || {}).slice(0, 6)" t-as="service" t-key="service[0]">
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card border-left-primary">
+                                            <div class="card-body">
+                                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                    <t t-esc="service[0]"/>
+                                                </div>
+                                                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                    <t t-esc="service[1]"/> bookings
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+
+</templates>

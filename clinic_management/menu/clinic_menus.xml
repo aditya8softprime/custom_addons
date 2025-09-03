@@ -6,17 +6,39 @@
               web_icon="clinic_management,static/description/icon.png"
               sequence="10"/>
 
-    <menuitem id="menu_appointment_dashboard"
-              name="Appointment Dashboard"
+    <!-- ========== ROLE-BASED DASHBOARDS ========== -->
+    
+    <!-- Receptionist Dashboard -->
+    <menuitem id="menu_receptionist_dashboard"
+              name="Receptionist Dashboard"
               parent="menu_clinic_root"
-              action="action_appointment_dashboard"
-              sequence="0"/>
+              action="action_receptionist_dashboard"
+              sequence="1"
+              groups="group_clinic_receptionist"/>
 
+    <!-- Doctor Dashboard -->
+    <menuitem id="menu_doctor_dashboard"
+              name="Doctor Dashboard"
+              parent="menu_clinic_root"
+              action="action_doctor_dashboard"
+              sequence="2"
+              groups="group_clinic_doctor"/>
+
+    <!-- Admin Dashboard -->
+    <menuitem id="menu_admin_dashboard"
+              name="Admin Dashboard"
+              parent="menu_clinic_root"
+              action="action_admin_dashboard"
+              sequence="3"
+              groups="group_clinic_admin"/>
+
+    <!-- ========== APPOINTMENTS SECTION ========== -->
+    
     <!-- Appointments Menu (Main Group) -->
     <menuitem id="menu_clinic_appointments"
               name="Appointments"
               parent="menu_clinic_root"
-              sequence="1"
+              sequence="10"
               groups="group_clinic_receptionist,group_clinic_doctor,group_clinic_admin"/>
     
     <menuitem id="menu_clinic_appointment_today"
@@ -24,27 +46,145 @@
               parent="menu_clinic_appointments"
               action="action_clinic_appointment_today"
               groups="group_clinic_receptionist,group_clinic_doctor,group_clinic_admin"
-              sequence="2"/>
+              sequence="1"/>
     
     <menuitem id="menu_clinic_appointment_all"
               name="All Appointments"
               parent="menu_clinic_appointments"
               action="action_clinic_appointment"
               groups="group_clinic_receptionist,group_clinic_doctor,group_clinic_admin"
+              sequence="2"/>
+
+    <!-- Quick Booking (Receptionist Only) -->
+    <menuitem id="menu_quick_booking"
+              name="Quick Booking"
+              parent="menu_clinic_appointments"
+              action="action_quick_appointment_booking"
+              groups="group_clinic_receptionist,group_clinic_admin"
               sequence="3"/>
+
+    <!-- ========== DOCTOR SECTION ========== -->
+    
+    <!-- Doctor Menu -->
+    <menuitem id="menu_clinic_doctors_management"
+              name="Doctors"
+              parent="menu_clinic_root"
+              sequence="20"
+              groups="group_clinic_admin"/>
+    
+    <menuitem id="menu_clinic_doctor_list_management"
+              name="All Doctors"
+              parent="menu_clinic_doctors_management"
+              action="action_clinic_doctor"
+              groups="group_clinic_admin"
+              sequence="1"/>
+
+    <menuitem id="menu_clinic_doctor_schedule_management"
+              name="Doctor Schedules"
+              parent="menu_clinic_doctors_management"
+              action="action_clinic_slot"
+              groups="group_clinic_admin"
+              sequence="2"/>
+
+    <menuitem id="menu_clinic_doctor_leaves_management"
+              name="Doctor Leaves"
+              parent="menu_clinic_doctors_management"
+              action="action_clinic_holiday"
+              groups="group_clinic_admin"
+              sequence="3"/>
+
+    <!-- My Schedule (Doctor Only) -->
+    <menuitem id="menu_my_schedule"
+              name="My Schedule"
+              parent="menu_clinic_root"
+              action="action_doctor_schedule"
+              groups="group_clinic_doctor"
+              sequence="21"/>
+
+    <!-- ========== PATIENT SECTION ========== -->
+    
+    <!-- Patients Menu -->
+    <menuitem id="menu_clinic_patients_management"
+              name="Patients"
+              parent="menu_clinic_root"
+              sequence="30"
+              groups="group_clinic_receptionist,group_clinic_doctor,group_clinic_admin"/>
+    
+    <menuitem id="menu_clinic_patient_list_management"
+              name="All Patients"
+              parent="menu_clinic_patients_management"
+              action="action_clinic_patient"
+              groups="group_clinic_receptionist,group_clinic_doctor,group_clinic_admin"
+              sequence="1"/>
+
+    <!-- ========== SERVICES AND CONFIGURATION ========== -->
+    
+    <!-- Services Menu -->
+    <menuitem id="menu_clinic_services_management"
+              name="Services"
+              parent="menu_clinic_root"
+              sequence="40"
+              groups="group_clinic_admin"/>
+    
+    <menuitem id="menu_clinic_service_list_management"
+              name="All Services"
+              parent="menu_clinic_services_management"
+              action="action_clinic_service"
+              groups="group_clinic_admin"
+              sequence="1"/>
 
     <!-- Lab Tests -->
     <menuitem id="menu_clinic_lab_test"
               name="Lab Tests"
               parent="menu_clinic_root"
               action="action_clinic_lab_test"
+              sequence="50"
+              groups="group_clinic_receptionist,group_clinic_doctor,group_clinic_admin"/>
+
+    <!-- ========== REPORTS AND ANALYTICS ========== -->
+    
+    <!-- Reports Menu (Admin Only) -->
+    <menuitem id="menu_clinic_reports"
+              name="Reports &amp; Analytics"
+              parent="menu_clinic_root"
+              sequence="60"
+              groups="group_clinic_admin"/>
+
+    <menuitem id="menu_appointments_summary"
+              name="Appointments Summary"
+              parent="menu_clinic_reports"
+              action="action_admin_appointments_summary"
+              groups="group_clinic_admin"
+              sequence="1"/>
+
+    <menuitem id="menu_revenue_overview"
+              name="Revenue Overview"
+              parent="menu_clinic_reports"
+              action="action_admin_revenue_overview"
+              groups="group_clinic_admin"
               sequence="2"/>
 
+    <menuitem id="menu_doctor_utilization"
+              name="Doctor Utilization"
+              parent="menu_clinic_reports"
+              action="action_admin_doctor_utilization"
+              groups="group_clinic_admin"
+              sequence="3"/>
+
+    <menuitem id="menu_service_popularity"
+              name="Service Popularity"
+              parent="menu_clinic_reports"
+              action="action_admin_service_popularity"
+              groups="group_clinic_admin"
+              sequence="4"/>
+
+    <!-- ========== WEBSITE MANAGEMENT ========== -->
+    
     <!-- Website Menu -->
     <menuitem id="menu_clinic_website_root"
               name="Website"
               parent="menu_clinic_root"
-              sequence="3"
+              sequence="70"
               groups="group_clinic_admin"/>
     
     <menuitem id="menu_clinic_website_settings"

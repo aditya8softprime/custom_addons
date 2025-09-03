@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<odoo>
-    <data>
-        <record id="action_appointment_dashboard" model="ir.actions.client">
-            <field name="name">Appointment Dashboard</field>
-            <field name="tag">appointment_dashboard_tag</field>
-        </record>
-    </data>
-</odoo>

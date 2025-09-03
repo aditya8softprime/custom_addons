@@ -50,7 +50,7 @@
         'views/holiday_views.xml',
         'views/testimonial_views.xml',
         'views/clinic_website_settings_views.xml',
-        'views/appointment_dashboard.xml',
+        'views/dashboard_views.xml',
     # prescription dashboard actions removed
         
         # Wizards
@@ -86,9 +86,9 @@
     'assets': {
         'web.assets_backend': [
             # Dashboard files
-            'clinic_management/static/src/js/appointment_dashboard.js',
-            'clinic_management/static/src/css/appointment_dashboard.css',
-            'clinic_management/static/src/xml/appointment_dashboard_template.xml',
+            'clinic_management/static/src/js/dashboard.js',
+            'clinic_management/static/src/css/dashboard_styles.css',
+            'clinic_management/static/src/xml/dashboard_template.xml',
             'clinic_management/static/src/js/signature_widget.js',
             'clinic_management/static/src/xml/signature_widget.xml',
         ],

@@ -27,6 +27,7 @@ class ClinicAppointment(models.Model):
     slots = fields.Many2many('clinic.slot', string='Slots')
 
     appointment_date = fields.Date(string='Appointment Date', required=True, tracking=True)
+    appointment_time = fields.Char(string='Appointment Time', compute='_compute_appointment_time', store=True)
     
     # Start and end time are computed from the slot
     start_time = fields.Float(related='slot_id.start_time', string='Start Time', store=True)
@@ -56,10 +57,12 @@ class ClinicAppointment(models.Model):
     
     state = fields.Selection([
         ('draft', 'Draft'),
+        ('waiting', 'Waiting'),
         ('confirmed', 'Confirmed'),
         ('checked_in', 'Checked In'),
         ('in_consultation', 'In Consultation'),
         ('completed', 'Completed'),
+        ('missed', 'Missed'),
         ('no_show', 'No Show'),
         ('cancelled', 'Cancelled'),
         ('rescheduled', 'Rescheduled')
@@ -84,6 +87,8 @@ class ClinicAppointment(models.Model):
         for appointment in self:
             if appointment.state == 'draft':
                 appointment.color = 0  # White
+            elif appointment.state == 'waiting':
+                appointment.color = 3  # Yellow
             elif appointment.state == 'confirmed':
                 appointment.color = 4  # Light Blue
             elif appointment.state == 'checked_in':
@@ -92,6 +97,8 @@ class ClinicAppointment(models.Model):
                 appointment.color = 1  # Red
             elif appointment.state == 'completed':
                 appointment.color = 10  # Green
+            elif appointment.state == 'missed':
+                appointment.color = 8  # Orange
             elif appointment.state == 'no_show':
                 appointment.color = 3  # Yellow
             elif appointment.state == 'cancelled':
@@ -113,6 +120,16 @@ class ClinicAppointment(models.Model):
                 appointment.next_visit_date = appointment.appointment_date + timedelta(days=appointment.next_visit_days)
             else:
                 appointment.next_visit_date = False
+    
+    @api.depends('start_time', 'end_time')
+    def _compute_appointment_time(self):
+        for appointment in self:
+            if appointment.start_time and appointment.end_time:
+                start_time = self._float_to_time(appointment.start_time)
+                end_time = self._float_to_time(appointment.end_time)
+                appointment.appointment_time = f"{start_time} - {end_time}"
+            else:
+                appointment.appointment_time = False
     
     @api.model_create_multi
     def create(self, vals_list):
@@ -755,3 +772,56 @@ class ClinicAppointment(models.Model):
         hours = int(float_time)
         minutes = int((float_time - hours) * 60)
         return f"{hours:02d}:{minutes:02d}"
+
+    # ===============================
+    # Dashboard Action Methods
+    # ===============================
+    
+    def action_check_in(self):
+        """Check in a patient from dashboard"""
+        for record in self:
+            if record.state == 'confirmed':
+                record.write({
+                    'state': 'checked_in',
+                    'checked_in_time': fields.Datetime.now()
+                })
+                record.message_post(body=_("Patient checked in"))
+        return True
+    
+    def action_start_consultation(self):
+        """Start consultation from dashboard"""
+        for record in self:
+            if record.state in ['checked_in']:
+                record.write({
+                    'state': 'in_consultation',
+                    'consultation_start_time': fields.Datetime.now()
+                })
+                record.message_post(body=_("Consultation started"))
+        return True
+    
+    def action_complete(self):
+        """Complete appointment from dashboard"""
+        for record in self:
+            if record.state == 'in_consultation':
+                record.write({
+                    'state': 'completed',
+                    'consultation_end_time': fields.Datetime.now()
+                })
+                record.message_post(body=_("Appointment completed"))
+        return True
+    
+    def action_cancel(self):
+        """Cancel appointment from dashboard"""
+        for record in self:
+            if record.state not in ['completed', 'cancelled']:
+                record.write({'state': 'cancelled'})
+                record.message_post(body=_("Appointment cancelled"))
+        return True
+    
+    def action_mark_no_show(self):
+        """Mark patient as no show"""
+        for record in self:
+            if record.state in ['confirmed', 'checked_in']:
+                record.write({'state': 'no_show'})
+                record.message_post(body=_("Patient marked as no show"))
+        return True

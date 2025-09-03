@@ -8,5 +8,6 @@ from . import appointment
 from . import holiday
 from . import res_config_settings
 from . import testimonial
+from . import dashboard
 from . import clinic_website_settings
 from . import website_menu

@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- ========== RECEPTIONIST DASHBOARD ========== -->
+        <record id="action_receptionist_dashboard" model="ir.actions.client">
+            <field name="name">Receptionist Dashboard</field>
+            <field name="tag">receptionist_dashboard_tag</field>
+            <field name="target">current</field>
+        </record>
+
+        <!-- Today's Appointments for Receptionist -->
+        <record id="action_receptionist_today_appointments" model="ir.actions.act_window">
+            <field name="name">Today's Appointments</field>
+            <field name="res_model">clinic.appointment</field>
+            <field name="view_mode">list,form,calendar</field>
+            <field name="domain">[('appointment_date', '=', context_today().strftime('%Y-%m-%d'))]</field>
+            <field name="context">{
+                'default_appointment_date': context_today().strftime('%Y-%m-%d'),
+                'search_default_today': 1
+            }</field>
+        </record>
+
+        <!-- Pending Appointments Kanban -->
+        <record id="action_receptionist_pending_appointments" model="ir.actions.act_window">
+            <field name="name">Pending Appointments</field>
+            <field name="res_model">clinic.appointment</field>
+            <field name="view_mode">kanban,list,form</field>
+            <field name="domain">[('state', 'in', ['draft', 'waiting'])]</field>
+            <field name="context">{'search_default_pending': 1}</field>
+        </record>
+
+        <!-- Quick Appointment Booking -->
+        <record id="action_quick_appointment_booking" model="ir.actions.act_window">
+            <field name="name">Quick Booking</field>
+            <field name="res_model">clinic.appointment</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{
+                'default_appointment_date': context_today().strftime('%Y-%m-%d'),
+                'form_view_initial_mode': 'edit'
+            }</field>
+        </record>
+
+        <!-- ========== DOCTOR DASHBOARD ========== -->
+        <record id="action_doctor_dashboard" model="ir.actions.client">
+            <field name="name">Doctor Dashboard</field>
+            <field name="tag">doctor_dashboard_tag</field>
+            <field name="target">current</field>
+        </record>
+
+        <!-- Doctor's Today Patients -->
+        <record id="action_doctor_today_patients" model="ir.actions.act_window">
+            <field name="name">Today's Patients</field>
+            <field name="res_model">clinic.appointment</field>
+            <field name="view_mode">list,kanban,form,calendar</field>
+            <field name="domain">[
+                ('appointment_date', '=', context_today().strftime('%Y-%m-%d')),
+                ('doctor_id.user_id', '=', uid)
+            ]</field>
+            <field name="context">{
+                'search_default_today': 1,
+                'search_default_my_appointments': 1
+            }</field>
+        </record>
+
+        <!-- Doctor Schedule View -->
+        <record id="action_doctor_schedule" model="ir.actions.act_window">
+            <field name="name">My Schedule</field>
+            <field name="res_model">clinic.slot</field>
+            <field name="view_mode">calendar,list</field>
+            <field name="domain">[('doctor_id.user_id', '=', uid)]</field>
+        </record>
+
+        <!-- Missed Patients -->
+        <record id="action_doctor_missed_patients" model="ir.actions.act_window">
+            <field name="name">Missed/Unattended Patients</field>
+            <field name="res_model">clinic.appointment</field>
+            <field name="view_mode">list,form</field>
+            <field name="domain">[
+                ('doctor_id.user_id', '=', uid),
+                ('state', '=', 'missed')
+            ]</field>
+        </record>
+
+        <!-- Start Consultation Action -->
+        <record id="action_start_consultation" model="ir.actions.act_window">
+            <field name="name">Start Consultation</field>
+            <field name="res_model">clinic.appointment</field>
+            <field name="view_mode">form</field>
+            <field name="domain">[
+                ('doctor_id.user_id', '=', uid),
+                ('state', 'in', ['confirmed', 'waiting']),
+                ('appointment_date', '=', context_today().strftime('%Y-%m-%d'))
+            ]</field>
+            <field name="target">current</field>
+        </record>
+
+        <!-- ========== ADMIN DASHBOARD ========== -->
+        <record id="action_admin_dashboard" model="ir.actions.client">
+            <field name="name">Admin Dashboard</field>
+            <field name="tag">admin_dashboard_tag</field>
+            <field name="target">current</field>
+        </record>
+
+        <!-- Appointments Summary Graph -->
+        <record id="action_admin_appointments_summary" model="ir.actions.act_window">
+            <field name="name">Appointments Summary</field>
+            <field name="res_model">clinic.appointment</field>
+            <field name="view_mode">graph,pivot,list</field>
+            <field name="context">{
+                'search_default_group_by_state': 1,
+                'search_default_current_month': 1
+            }</field>
+        </record>
+
+        <!-- Revenue Overview -->
+        <record id="action_admin_revenue_overview" model="ir.actions.act_window">
+            <field name="name">Revenue Overview</field>
+            <field name="res_model">clinic.appointment</field>
+            <field name="view_mode">pivot,graph,list</field>
+            <field name="domain">[('state', '=', 'completed')]</field>
+            <field name="context">{
+                'search_default_group_by_service': 1,
+                'search_default_group_by_doctor': 1,
+                'search_default_current_month': 1
+            }</field>
+        </record>
+
+        <!-- Doctor Utilization -->
+        <record id="action_admin_doctor_utilization" model="ir.actions.act_window">
+            <field name="name">Doctor Utilization</field>
+            <field name="res_model">clinic.doctor</field>
+            <field name="view_mode">kanban,list</field>
+        </record>
+
+        <!-- Upcoming Doctor Leaves -->
+        <record id="action_admin_upcoming_leaves" model="ir.actions.act_window">
+            <field name="name">Upcoming Doctor Leaves</field>
+            <field name="res_model">clinic.holiday</field>
+            <field name="view_mode">list,calendar,form</field>
+            <field name="domain">[('start_date', '>=', context_today().strftime('%Y-%m-%d'))]</field>
+        </record>
+
+        <!-- Service Popularity -->
+        <record id="action_admin_service_popularity" model="ir.actions.act_window">
+            <field name="name">Service Popularity</field>
+            <field name="res_model">clinic.service</field>
+            <field name="view_mode">graph,list</field>
+        </record>
+
+        <!-- ========== DASHBOARD VIEWS ========== -->
+        
+        <!-- Appointment List View with Dashboard Actions -->
+        <record id="view_appointment_list_dashboard" model="ir.ui.view">
+            <field name="name">clinic.appointment.list.dashboard</field>
+            <field name="model">clinic.appointment</field>
+            <field name="arch" type="xml">
+                <list string="Appointments" editable="bottom">
+                    <field name="patient_id"/>
+                    <field name="doctor_id"/>
+                    <field name="service_id"/>
+                    <field name="appointment_date"/>
+                    <field name="appointment_time"/>
+                    <field name="state" widget="badge" 
+                           decoration-success="state == 'completed'"
+                           decoration-info="state == 'confirmed'"
+                           decoration-warning="state == 'waiting'"
+                           decoration-muted="state == 'draft'"
+                           decoration-danger="state == 'cancelled'"/>
+                    <button name="action_check_in" type="object" string="Check-In" 
+                            invisible="state not in ['confirmed']"
+                            class="btn-primary"/>
+                    <button name="action_start_consultation" type="object" string="Start" 
+                            invisible="state not in ['waiting']"
+                            class="btn-success"/>
+                    <button name="action_complete" type="object" string="Complete" 
+                            invisible="state not in ['in_progress']"
+                            class="btn-info"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Appointment Kanban View for Dashboard -->
+        <record id="view_appointment_kanban_dashboard" model="ir.ui.view">
+            <field name="name">clinic.appointment.kanban.dashboard</field>
+            <field name="model">clinic.appointment</field>
+            <field name="arch" type="xml">
+                <kanban default_group_by="state" class="o_kanban_dashboard">
+                    <field name="patient_id"/>
+                    <field name="doctor_id"/>
+                    <field name="service_id"/>
+                    <field name="appointment_date"/>
+                    <field name="appointment_time"/>
+                    <field name="state"/>
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div class="oe_kanban_card oe_kanban_global_click">
+                                <div class="oe_kanban_content">
+                                    <div class="o_kanban_record_title">
+                                        <strong><field name="patient_id"/></strong>
+                                    </div>
+                                    <div class="o_kanban_record_body">
+                                        <div>Doctor: <field name="doctor_id"/></div>
+                                        <div>Service: <field name="service_id"/></div>
+                                        <div>Date: <field name="appointment_date"/></div>
+                                        <div>Time: <field name="appointment_time"/></div>
+                                    </div>
+                                    <div class="o_kanban_record_bottom">
+                                        <div class="oe_kanban_bottom_left">
+                                            <span class="badge" t-attf-class="badge-#{record.state.raw_value}">
+                                                <field name="state"/>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+
+        <!-- Appointment Graph View for Admin -->
+        <record id="view_appointment_graph_admin" model="ir.ui.view">
+            <field name="name">clinic.appointment.graph.admin</field>
+            <field name="model">clinic.appointment</field>
+            <field name="arch" type="xml">
+                <graph string="Appointment Analysis" type="bar">
+                    <field name="state" type="row"/>
+                    <field name="appointment_date" type="col" interval="month"/>
+                </graph>
+            </field>
+        </record>
+
+        <!-- Appointment Pivot View for Revenue -->
+        <record id="view_appointment_pivot_revenue" model="ir.ui.view">
+            <field name="name">clinic.appointment.pivot.revenue</field>
+            <field name="model">clinic.appointment</field>
+            <field name="arch" type="xml">
+                <pivot string="Revenue Analysis">
+                    <field name="doctor_id" type="row"/>
+                    <field name="service_id" type="row"/>
+                    <field name="appointment_date" type="col" interval="month"/>
+                    <field name="service_id" type="measure"/>
+                </pivot>
+            </field>
+        </record>
+
+    </data>
+</odoo>

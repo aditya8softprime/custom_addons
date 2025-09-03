@@ -50,3 +50,7 @@ access_appointment_reschedule_wizard_doctor,appointment.reschedule.wizard doctor
 
 access_clinic_website_settings_admin,clinic.website.settings admin,model_clinic_website_settings,group_clinic_admin,1,1,1,1
 access_clinic_website_settings_system,clinic.website.settings system,model_clinic_website_settings,base.group_system,1,1,1,1
+
+access_clinic_dashboard_admin,clinic.dashboard admin,model_clinic_dashboard,group_clinic_admin,1,1,1,1
+access_clinic_dashboard_receptionist,clinic.dashboard receptionist,model_clinic_dashboard,group_clinic_receptionist,1,1,1,0
+access_clinic_dashboard_doctor,clinic.dashboard doctor,model_clinic_dashboard,group_clinic_doctor,1,1,1,0
