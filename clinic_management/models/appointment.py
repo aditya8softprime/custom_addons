@@ -79,6 +79,9 @@ class ClinicAppointment(models.Model):
     
     lab_test_count = fields.Integer(compute='_compute_counts')
     
+    # Previous appointments chain count
+    previous_appointments_count = fields.Integer(string='Previous Appointments Count', compute='_compute_previous_appointments_count')
+    
     # Fields for next visit follow-up
     next_visit_slot_available = fields.Boolean(string='Next Visit Slot Available', 
                                                compute='_compute_next_visit_slot_available')
@@ -115,12 +118,12 @@ class ClinicAppointment(models.Model):
     
     @api.depends('next_visit_date', 'next_visit_slot_available', 'state')
     def _compute_show_reschedule_button(self):
-        """Show reschedule button if next visit date is set and slots are available"""
+        """Show reschedule button only in completed state when next visit date is set and slots are available"""
         for appointment in self:
             appointment.show_reschedule_button = (
                 appointment.next_visit_date and 
                 appointment.next_visit_slot_available and 
-                appointment.state in ('draft', 'confirmed', 'checked_in', 'in_consultation')
+                appointment.state == 'completed'
             )
     
     @api.depends('next_visit_date', 'next_visit_slot_available', 'doctor_id')
@@ -133,6 +136,19 @@ class ClinicAppointment(models.Model):
                 appointment.next_visit_status = f"Slots available on {appointment.next_visit_date.strftime('%Y-%m-%d')}"
             else:
                 appointment.next_visit_status = f"No slots available on {appointment.next_visit_date.strftime('%Y-%m-%d')}"
+    
+    @api.depends('original_appointment_id')
+    def _compute_previous_appointments_count(self):
+        """Compute count of previous appointments in the chain"""
+        for appointment in self:
+            count = 0
+            if appointment.original_appointment_id:
+                # Find the root appointment and count all appointments in the chain
+                root_appointment = appointment._get_root_appointment()
+                chain_appointments = appointment._get_appointment_chain(root_appointment)
+                # Count only previous appointments (excluding current)
+                count = len(chain_appointments) - 1
+            appointment.previous_appointments_count = count
     
     @api.depends('state')
     def _compute_color(self):
@@ -170,11 +186,53 @@ class ClinicAppointment(models.Model):
             else:
                 appointment.next_visit_date = False
     
+    def _get_root_appointment(self):
+        """Get the root appointment of the chain"""
+        current = self
+        while current.original_appointment_id:
+            current = current.original_appointment_id
+        return current
+    
+    def _get_appointment_chain(self, root_appointment):
+        """Get all appointments in the chain starting from root"""
+        chain = [root_appointment]
+        current = root_appointment
+        while current.rescheduled_to_id:
+            chain.append(current.rescheduled_to_id)
+            current = current.rescheduled_to_id
+        return chain
+    
+    def action_view_previous_appointments(self):
+        """View all previous appointments in the chain"""
+        self.ensure_one()
+        if not self.original_appointment_id:
+            return {'type': 'ir.actions.act_window_close'}
+        
+        root_appointment = self._get_root_appointment()
+        chain_appointments = self._get_appointment_chain(root_appointment)
+        # Get all previous appointments (excluding current)
+        previous_appointment_ids = [app.id for app in chain_appointments if app.id != self.id]
+        
+        return {
+            'name': _('Previous Appointments'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'clinic.appointment',
+            'view_mode': 'list,form',
+            'domain': [('id', 'in', previous_appointment_ids)],
+            'context': {'default_patient_id': self.patient_id.id},
+        }
+    
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
-            if vals.get('name', 'New') == 'New':
-                vals['name'] = self.env['ir.sequence'].next_by_code('clinic.appointment') or 'New'
+            # Generate sequence number if name is 'New' or not provided
+            if not vals.get('name') or vals.get('name', 'New') == 'New':
+                sequence = self.env['ir.sequence'].next_by_code('clinic.appointment')
+                if sequence:
+                    vals['name'] = sequence
+                else:
+                    # Fallback if sequence is not found
+                    vals['name'] = f"APT{self.env['clinic.appointment'].search_count([]) + 1:05d}"
             
             # Set consulting fee if not provided and doctor is specified
             if not vals.get('consulting_fee') and vals.get('doctor_id'):
@@ -362,10 +420,6 @@ class ClinicAppointment(models.Model):
                 'consultation_end_time': fields.Datetime.now()
             })
 
-            # Create follow-up appointment if needed
-            if appointment.next_visit_days and appointment.next_visit_date:
-                appointment._create_followup_appointment()
-
             # Prepare attachments list
             attachment_ids = []
 
@@ -506,40 +560,7 @@ class ClinicAppointment(models.Model):
 
 
     
-    def action_create_prescription(self):
-        """Create a new prescription"""
-        self.ensure_one()
-        return {
-            'name': _('Create Prescription'),
-            'type': 'ir.actions.act_window',
-            # Previously opened the prescription form; removed as prescription model deprecated
-            'res_model': 'clinic.appointment',
-            'view_mode': 'form',
-            'target': 'current',
-            'context': {
-                'default_patient_id': self.patient_id.id,
-                'default_doctor_id': self.doctor_id.id,
-                'default_appointment_id': self.id,
-            }
-        }
-    
-    def action_view_prescriptions(self):
-        """View prescriptions"""
-        self.ensure_one()
-        return {
-            'name': _('Prescriptions'),
-            'type': 'ir.actions.act_window',
-            # Prescription model removed; show appointment form instead as placeholder
-            'res_model': 'clinic.appointment',
-            'view_mode': 'form',
-            'res_id': self.id,
-            'context': {
-                'default_patient_id': self.patient_id.id,
-                'default_doctor_id': self.doctor_id.id,
-                'default_appointment_id': self.id,
-            }
-        }
-    
+ 
     def action_create_lab_test(self):
         """Create a new lab test"""
         self.ensure_one()
@@ -572,62 +593,7 @@ class ClinicAppointment(models.Model):
             }
         }
     
-    def _create_followup_appointment(self):
-        """Create a follow-up appointment based on next visit date"""
-        self.ensure_one()
-        
-        # Try to find an available slot on the next visit date
-        day_name = self.next_visit_date.strftime('%A')
-        day = self.env['clinic.days'].search([('name', '=', day_name)], limit=1)
-        
-        if not day or day not in self.doctor_id.available_days:
-            # Doctor doesn't work on this da    y, can't create follow-up automatically
-            return
-        
-        # Check if doctor is on leave
-        holidays = self.env['clinic.holiday'].search([
-            ('doctor_id', '=', self.doctor_id.id),
-            ('state', '=', 'approved'),
-            ('from_date', '<=', self.next_visit_date),
-            ('to_date', '>=', self.next_visit_date)
-        ])
-        
-        if holidays:
-            # Doctor is on leave, can't create follow-up automatically
-            return
-        
-        # Find available slot
-        available_slot = self.env['clinic.slot'].search([
-            ('doctor_id', '=', self.doctor_id.id),
-            ('day_id', '=', day.id),
-            ('status', '=', 'available')
-        ], limit=1)
-        
-        if not available_slot:
-            # No available slots, can't create follow-up automatically
-
-            return
-        
-        # Create follow-up appointment
-        follow_up = self.create({
-            'patient_id': self.patient_id.id,
-            'doctor_id': self.doctor_id.id,
-            'slot_id': available_slot.id,
-            'appointment_date': self.next_visit_date,
-            'consulting_fee': self.doctor_id.consultation_fee,
-            'symptom': self.symptom,
-            'state': 'draft',
-            'original_appointment_id': self.id,
-        })
-        
-        # Link back to the original appointment
-        self.rescheduled_to_id = follow_up.id
-        
-        # Auto-confirm the follow-up
-        follow_up.action_confirm()
-        
-        return follow_up
-
+ 
     def action_create_invoice(self):
         """Create invoice for consultation fee and prescription medicines"""
         self.ensure_one()

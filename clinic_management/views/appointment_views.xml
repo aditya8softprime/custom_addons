@@ -51,6 +51,12 @@
                                 title="View Invoice">
                             <span>View Invoice</span>
                         </button>
+                        <button name="action_view_previous_appointments" type="object" 
+                                class="oe_stat_button" icon="fa-history"
+                                invisible="previous_appointments_count == 0"
+                                title="View Previous Appointments">
+                            <field name="previous_appointments_count" widget="statinfo" string="Previous"/>
+                        </button>
                     </div>
                     <div class="oe_title">
                         <h1>
@@ -80,6 +86,7 @@
                             <field name="next_visit_slot_available" invisible="1"/>
                             <field name="show_reschedule_button" invisible="1"/>
                             <field name="next_visit_status" invisible="1"/>
+                            <field name="previous_appointments_count" invisible="1"/>
                         </group>
                     </group>
                     <notebook>
@@ -101,8 +108,9 @@
                             <group>
                                 <field name="medicine_image" widget="draw_canvas" readonly="state != 'in_consultation'" groups="clinic_management.group_clinic_doctor,clinic_management.group_clinic_admin"/>
                                 <field name="medicine_image" widget="draw_canvas" groups="clinic_management.group_clinic_receptionist" readonly="1"/>
-                                <field name="medicine_pdf"/>
-                                        <field name="medicine_image_filename" invisible="1"/>
+                                <field name="medicine_pdf" filename="medicine_pdf_filename" invisible="not medicine_pdf"/>
+                                <field name="medicine_image_filename" invisible="1"/>
+                                <field name="medicine_pdf_filename" invisible="1"/>
                             </group>
                         </page>
                         <page string="Status Info" invisible="state in ('draft')">

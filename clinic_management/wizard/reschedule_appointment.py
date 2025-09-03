@@ -92,10 +92,7 @@ class AppointmentRescheduleWizard(models.TransientModel):
     def action_reschedule(self):
         """Reschedule the appointment"""
         self.ensure_one()
-        
-        if self.appointment_id.state in ['completed', 'no_show']:
-            raise ValidationError(_("Cannot reschedule an appointment that is completed, cancelled, or marked as no-show"))
-        
+      
         # Check if new slot is available
         if self.new_slot_id.status != 'available':
             raise ValidationError(_("The selected slot is no longer available"))

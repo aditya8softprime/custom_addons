@@ -26,10 +26,6 @@ class ClinicPatient(models.Model):
     medical_report = fields.Binary(string='Medical Report')
     medical_report_filename = fields.Char(string='Medical Report Filename')
     
-    # Medicine/Prescription history from appointments
-    medicine_pdf_history = fields.One2many('clinic.appointment', 'patient_id', string='Medicine PDF History',
-                                          domain=[('medicine_pdf', '!=', False)])
-    
     symptom = fields.Text(string='Symptoms', readonly=True,
                          help='Symptoms as reported during appointments')
     
@@ -43,7 +39,6 @@ class ClinicPatient(models.Model):
     
     appointment_count = fields.Integer(string='Appointment Count', compute='_compute_counts')
     lab_test_count = fields.Integer(string='Lab Test Count', compute='_compute_counts')
-    medicine_pdf_count = fields.Integer(string='Medicine PDF Count', compute='_compute_counts')
 
     # ticket reports
 
@@ -52,12 +47,11 @@ class ClinicPatient(models.Model):
         """Get available languages from the system"""
         return self.env['res.lang'].get_installed()
     
-    @api.depends('appointment_ids', 'lab_test_ids', 'medicine_pdf_history')
+    @api.depends('appointment_ids', 'lab_test_ids')
     def _compute_counts(self):
         for patient in self:
             patient.appointment_count = len(patient.appointment_ids)
             patient.lab_test_count = len(patient.lab_test_ids)
-            patient.medicine_pdf_count = len(patient.medicine_pdf_history)
     
     def _get_symptoms_from_appointments(self):
         """Update symptom field based on appointment data"""
@@ -87,17 +81,5 @@ class ClinicPatient(models.Model):
             'res_model': 'clinic.lab.test',
             'view_mode': 'list,form',
             'domain': [('patient_id', '=', self.id)],
-            'context': {'default_patient_id': self.id},
-        }
-    
-    def action_view_medicine_pdf_history(self):
-        """View medicine PDF history from appointments"""
-        self.ensure_one()
-        return {
-            'name': _('Medicine PDF History'),
-            'type': 'ir.actions.act_window',
-            'res_model': 'clinic.appointment',
-            'view_mode': 'list,form',
-            'domain': [('patient_id', '=', self.id), ('medicine_pdf', '!=', False)],
             'context': {'default_patient_id': self.id},
         }
