@@ -9,6 +9,7 @@ class AppointmentRescheduleWizard(models.TransientModel):
     appointment_id = fields.Many2one('clinic.appointment', string='Appointment', required=True)
     patient_id = fields.Many2one('clinic.patient', string='Patient', required=True)
     doctor_id = fields.Many2one('clinic.doctor', string='Doctor', required=True)
+    service_id = fields.Many2one('clinic.service', string='Service', required=True)
     
     # Original appointment details (for reference)
     original_date = fields.Date(related='appointment_id.appointment_date', string='Original Date')
@@ -19,6 +20,26 @@ class AppointmentRescheduleWizard(models.TransientModel):
     new_slot_id = fields.Many2one('clinic.slot', string='New Slot', required=True,
                                  domain="[('doctor_id', '=', doctor_id), ('status', '=', 'available')]")
     reason = fields.Text(string='Reason for Reschedule')
+    
+    @api.model
+    def default_get(self, fields_list):
+        """Set default new_date from appointment's next_visit_date if available"""
+        result = super().default_get(fields_list)
+        
+        # Get appointment from context
+        appointment_id = self.env.context.get('default_appointment_id')
+        if appointment_id:
+            appointment = self.env['clinic.appointment'].browse(appointment_id)
+            
+            # Set new_date from next_visit_date if available and no default_new_date in context
+            if appointment.next_visit_date and 'new_date' in fields_list and 'default_new_date' not in self.env.context:
+                result['new_date'] = appointment.next_visit_date
+                
+        # Override with explicit default_new_date from context if provided
+        if 'default_new_date' in self.env.context and 'new_date' in fields_list:
+            result['new_date'] = self.env.context['default_new_date']
+            
+        return result
     
     @api.onchange('doctor_id', 'new_date')
     def _onchange_doctor_date(self):
@@ -84,6 +105,7 @@ class AppointmentRescheduleWizard(models.TransientModel):
             'patient_id': self.patient_id.id,
             'doctor_id': self.doctor_id.id,
             'slot_id': self.new_slot_id.id,
+            'service_id': self.service_id.id,
             'appointment_date': self.new_date,
             'consulting_fee': self.appointment_id.consulting_fee,
             'symptom': self.appointment_id.symptom,

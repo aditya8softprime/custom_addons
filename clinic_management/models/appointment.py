@@ -79,6 +79,61 @@ class ClinicAppointment(models.Model):
     
     lab_test_count = fields.Integer(compute='_compute_counts')
     
+    # Fields for next visit follow-up
+    next_visit_slot_available = fields.Boolean(string='Next Visit Slot Available', 
+                                               compute='_compute_next_visit_slot_available')
+    show_reschedule_button = fields.Boolean(string='Show Reschedule Button',
+                                           compute='_compute_show_reschedule_button')
+    next_visit_status = fields.Char(string='Next Visit Status', compute='_compute_next_visit_status')
+    @api.depends('next_visit_date', 'doctor_id')
+    def _compute_next_visit_slot_available(self):
+        """Check if slot is available on next visit date"""
+        for appointment in self:
+            appointment.next_visit_slot_available = False
+            if appointment.next_visit_date and appointment.doctor_id:
+                # Check if next visit date has available slots
+                day_name = appointment.next_visit_date.strftime('%A')
+                day = self.env['clinic.days'].search([('name', '=', day_name)], limit=1)
+                
+                if day and day in appointment.doctor_id.available_days:
+                    # Check if doctor is not on leave
+                    holidays = self.env['clinic.holiday'].search([
+                        ('doctor_id', '=', appointment.doctor_id.id),
+                        ('state', '=', 'approved'),
+                        ('from_date', '<=', appointment.next_visit_date),
+                        ('to_date', '>=', appointment.next_visit_date)
+                    ])
+                    
+                    if not holidays:
+                        # Check available slots
+                        available_slots = self.env['clinic.slot'].search([
+                            ('doctor_id', '=', appointment.doctor_id.id),
+                            ('day_id', '=', day.id),
+                            ('status', '=', 'available')
+                        ])
+                        appointment.next_visit_slot_available = bool(available_slots)
+    
+    @api.depends('next_visit_date', 'next_visit_slot_available', 'state')
+    def _compute_show_reschedule_button(self):
+        """Show reschedule button if next visit date is set and slots are available"""
+        for appointment in self:
+            appointment.show_reschedule_button = (
+                appointment.next_visit_date and 
+                appointment.next_visit_slot_available and 
+                appointment.state in ('draft', 'confirmed', 'checked_in', 'in_consultation')
+            )
+    
+    @api.depends('next_visit_date', 'next_visit_slot_available', 'doctor_id')
+    def _compute_next_visit_status(self):
+        """Compute status message for next visit"""
+        for appointment in self:
+            if not appointment.next_visit_date:
+                appointment.next_visit_status = "No next visit scheduled"
+            elif appointment.next_visit_slot_available:
+                appointment.next_visit_status = f"Slots available on {appointment.next_visit_date.strftime('%Y-%m-%d')}"
+            else:
+                appointment.next_visit_status = f"No slots available on {appointment.next_visit_date.strftime('%Y-%m-%d')}"
+    
     @api.depends('state')
     def _compute_color(self):
         """Set color based on state for kanban view"""
@@ -110,7 +165,7 @@ class ClinicAppointment(models.Model):
     @api.depends('next_visit_days', 'appointment_date')
     def _compute_next_visit_date(self):
         for appointment in self:
-            if appointment.next_visit_days and appointment.appointment_date:
+            if appointment.next_visit_days and appointment.next_visit_days > 0 and appointment.appointment_date:
                 appointment.next_visit_date = appointment.appointment_date + timedelta(days=appointment.next_visit_days)
             else:
                 appointment.next_visit_date = False
@@ -120,6 +175,13 @@ class ClinicAppointment(models.Model):
         for vals in vals_list:
             if vals.get('name', 'New') == 'New':
                 vals['name'] = self.env['ir.sequence'].next_by_code('clinic.appointment') or 'New'
+            
+            # Set consulting fee if not provided and doctor is specified
+            if not vals.get('consulting_fee') and vals.get('doctor_id'):
+                doctor = self.env['clinic.doctor'].browse(vals['doctor_id'])
+                if doctor.consultation_fee:
+                    vals['consulting_fee'] = doctor.consultation_fee
+                    
         return super(ClinicAppointment, self).create(vals_list)
     
     def write(self, vals):
@@ -130,6 +192,55 @@ class ClinicAppointment(models.Model):
                 if rec.patient_id and rec.symptom:
                     rec.patient_id._get_symptoms_from_appointments()
         return result
+
+    @api.onchange('next_visit_days', 'appointment_date', 'doctor_id')
+    def _onchange_next_visit_days(self):
+        """Validate next visit slot availability when next_visit_days is set"""
+        if self.next_visit_days and self.next_visit_days > 0 and self.appointment_date and self.doctor_id:
+            next_date = self.appointment_date + timedelta(days=self.next_visit_days)
+            
+            # Check if next visit date has available slots
+            day_name = next_date.strftime('%A')
+            day = self.env['clinic.days'].search([('name', '=', day_name)], limit=1)
+            
+            if not day or day not in self.doctor_id.available_days:
+                return {
+                    'warning': {
+                        'title': 'Doctor Not Available',
+                        'message': f"Doctor {self.doctor_id.name} is not available on {day_name} ({next_date.strftime('%Y-%m-%d')}). Please choose different days for next visit."
+                    }
+                }
+            
+            # Check if doctor is on leave
+            holidays = self.env['clinic.holiday'].search([
+                ('doctor_id', '=', self.doctor_id.id),
+                ('state', '=', 'approved'),
+                ('from_date', '<=', next_date),
+                ('to_date', '>=', next_date)
+            ])
+            
+            if holidays:
+                return {
+                    'warning': {
+                        'title': 'Doctor on Leave',
+                        'message': f"Doctor {self.doctor_id.name} is on leave on {next_date.strftime('%Y-%m-%d')}. Please choose different days for next visit."
+                    }
+                }
+            
+            # Check available slots
+            available_slots = self.env['clinic.slot'].search([
+                ('doctor_id', '=', self.doctor_id.id),
+                ('day_id', '=', day.id),
+                ('status', '=', 'available')
+            ])
+            
+            if not available_slots:
+                return {
+                    'warning': {
+                        'title': 'No Available Slots',
+                        'message': f"No available slots for Dr. {self.doctor_id.name} on {next_date.strftime('%Y-%m-%d')}. Please choose different days for next visit."
+                    }
+                }
 
     @api.onchange('service_id')
     def _onchange_service_id(self):
@@ -148,6 +259,12 @@ class ClinicAppointment(models.Model):
         
         domain = [('id', 'in', doctors.ids)]
         return {'domain': {'doctor_id': domain}}
+    
+    @api.onchange('doctor_id')
+    def _onchange_doctor_id(self):
+        """Set consulting fee when doctor is selected"""
+        if self.doctor_id and not self.consulting_fee:
+            self.consulting_fee = self.doctor_id.consultation_fee
 
     @api.onchange('doctor_id', 'appointment_date')
     def _onchange_doctor_appointment_date(self):
@@ -367,17 +484,24 @@ class ClinicAppointment(models.Model):
     def action_reschedule(self):
         """Open the reschedule wizard"""
         self.ensure_one()
+        context = {
+            'default_appointment_id': self.id,
+            'default_patient_id': self.patient_id.id,
+            'default_doctor_id': self.doctor_id.id,
+            'default_service_id': self.service_id.id,
+        }
+        
+        # If next_visit_date is available, pass it to the wizard
+        if self.next_visit_date:
+            context['default_new_date'] = self.next_visit_date
+            
         return {
             'name': _('Reschedule Appointment'),
             'type': 'ir.actions.act_window',
             'res_model': 'appointment.reschedule.wizard',
             'view_mode': 'form',
             'target': 'new',
-            'context': {
-                'default_appointment_id': self.id,
-                'default_patient_id': self.patient_id.id,
-                'default_doctor_id': self.doctor_id.id,
-            }
+            'context': context
         }
 
 

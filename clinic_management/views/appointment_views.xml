@@ -20,6 +20,8 @@
                         invisible="state not in ('draft','confirmed','checked_in')" class="btn-danger" groups="clinic_management.group_clinic_receptionist,clinic_management.group_clinic_admin"/>
                     <button name="action_reschedule" string="Reschedule" type="object" 
                             invisible="state not in ('cancelled')" class="btn-info"/>
+                    <button name="action_reschedule" string="Reschedule for Next Visit" type="object" 
+                            invisible="not show_reschedule_button" class="btn-success"/>
                     <button name="reset_to_in_consultation" string="Reset to In Consultation" type="object"
                             class="btn-warning"/>
                     <field name="state" widget="statusbar" 
@@ -40,11 +42,13 @@
                         <button name="action_create_invoice" type="object" 
                             class="oe_stat_button" icon="fa-dollar"
                             invisible="state != 'completed'"
+                            title="Create Invoice"
                             groups="clinic_management.group_clinic_admin,clinic_management.group_clinic_receptionist"/>
 
                         <button name="action_view_invoice" type="object" 
-                                class="oe_stat_button" icon="fa-dollar"
-                                invisible="not invoice_id">
+                                class="oe_stat_button" icon="fa-file-text"
+                                invisible="not invoice_id"
+                                title="View Invoice">
                             <span>View Invoice</span>
                         </button>
                     </div>
@@ -72,16 +76,26 @@
                             <field name="consulting_fee" readonly="1" />
                             <field name="currency_id" invisible="1"/>
                             <field name="company_id" groups="base.group_multi_company" invisible="1"/>
+                            <field name="slots" invisible="1"/>
+                            <field name="next_visit_slot_available" invisible="1"/>
+                            <field name="show_reschedule_button" invisible="1"/>
+                            <field name="next_visit_status" invisible="1"/>
                         </group>
                     </group>
                     <notebook>
                         <page string="Symptoms &amp; Follow-up">
                             <group>
+                                <group>
                                     <field name="symptom" placeholder="Patient symptoms or problems" readonly="state in ('completed', 'cancelled', 'no_show')"/>
                                     <field name="is_lab_test_required" readonly="state in ('completed', 'cancelled', 'no_show')"/>
                                     <field name="next_visit_days" readonly="state in ('completed', 'cancelled', 'no_show')"/>
                                     <field name="next_visit_date" readonly="1"/>
                                 </group>
+                                <group>
+                                    <field name="next_visit_slot_available" readonly="1" string="Next Visit Slot Available"/>
+                                    <field name="next_visit_status" readonly="1" string="Next Visit Status"/>
+                                </group>
+                            </group>
                         </page>
                         <page string="Prescription">
                             <group>
