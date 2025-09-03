@@ -20,6 +20,8 @@
                         invisible="state not in ('draft','confirmed','checked_in')" class="btn-danger" groups="clinic_management.group_clinic_receptionist,clinic_management.group_clinic_admin"/>
                     <button name="action_reschedule" string="Reschedule" type="object" 
                             invisible="state not in ('cancelled')" class="btn-info"/>
+                    <button name="reset_to_in_consultation" string="Reset to In Consultation" type="object"
+                            class="btn-warning"/>
                     <field name="state" widget="statusbar" 
                            statusbar_visible="draft,confirmed,checked_in,in_consultation,completed"/>
                 </header>
@@ -38,7 +40,7 @@
                         <button name="action_create_invoice" type="object" 
                             class="oe_stat_button" icon="fa-dollar"
                             invisible="state != 'completed'"
-                            groups="group_clinic_admin,group_clinic_receptionist"/>
+                            groups="clinic_management.group_clinic_admin,clinic_management.group_clinic_receptionist"/>
 
                         <button name="action_view_invoice" type="object" 
                                 class="oe_stat_button" icon="fa-dollar"
@@ -83,9 +85,10 @@
                         </page>
                         <page string="Prescription">
                             <group>
-                                <field name="medicine_image" widget="draw_canvas" readonly="state != 'in_consultation'" groups="clinic_management.group_clinic_doctor"/>
+                                <field name="medicine_image" widget="draw_canvas" readonly="state != 'in_consultation'" groups="clinic_management.group_clinic_doctor,clinic_management.group_clinic_admin"/>
                                 <field name="medicine_image" widget="draw_canvas" groups="clinic_management.group_clinic_receptionist" readonly="1"/>
-                                <field name="medicine_image_filename" invisible="1"/>
+                                <field name="medicine_pdf"/>
+                                        <field name="medicine_image_filename" invisible="1"/>
                             </group>
                         </page>
                         <page string="Status Info" invisible="state in ('draft')">

@@ -1,25 +1,65 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- <data noupdate="0">
+    <data noupdate="0">
+
         <record id="email_template_appointment_complete" model="mail.template">
-            <field name="name">Appointment Completed with Prescription PDF</field>
-            <field name="model_id" ref="model_clinic_appointment"/>
+            <field name="name">Appointment Completed with Prescription</field>
+            <field name="model_id" ref="clinic_management.model_clinic_appointment"/>
             <field name="subject">Your Appointment Summary - {{ object.name }}</field>
-            <field name="email_from">{{ (object.doctor_id.email_formatted or object.company_id.email_formatted or user.email_formatted) }}</field>
+            <field name="email_from">{{ object.doctor_id.email }} </field>
             <field name="email_to">{{ object.patient_id.email }}</field>
             <field name="auto_delete" eval="True"/>
-            <field name="body_html" type="html"><![CDATA[
-                <p>Dear {{ object.patient_id.name }},</p>
-                <p>Your appointment <strong>{{ object.name }}</strong> with Dr. {{ object.doctor_id.name }} on {{ object.appointment_date }} has been completed.</p>
-                <p>Please find your prescription attached as a PDF (or image if conversion failed).</p>
-                <p>Summary:</p>
-                <ul>
-                    <li>Doctor: Dr. {{ object.doctor_id.name }}</li>
-                    <li>Date: {{ object.appointment_date }}</li>
-                    <li>Consultation Fee: {{ object.consulting_fee }}</li>
-                </ul>
-                <p>Regards,<br/>{{ object.company_id.name or 'Clinic' }}</p>
-            ]]></field>
+            <field name="body_html" type="html">
+                <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+                    <p>Hello <t t-esc="object.patient_id.name"/>,</p>
+                    
+                    <p>Your appointment has been completed successfully.</p>
+                    
+                    <h3 style="color: #2c5aa0;">Appointment Details</h3>
+                    <table style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Reference</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;"><t t-esc="object.name"/></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Patient</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;"><t t-esc="object.patient_id.name"/></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Doctor</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">Dr. <t t-esc="object.doctor_id.name"/></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Date</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;"><t t-esc="object.appointment_date"/></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Time</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;"><t t-esc="object.start_time"/> - <t t-esc="object.end_time"/></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Service</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;"><t t-esc="object.service_id.name"/></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Consulting Fee</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;"><t t-esc="object.consulting_fee"/> <t t-esc="object.currency_id.symbol"/></td>
+                        </tr>
+                    </table>
+
+                    <t t-if="object.symptom">
+                        <h3 style="color: #2c5aa0;">Symptoms / Notes</h3>
+                        <p style="background-color: #f9f9f9; padding: 10px; border-left: 4px solid #2c5aa0;"><t t-esc="object.symptom"/></p>
+                    </t>
+
+                   
+
+                    <p style="margin-top: 30px;">Best regards,</p>
+                    <p><strong>Dr. <t t-esc="object.doctor_id.name"/></strong><br/>
+                    <t t-esc="object.company_id.name or 'Clinic'"/></p>
+                </div>
+            </field>
         </record>
-    </data> -->
+
+    </data>
 </odoo>

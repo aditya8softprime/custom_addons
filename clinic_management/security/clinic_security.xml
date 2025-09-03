@@ -22,7 +22,7 @@
 
         <!-- ================== Access Rights ================== -->
         <!-- Doctor Master -->
-        <record id="access_clinic_doctor" model="ir.model.access">
+        <!-- <record id="access_clinic_doctor" model="ir.model.access">
             <field name="name">Doctor Master Access</field>
             <field name="model_id" ref="model_clinic_doctor"/>
             <field name="group_id" ref="group_clinic_admin"/>
@@ -30,10 +30,11 @@
             <field name="perm_write" eval="True"/>
             <field name="perm_create" eval="True"/>
             <field name="perm_unlink" eval="True"/>
-        </record>
+        </record> -->
+
 
         <!-- Service Master -->
-        <record id="access_clinic_service" model="ir.model.access">
+        <!-- <record id="access_clinic_service" model="ir.model.access">
             <field name="name">Service Master Access</field>
             <field name="model_id" ref="model_clinic_service"/>
             <field name="group_id" ref="group_clinic_admin"/>
@@ -41,10 +42,10 @@
             <field name="perm_write" eval="True"/>
             <field name="perm_create" eval="True"/>
             <field name="perm_unlink" eval="True"/>
-        </record>
+        </record> -->
 
         <!-- Slot Master -->
-        <record id="access_clinic_slot" model="ir.model.access">
+        <!-- <record id="access_clinic_slot" model="ir.model.access">
             <field name="name">Slot Master Access</field>
             <field name="model_id" ref="model_clinic_slot"/>
             <field name="group_id" ref="group_clinic_admin"/>
@@ -52,10 +53,10 @@
             <field name="perm_write" eval="True"/>
             <field name="perm_create" eval="True"/>
             <field name="perm_unlink" eval="True"/>
-        </record>
+        </record> -->
 
         <!-- Patient Master -->
-        <record id="access_clinic_patient_admin" model="ir.model.access">
+        <!-- <record id="access_clinic_patient_admin" model="ir.model.access">
             <field name="name">Patient Admin Access</field>
             <field name="model_id" ref="model_clinic_patient"/>
             <field name="group_id" ref="group_clinic_admin"/>
@@ -81,10 +82,10 @@
             <field name="perm_write" eval="False"/>
             <field name="perm_create" eval="False"/>
             <field name="perm_unlink" eval="False"/>
-        </record>
+        </record> -->
 
         <!-- Appointment -->
-        <record id="access_clinic_appointment_admin" model="ir.model.access">
+        <!-- <record id="access_clinic_appointment_admin" model="ir.model.access">
             <field name="name">Appointment Admin Access</field>
             <field name="model_id" ref="model_clinic_appointment"/>
             <field name="group_id" ref="group_clinic_admin"/>
@@ -92,9 +93,9 @@
             <field name="perm_write" eval="True"/>
             <field name="perm_create" eval="True"/>
             <field name="perm_unlink" eval="True"/>
-        </record>
+        </record> -->
 
-        <record id="access_clinic_appointment_receptionist" model="ir.model.access">
+        <!-- <record id="access_clinic_appointment_receptionist" model="ir.model.access">
             <field name="name">Appointment Receptionist Access</field>
             <field name="model_id" ref="model_clinic_appointment"/>
             <field name="group_id" ref="group_clinic_receptionist"/>
@@ -111,28 +112,28 @@
             <field name="perm_write" eval="True"/>
             <field name="perm_create" eval="False"/>
             <field name="perm_unlink" eval="False"/>
-        </record>
+        </record> -->
 
-        <record id="rule_clinic_appointment_doctor_own" model="ir.rule">
+        <!-- <record id="rule_clinic_appointment_doctor_own" model="ir.rule">
             <field name="name">Doctor: Own Appointments Only</field>
             <field name="model_id" ref="model_clinic_appointment"/>
             <field name="domain_force">[('doctor_id.user_id','=',user.id)]</field>
             <field name="groups" eval="[(4, ref('clinic_management.group_clinic_doctor'))]"/>
         
-        </record>
+        </record> -->
 
-        <record id="rule_clinic_holiday_doctor_own" model="ir.rule">
+        <!-- <record id="rule_clinic_holiday_doctor_own" model="ir.rule">
             <field name="name">Doctor: Own Holidays Only</field>
             <field name="model_id" ref="model_clinic_holiday"/>
             <field name="domain_force">[('doctor_id.user_id','=',user.id)]</field>
             <field name="groups" eval="[(4, ref('clinic_management.group_clinic_doctor'))]"/>
          
-        </record>
+        </record> -->
 
 
 
         <!-- Holiday / Leave -->
-        <record id="access_clinic_holiday_admin" model="ir.model.access">
+        <!-- <record id="access_clinic_holiday_admin" model="ir.model.access">
             <field name="name">Holiday Admin Access</field>
             <field name="model_id" ref="model_clinic_holiday"/>
             <field name="group_id" ref="group_clinic_admin"/>
@@ -140,8 +141,8 @@
             <field name="perm_write" eval="True"/>
             <field name="perm_create" eval="True"/>
             <field name="perm_unlink" eval="True"/>
-        </record>
-        <record id="access_clinic_holiday_doctor" model="ir.model.access">
+        </record> -->
+        <!-- <record id="access_clinic_holiday_doctor" model="ir.model.access">
             <field name="name">Holiday Doctor Access</field>
             <field name="model_id" ref="model_clinic_holiday"/>
             <field name="group_id" ref="group_clinic_doctor"/>
@@ -149,39 +150,39 @@
             <field name="perm_write" eval="True"/>
             <field name="perm_create" eval="True"/>
             <field name="perm_unlink" eval="False"/>
-        </record>
+        </record> -->
 
         <!-- ================== Record Rules / Multi-Company ================== -->
         <!-- Doctor -->
-        <record id="rule_clinic_doctor_company" model="ir.rule">
+        <!-- <record id="rule_clinic_doctor_company" model="ir.rule">
             <field name="name">Clinic Doctor: Multi-company Rule</field>
             <field name="model_id" ref="model_clinic_doctor"/>
             <field name="global" eval="True"/>
             <field name="domain_force">[('company_id', 'in', company_ids)]</field>
-        </record>
+        </record> -->
 
         <!-- Service -->
-        <record id="rule_clinic_service_company" model="ir.rule">
+        <!-- <record id="rule_clinic_service_company" model="ir.rule">
             <field name="name">Clinic Service: Multi-company Rule</field>
             <field name="model_id" ref="model_clinic_service"/>
             <field name="global" eval="True"/>
             <field name="domain_force">[('company_id', 'in', company_ids)]</field>
-        </record>
+        </record> -->
 
         <!-- Slot -->
-        <record id="rule_clinic_slot_company" model="ir.rule">
+        <!-- <record id="rule_clinic_slot_company" model="ir.rule">
             <field name="name">Clinic Slot: Multi-company Rule</field>
             <field name="model_id" ref="model_clinic_slot"/>
             <field name="global" eval="True"/>
             <field name="domain_force">[('doctor_id.company_id', 'in', company_ids)]</field>
-        </record>
+        </record> -->
 
         <!-- Patient -->
-        <record id="rule_clinic_patient_company" model="ir.rule">
+        <!-- <record id="rule_clinic_patient_company" model="ir.rule">
             <field name="name">Clinic Patient: Multi-company Rule</field>
             <field name="model_id" ref="model_clinic_patient"/>
             <field name="global" eval="True"/>
             <field name="domain_force">[('company_id', 'in', company_ids)]</field>
-        </record>
+        </record> -->
     
 </odoo>

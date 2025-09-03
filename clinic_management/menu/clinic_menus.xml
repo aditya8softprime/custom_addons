@@ -66,28 +66,28 @@
               name="Configuration"
               parent="menu_clinic_root"
               sequence="4"
-              groups="group_clinic_admin"/>
-    
+              groups="group_clinic_admin,group_clinic_receptionist,group_clinic_doctor"/>
+
     <menuitem id="menu_clinic_doctor"
               name="Doctors"
               parent="menu_clinic_configuration"
               action="action_clinic_doctor"
               sequence="1"
-              groups="group_clinic_admin"/>
+              groups="group_clinic_admin,group_clinic_receptionist,group_clinic_doctor"/>
 
     <menuitem id="menu_clinic_patient"
               name="Patients"
               parent="menu_clinic_configuration"
               action="action_clinic_patient"
               sequence="2"
-              groups="group_clinic_admin,group_clinic_receptionist"/>
+              groups="group_clinic_admin,group_clinic_receptionist,group_clinic_doctor"/>
 
     <menuitem id="menu_clinic_service"
               name="Services/Treatments"
               parent="menu_clinic_configuration"
               action="action_clinic_service"
               sequence="3"
-              groups="group_clinic_admin"/>
+              groups="group_clinic_admin,group_clinic_receptionist,group_clinic_doctor"/>
 
     <menuitem id="menu_clinic_slot"
               name="Slots"
@@ -115,5 +115,5 @@
               parent="menu_clinic_configuration"
               action="action_clinic_doctor_special_tag"
               sequence="7"
-              groups="group_clinic_admin,group_clinic_receptionist"/>
+              groups="group_clinic_admin"/>
 </odoo>

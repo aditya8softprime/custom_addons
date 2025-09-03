@@ -48,9 +48,10 @@ class ClinicAppointment(models.Model):
     is_lab_test_required = fields.Boolean(string='Lab Test Required', tracking=True)
     
     # Related records
-    # medicine_image replaces the old prescription model; store handwritten image per appointment
     medicine_image = fields.Binary(string='Medicine / Prescription Image',attachment=True)
     medicine_image_filename = fields.Char(string='Medicine Image Filename')
+    medicine_pdf = fields.Binary(string='Medicine / Prescription PDF', attachment=True)
+    medicine_pdf_filename = fields.Char(string='Medicine PDF Filename')
     lab_test_ids = fields.One2many('clinic.lab.test', 'appointment_id', string='Lab Tests')
     invoice_id = fields.Many2one('account.move', string='Invoice')
     
@@ -227,7 +228,14 @@ class ClinicAppointment(models.Model):
             'state': 'in_consultation',
             'consultation_start_time': fields.Datetime.now()
         })
-    
+
+    def reset_to_in_consultation(self):
+        """Reset the appointment state to in consultation"""
+        self.write({
+            'state': 'in_consultation',
+            'consultation_start_time': fields.Datetime.now()
+        })
+
     def action_complete(self):
         """Complete the appointment: set state, optionally create follow-up, generate PDF from medicine_image,
         attach it and send completion email to patient."""
@@ -274,33 +282,47 @@ class ClinicAppointment(models.Model):
                             pdf_bytes = None
 
                     if pdf_bytes:
-                        pdf_datas = base64.b64encode(pdf_bytes)
+                        # Save PDF on the appointment record and create an attachment linked to it
+                        pdf_b64 = base64.b64encode(pdf_bytes).decode()
                         pdf_name = f"Prescription_{appointment.name or ''}.pdf"
                         if appointment.medicine_image_filename:
                             # Replace extension with .pdf
                             base_name = appointment.medicine_image_filename.rsplit('.', 1)[0]
                             pdf_name = f"{base_name}.pdf"
+
+                        # store on record
+                        try:
+                            appointment.medicine_pdf = pdf_b64
+                            appointment.medicine_pdf_filename = pdf_name
+                        except Exception:
+                            # non-fatal if writing fails
+                            logging.getLogger(__name__).exception('Failed to write medicine_pdf on appointment %s', appointment.id)
+
+                        # create ir.attachment so it appears in object.attachment_ids for the template
                         attachment = self.env['ir.attachment'].create({
                             'name': pdf_name,
                             'type': 'binary',
-                            'datas': pdf_datas,
+                            'datas': pdf_b64,
                             'res_model': 'clinic.appointment',
                             'res_id': appointment.id,
                             'mimetype': 'application/pdf',
                         })
                         attachment_ids.append(attachment.id)
                     else:
-                        # Fallback: attach original image
+                        # Fallback: attach original image (and keep existing medicine_image on record)
                         img_name = appointment.medicine_image_filename or f"Prescription_{appointment.name or ''}.png"
-                        attachment = self.env['ir.attachment'].create({
-                            'name': img_name,
-                            'type': 'binary',
-                            'datas': appointment.medicine_image,
-                            'res_model': 'clinic.appointment',
-                            'res_id': appointment.id,
-                            'mimetype': 'image/png',
-                        })
-                        attachment_ids.append(attachment.id)
+                        try:
+                            attachment = self.env['ir.attachment'].create({
+                                'name': img_name,
+                                'type': 'binary',
+                                'datas': appointment.medicine_image,
+                                'res_model': 'clinic.appointment',
+                                'res_id': appointment.id,
+                                'mimetype': 'image/png',
+                            })
+                            attachment_ids.append(attachment.id)
+                        except Exception:
+                            logging.getLogger(__name__).exception('Failed to attach original image for appointment %s', appointment.id)
 
                 except Exception:
                     logging.getLogger(__name__).exception('Failed to convert/attach medicine_image for appointment %s', appointment.id)
@@ -310,11 +332,12 @@ class ClinicAppointment(models.Model):
                 if appointment.patient_id and appointment.patient_id.email:
                     template = self.env.ref('clinic_management.email_template_appointment_complete', False)
                     if template:
-                        # If attachments exist, pass them via context
-                        ctx = {}
-                        if attachment_ids:
-                            ctx = {'attachment_ids': attachment_ids}
-                        template.with_context(**ctx).send_mail(appointment.id, force_send=True)
+                        # Send email with explicit attachment ids to ensure they are included
+                        email_values = {
+                            'attachment_ids': [(4, att_id) for att_id in attachment_ids] if attachment_ids else False
+                        }
+                        template.attachment_ids = [(6, 0, attachment_ids)]
+                        template.send_mail(appointment.id, force_send=True, email_values=email_values)
             except Exception:
                 logging.getLogger(__name__).exception('Failed to send completion email for appointment %s', appointment.id)
     
@@ -512,14 +535,19 @@ class ClinicAppointment(models.Model):
         # ------------------------
         # 1. Add consultation fee line
         # ------------------------
+        consultation_product = self.env['product.product'].search([
+            ('name', '=', 'Consultation'),
+            ('type', '=', 'service')
+        ], limit=1)
+        if not consultation_product:
+            consultation_product = self._get_consultation_product()
         if self.consulting_fee:
-            doctor_vals = self.doctor_id.get_consultation_product_vals()
             consultation_line = (0, 0, {
-                'product_id': doctor_vals['product'].id,
-                'name': doctor_vals['description'],
+                'product_id': consultation_product.id,
+                'name': self.name,
                 'quantity': 1,
                 'price_unit': self.consulting_fee,
-                'account_id': doctor_vals['product'].property_account_income_id.id,
+                # 'account_id': consultation_product.property_account_income_id.id,
             })
             invoice_vals['invoice_line_ids'].append(consultation_line)
 
@@ -577,7 +605,6 @@ class ClinicAppointment(models.Model):
                 'list_price': 500.0,  # Default price
                 'sale_ok': True,
                 'purchase_ok': False,
-                'detailed_type': 'service',
             })
         
         return product
