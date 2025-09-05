@@ -3,8 +3,8 @@ from . import service
 from . import days_master
 from . import slot
 from . import patient
-from . import labtest
 from . import appointment
+from . import appointment_lab_line
 from . import holiday
 from . import res_config_settings
 from . import testimonial

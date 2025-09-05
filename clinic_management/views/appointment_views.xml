@@ -29,13 +29,7 @@
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
-                        <button name="action_create_lab_test" type="object" 
-                                class="oe_stat_button" icon="fa-flask"
-                                invisible="not is_lab_test_required or lab_test_count > 0 or state in ('draft', 'cancelled', 'no_show')">
-                            <span>Create Lab Test</span>
-                        </button>
-                        <button name="action_view_lab_tests" type="object" 
-                                class="oe_stat_button" icon="fa-flask"
+                        <button class="oe_stat_button" icon="fa-flask"
                                 invisible="lab_test_count == 0">
                             <field name="lab_test_count" widget="statinfo" string="Lab Tests"/>
                         </button>
@@ -112,6 +106,9 @@
                                 <field name="medicine_image_filename" invisible="1"/>
                                 <field name="medicine_pdf_filename" invisible="1"/>
                             </group>
+                        </page>
+                        <page string="Lab Test Lines" invisible="not is_lab_test_required">
+                            <field name="lab_test_line_ids"/>
                         </page>
                         <page string="Status Info" invisible="state in ('draft')">
                             <group>

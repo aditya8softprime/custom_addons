@@ -52,7 +52,9 @@ class ClinicAppointment(models.Model):
     medicine_image_filename = fields.Char(string='Medicine Image Filename')
     medicine_pdf = fields.Binary(string='Medicine / Prescription PDF', attachment=True)
     medicine_pdf_filename = fields.Char(string='Medicine PDF Filename')
-    lab_test_ids = fields.One2many('clinic.lab.test', 'appointment_id', string='Lab Tests')
+    
+    # Lab test lines (simplified approach)
+    lab_test_line_ids = fields.One2many('appointment.lab.line', 'appointment_id', string='Lab Test Lines')
     invoice_id = fields.Many2one('account.move', string='Invoice')
     
     state = fields.Selection([
@@ -173,10 +175,10 @@ class ClinicAppointment(models.Model):
             else:
                 appointment.color = 0
     
-    @api.depends('lab_test_ids')
+    @api.depends('lab_test_line_ids')
     def _compute_counts(self):
         for record in self:
-            record.lab_test_count = len(record.lab_test_ids)
+            record.lab_test_count = len(record.lab_test_line_ids)
     
     @api.depends('next_visit_days', 'appointment_date')
     def _compute_next_visit_date(self):
@@ -558,42 +560,6 @@ class ClinicAppointment(models.Model):
             'context': context
         }
 
-
-    
- 
-    def action_create_lab_test(self):
-        """Create a new lab test"""
-        self.ensure_one()
-        return {
-            'name': _('Create Lab Test'),
-            'type': 'ir.actions.act_window',
-            'res_model': 'clinic.lab.test',
-            'view_mode': 'form',
-            'target': 'current',
-            'context': {
-                'default_patient_id': self.patient_id.id,
-                'default_doctor_id': self.doctor_id.id,
-                'default_appointment_id': self.id,
-            }
-        }
-    
-    def action_view_lab_tests(self):
-        """View lab tests"""
-        self.ensure_one()
-        return {
-            'name': _('Lab Tests'),
-            'type': 'ir.actions.act_window',
-            'res_model': 'clinic.lab.test',
-            'view_mode': 'list,form',
-            'domain': [('appointment_id', '=', self.id)],
-            'context': {
-                'default_patient_id': self.patient_id.id,
-                'default_doctor_id': self.doctor_id.id,
-                'default_appointment_id': self.id,
-            }
-        }
-    
- 
     def action_create_invoice(self):
         """Create invoice for consultation fee and prescription medicines"""
         self.ensure_one()
@@ -784,7 +750,7 @@ class ClinicAppointment(models.Model):
         total_revenue = sum(completed.mapped('consulting_fee'))
 
         # Count lab tests (prescription model removed; handwritten image stored on appointment)
-        total_lab_tests = sum(len(a.lab_test_ids) for a in appointments)
+        total_lab_tests = sum(len(a.lab_tes) for a in appointments)
 
         return {
             'total_appointments': len(appointments),

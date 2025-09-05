@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Lab Test Line Action -->
+    <record id="action_view_appointment_lab_line" model="ir.actions.act_window">
+        <field name="name">Lab Test Lines</field>
+        <field name="res_model">appointment.lab.line</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('appointment_id', '=', active_id)]</field>
+        <field name="context">{'default_appointment_id': active_id}</field>
+    </record>
+
+    <!-- Lab Test Line Form View -->
+    <record id="view_appointment_lab_line_form" model="ir.ui.view">
+        <field name="name">appointment.lab.line.form</field>
+        <field name="model">appointment.lab.line</field>
+        <field name="arch" type="xml">
+            <form string="Lab Test Line">
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="pending,completed,cancelled"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="test_name" placeholder="e.g., CBC, Blood Sugar, Urine Test"/>
+                            <field name="cost"/>
+                            <field name="sequence"/>
+                        </group>
+                        <group>
+                            <field name="date_requested"/>
+                            <field name="date_completed" readonly="1"/>
+                        </group>
+                    </group>
+                    
+                    <group string="Instructions/Notes">
+                        <field name="notes" placeholder="Special instructions for the lab test..." nolabel="1"/>
+                    </group>
+                    
+                    <group string="Results" invisible="state == 'pending'">
+                        <group>
+                            <field name="result_text" placeholder="Text results or values..."/>
+                        </group>
+                        <group>
+                            <field name="result_file" filename="result_filename"/>
+                            <field name="result_filename" invisible="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Lab Test Line Tree View -->
+    <record id="view_appointment_lab_line_tree" model="ir.ui.view">
+        <field name="name">appointment.lab.line.tree</field>
+        <field name="model">appointment.lab.line</field>
+        <field name="arch" type="xml">
+            <list string="Lab Test Lines" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="test_name"/>
+                <field name="notes"/>
+                <field name="state"/>
+                <field name="cost" sum="Total Cost"/>
+                <field name="date_requested"/>
+                <field name="date_completed"/>
+                <field name="result_text"/>
+                <field name="result_file" filename="result_filename"/>
+                <field name="result_filename" invisible="1"/>
+            </list>
+        </field>
+    </record>
+</odoo>

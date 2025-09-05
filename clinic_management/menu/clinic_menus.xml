@@ -33,13 +33,6 @@
               groups="group_clinic_receptionist,group_clinic_doctor,group_clinic_admin"
               sequence="3"/>
 
-    <!-- Lab Tests -->
-    <menuitem id="menu_clinic_lab_test"
-              name="Lab Tests"
-              parent="menu_clinic_root"
-              action="action_clinic_lab_test"
-              sequence="2"/>
-
     <!-- Website Menu -->
     <menuitem id="menu_clinic_website_root"
               name="Website"

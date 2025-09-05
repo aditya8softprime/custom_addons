@@ -26,13 +26,13 @@ access_clinic_appointment_system,clinic.appointment system,model_clinic_appointm
 access_clinic_appointment_receptionist,clinic.appointment receptionist,model_clinic_appointment,group_clinic_receptionist,1,1,1,0
 access_clinic_appointment_doctor,clinic.appointment doctor,model_clinic_appointment,group_clinic_doctor,1,1,0,0
 
+
+access_appointment_lab_line,appointment.lab.line,model_appointment_lab_line,base.group_user,1,1,1,1
+
 access_clinic_holiday_admin,clinic.holiday admin,model_clinic_holiday,group_clinic_admin,1,1,1,1
 access_clinic_holiday_receptionist,clinic.holiday receptionist,model_clinic_holiday,group_clinic_receptionist,1,1,0,0
 access_clinic_holiday_doctor,clinic.holiday doctor,model_clinic_holiday,group_clinic_doctor,1,1,1,0
 
-access_clinic_lab_test_admin,clinic.lab.test admin,model_clinic_lab_test,group_clinic_admin,1,1,1,1
-access_clinic_lab_test_receptionist,clinic.lab.test receptionist,model_clinic_lab_test,group_clinic_receptionist,1,1,1,0
-access_clinic_lab_test_doctor,clinic.lab.test doctor,model_clinic_lab_test,group_clinic_doctor,1,1,1,1
 
 access_clinic_doctor_special_tag_admin,clinic.doctor.special.tag admin,model_clinic_doctor_special_tag,group_clinic_admin,1,1,1,1
 access_clinic_doctor_special_tag_receptionist,clinic.doctor.special.tag receptionist,model_clinic_doctor_special_tag,group_clinic_receptionist,1,0,0,0
