@@ -67,6 +67,8 @@
                       <field name="customer_id"/>
                       <field name="allocated_expense"/>
                       <field name="commission_amount"/>
+                      <field name="damage_amount"/>
+                      <field name="profit"/>
                       <field name="final_price"/>
                       <field name="delivery_id"/>
                     </list>
@@ -110,11 +112,11 @@
               </field>
             </page>
 
-            <page string="Deliveries" invisible="state in ['draft', 'validated']">
-              <field name="delivery_ids">
+            <page string="Deliveries" invisible="state in ['draft']">
+              <field name="delivery_ids" readonly="state == 'closed'">
                 <list>
                   <field name="name"/>
-                  <field name="vehicle_id"/>
+                  <field name="customer_id"/>
                   <field name="state"/>
                   <field name="delivery_date"/>
                 </list>

@@ -7,7 +7,6 @@
       <list>
         <field name="name"/>
         <field name="shipment_id"/>
-        <field name="vehicle_id"/>
         <field name="customer_id"/>
         <field name="state"/>
         <field name="delivery_date"/>
@@ -37,17 +36,30 @@
             <group>
               <field name="name"/>
               <field name="shipment_id"/>
-              <field name="container_id"/>
-              <field name="vehicle_id"/>
+              <field name="customer_id"/>
             </group>
             <group>
-              <field name="customer_id"/>
               <field name="sale_order_id" readonly="state != 'draft'"/>
               <field name="invoice_id" readonly="state != 'draft'"/>
               <field name="delivery_date" required="state == 'delivered'" readonly="state == 'draft'"/>
             </group>
           </group>
           <notebook>
+            <page string="Delivery Lines">
+              <field name="delivery_line_ids">
+                <list editable="bottom">
+                  <field name="sequence" widget="handle"/>
+                  <field name="container_id"/>
+                  <field name="vehicle_id"/>
+                </list>
+                <form>
+                  <group>
+                    <field name="container_id"/>
+                    <field name="vehicle_id"/>
+                  </group>
+                </form>
+              </field>
+            </page>
             <page string="Release Documents" invisible="state == 'draft'">
               <field name="attachment_ids" widget="many2many_binary" required="state == 'delivered'"/>
             </page>

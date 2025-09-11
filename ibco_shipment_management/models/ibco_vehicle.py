@@ -3,6 +3,7 @@ from odoo import models, fields, api
 class IbcoVehicleLine(models.Model):
     _name = "ibco.vehicle.line"
     _description = "IBCO Vehicle / Cargo Line"
+    _rec_name = 'chassis_no'
 
     name = fields.Char(string="Vehicle Description")
     chassis_no = fields.Char(string="Chassis No", required=True)

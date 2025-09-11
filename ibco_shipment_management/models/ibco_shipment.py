@@ -198,25 +198,42 @@ class IbcoShipment(models.Model):
                         
                         created_invoices[sale_order.id] = invoice
             
-            # Create Delivery Records for each Vehicle Line
+            # Create Delivery Records grouped by customer
+            vehicles_by_customer = {}
             for vehicle in vehicle_lines:
                 if vehicle.sale_line_id and not vehicle.delivery_id:
-                    sale_order = vehicle.sale_line_id.order_id
-                    invoice = created_invoices.get(sale_order.id)
-                    
-                    # Create Delivery Record
-                    delivery = self.env['ibco.delivery'].create({
-                        'shipment_id': rec.id,
+                    customer_id = vehicle.customer_id.id
+                    if customer_id not in vehicles_by_customer:
+                        vehicles_by_customer[customer_id] = {
+                            'vehicles': [],
+                            'sale_order': vehicle.sale_line_id.order_id,
+                            'invoice': created_invoices.get(vehicle.sale_line_id.order_id.id)
+                        }
+                    vehicles_by_customer[customer_id]['vehicles'].append(vehicle)
+            
+            # Create delivery records for each customer
+            for customer_id, customer_data in vehicles_by_customer.items():
+                # Create Delivery Record
+                delivery = self.env['ibco.delivery'].create({
+                    'shipment_id': rec.id,
+                    'customer_id': customer_id,
+                    'sale_order_id': customer_data['sale_order'].id,
+                    'invoice_id': customer_data['invoice'].id if customer_data['invoice'] else False,
+                    'state': 'draft',
+                })
+                
+                # Create delivery lines for each vehicle
+                for vehicle in customer_data['vehicles']:
+                    self.env['ibco.delivery.line'].create({
+                        'delivery_id': delivery.id,
                         'container_id': vehicle.container_id.id,
                         'vehicle_id': vehicle.id,
-                        'customer_id': vehicle.customer_id.id,
-                        'sale_order_id': sale_order.id,
-                        'invoice_id': invoice.id if invoice else False,
-                        'state': 'draft',
                     })
                     
                     # Link delivery to vehicle
                     vehicle.delivery_id = delivery.id
+
+            rec.state = 'in_progress'
 
     def action_view_deliveries(self):
         """Action to view all deliveries for this shipment"""
@@ -278,7 +295,5 @@ class IbcoShipment(models.Model):
                     unpaid_invoices |= delivery.invoice_id
             
             if unpaid_invoices:
-                raise UserError(_("Cannot close: All invoices must be paid. Unpaid invoices: %s") % 
-                              ', '.join(unpaid_invoices.mapped('name')))
-            
+                raise UserError(_("Cannot close: All invoices must be paid. Unpaid invoices"))
             rec.state = 'closed'
