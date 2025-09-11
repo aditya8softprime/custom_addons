@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_ibco_damage_list" model="ir.ui.view">
+    <field name="name">ibco.damage.list</field>
+    <field name="model">ibco.damage</field>
+    <field name="arch" type="xml">
+      <list readonly="1">
+        <field name="name"/>
+        <field name="vehicle_id"/>
+        <field name="shipment_id"/>
+        <field name="amount"/>
+      </list>
+    </field>
+  </record>
+
+  <!-- Damage Action -->
+  <record id="action_ibco_damages" model="ir.actions.act_window">
+    <field name="name">Damages</field>
+    <field name="res_model">ibco.damage</field>
+    <field name="view_mode">list</field>
+    <field name="context">{'create': False, 'edit': False}</field>        
+  </record>
+</odoo>
+

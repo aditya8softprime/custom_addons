@@ -1,0 +1,26 @@
+{
+    "name": "IBCO Shipment Management",
+    "version": "1.0.0",
+    "summary": "Shipment, Container, Vehicle, Expense allocation, Commission, Delivery and Invoicing for IBCO",
+    "description": "Complete shipment workflow: containers, vehicle lines, expense allocation by m3, commission, auto SO/invoice, deliveries and damages.",
+    "author": "Softprime Consulting",
+    "website": "https://softprime.example",
+    "category": "Operations/Shipping",
+    "depends": ["sale", "account", "stock", "base"],
+    "data": [
+        "data/ir_sequence_data.xml",
+        "security/ibco_shipment_security.xml",
+        "security/ir.model.access.csv",
+        "views/ibco_shipment_views.xml",
+        "views/ibco_container_views.xml",
+        "views/ibco_vehicle_views.xml",
+        "views/ibco_expense_views.xml",
+        "views/ibco_delivery_views.xml",
+        "views/ibco_damage_views.xml",
+        "reports/ibco_shipment_report.xml",
+        "views/menu.xml",
+
+    ],
+    "installable": True,
+    "application": True,
+}
