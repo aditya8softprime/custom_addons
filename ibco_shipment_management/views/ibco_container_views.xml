@@ -43,6 +43,7 @@
     <field name="name">Containers</field>
     <field name="res_model">ibco.container</field>
     <field name="view_mode">list,form</field>
+    <field name="context">{'create': False}</field>
   </record>
   
 </odoo>

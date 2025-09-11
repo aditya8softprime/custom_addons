@@ -24,25 +24,34 @@
       <form string="Shipment">
         <header>
           <button name="action_validate" type="object" string="Validate Shipment" 
-                  attrs="{'invisible': [('state', '!=', 'draft')]}" 
                   class="btn-primary"/>
           <button name="action_set_in_progress" type="object" string="Confirm Shipment" 
-                  attrs="{'invisible': [('state', '!=', 'validated')]}" 
-                  class="btn-primary"/>
+                  class="btn-primary" />
           <button name="action_close" type="object" string="Close Shipment" 
-                  attrs="{'invisible': [('state', '!=', 'in_progress')]}" 
+                  invisible="state != 'in_progress'" 
                   class="btn-primary"/>
           <field name="state" widget="statusbar" statusbar_visible="draft,validated,in_progress,closed"/>
         </header>
         <sheet>
+          <div class="oe_button_box" name="button_box">
+            <button name="action_view_deliveries" type="object" class="oe_stat_button" icon="fa-truck">
+              <field name="delivery_count" widget="statinfo" string="Deliveries"/>
+            </button>
+            <button name="action_view_orders" type="object" class="oe_stat_button" icon="fa-file-text-o">
+              <field name="order_count" widget="statinfo" string="Orders"/>
+            </button>
+            <button name="action_view_invoices" type="object" class="oe_stat_button" icon="fa-money">
+              <field name="invoice_count" widget="statinfo" string="Invoices"/>
+            </button>
+          </div>
           <group>
-            <field name="name"/>
-            <field name="vessel"/>
-            <field name="arrival_date"/>
+            <field name="name" readonly="state != 'draft'"/>
+            <field name="vessel" readonly="state in ['closed']"/>
+            <field name="arrival_date" readonly="state in ['closed']"/>
           </group>
           <notebook>
-            <page string="Containers">
-              <field name="container_ids">
+            <page string="Containers" invisible="state == 'closed'">
+              <field name="container_ids" readonly="state != 'draft'">
                 <form>
                   <group>
                     <field name="name"/>
@@ -73,15 +82,14 @@
                   <field name="expense_type"/>
                   <field name="amount"/>
                   <field name="container_id"/>
-                  <field name="date"/>
                 </list>
               </field>
             </page>
 
             <page string="Commission">
               <group>
-                <field name="commission_type"/>
-                <field name="commission_value"/>
+                <field name="commission_type" readonly="state != 'draft'"/>
+                <field name="commission_value" readonly="state != 'draft'"/>
               </group>
               <group>
                 <field name="total_expense" readonly="1"/>
@@ -102,7 +110,7 @@
               </field>
             </page>
 
-            <page string="Deliveries">
+            <page string="Deliveries" invisible="state in ['draft', 'validated']">
               <field name="delivery_ids">
                 <list>
                   <field name="name"/>

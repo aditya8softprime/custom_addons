@@ -15,7 +15,6 @@ class IbcoExpense(models.Model):
     amount = fields.Monetary(string="Amount", required=True, currency_field='company_currency_id')
     shipment_id = fields.Many2one('ibco.shipment', string="Shipment", ondelete='cascade')
     container_id = fields.Many2one('ibco.container', string="Container", ondelete='cascade')
-    date = fields.Date(string='Date')
     company_currency_id = fields.Many2one('res.currency', string='Company Currency', default=lambda self: self.env.company.currency_id)
 # -*- coding: utf-8 -*-
 # IBCO Expense Model

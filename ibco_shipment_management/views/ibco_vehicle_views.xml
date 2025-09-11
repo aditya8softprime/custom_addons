@@ -48,6 +48,7 @@
     <field name="name">Vehicles</field>
     <field name="res_model">ibco.vehicle.line</field>
     <field name="view_mode">list,form</field>
+    <field name="context">{'create': False}</field>
   </record>
 </odoo>
 

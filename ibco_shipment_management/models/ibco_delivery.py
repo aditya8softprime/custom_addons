@@ -42,6 +42,11 @@ class IbcoDelivery(models.Model):
                 raise UserError("Please enter delivery date before marking as delivered.")
             rec.state = 'delivered'
 
+    def action_set_draft(self):
+        """Set delivery status back to Draft"""
+        for rec in self:
+            rec.state = 'draft'
+
     def action_mark_done(self):
         for rec in self:
             # ensure invoice is paid if linked

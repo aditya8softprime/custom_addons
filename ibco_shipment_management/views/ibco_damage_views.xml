@@ -4,7 +4,7 @@
     <field name="name">ibco.damage.list</field>
     <field name="model">ibco.damage</field>
     <field name="arch" type="xml">
-      <list readonly="1">
+      <list>
         <field name="name"/>
         <field name="vehicle_id"/>
         <field name="shipment_id"/>
@@ -13,12 +13,29 @@
     </field>
   </record>
 
+  <record id="view_ibco_damage_form" model="ir.ui.view">
+    <field name="name">ibco.damage.form</field>
+    <field name="model">ibco.damage</field>
+    <field name="arch" type="xml">
+        <form string="Damage Record">
+            <sheet>
+                <group>
+                    <field name="name"/>
+                    <field name="shipment_id"/>
+                    <field name="vehicle_id"/>
+                    <field name="amount"/>
+                    <!-- <field name="attachment_ids" widget="many2many_binary"/> -->
+                </group>
+            </sheet>
+        </form>
+    </field>
+  </record>
+
   <!-- Damage Action -->
   <record id="action_ibco_damages" model="ir.actions.act_window">
     <field name="name">Damages</field>
     <field name="res_model">ibco.damage</field>
-    <field name="view_mode">list</field>
-    <field name="context">{'create': False, 'edit': False}</field>        
+    <field name="view_mode">list,form</field>
   </record>
 </odoo>
 

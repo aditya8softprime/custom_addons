@@ -31,6 +31,11 @@ class IbcoShipment(models.Model):
         'attachment_id',           # Column for attachment model
         string='Attachments'
     )
+    
+    # Smart Button Fields
+    delivery_count = fields.Integer(string='Delivery Count', compute='_compute_counts')
+    order_count = fields.Integer(string='Order Count', compute='_compute_counts')
+    invoice_count = fields.Integer(string='Invoice Count', compute='_compute_counts')
 
     @api.depends('expense_ids.amount','damage_ids.amount')
     def _compute_totals(self):
@@ -44,6 +49,25 @@ class IbcoShipment(models.Model):
                     invoices |= d.invoice_id
             rec.total_revenue = sum(invoices.mapped('amount_total') or [])
             rec.profit = rec.total_revenue - (rec.total_expense + rec.total_damage)
+
+    @api.depends('delivery_ids')    
+    def _compute_counts(self):
+        for rec in self:
+            rec.delivery_count = len(rec.delivery_ids)
+            
+            # Count orders from deliveries
+            orders = self.env['sale.order']
+            for delivery in rec.delivery_ids:
+                if delivery.sale_order_id:
+                    orders |= delivery.sale_order_id
+            rec.order_count = len(orders)
+            
+            # Count invoices from deliveries
+            invoices = self.env['account.move']
+            for delivery in rec.delivery_ids:
+                if delivery.invoice_id:
+                    invoices |= delivery.invoice_id
+            rec.invoice_count = len(invoices)
 
     def action_validate(self):
         """Validate Shipment - Create Sale Orders for each Vehicle Line"""
@@ -80,9 +104,25 @@ class IbcoShipment(models.Model):
                     'categ_id': self.env.ref('product.product_category_all').id,
                 })
             
-            # Create Sale Order for each Vehicle Line
+            # Group vehicles by customer to create consolidated sale orders
+            vehicles_by_customer = {}
             for vehicle in vehicle_lines:
-                if not vehicle.sale_line_id:  # Only create if not already created
+                if vehicle.customer_id:
+                    customer_id = vehicle.customer_id.id
+                    if customer_id not in vehicles_by_customer:
+                        vehicles_by_customer[customer_id] = []
+                    vehicles_by_customer[customer_id].append(vehicle)
+            
+            # Create Sale Order for each customer with multiple vehicle lines
+            for customer_id, customer_vehicles in vehicles_by_customer.items():
+                # Check if any vehicle already has a sale order
+                existing_sale_orders = customer_vehicles[0].mapped('sale_line_id.order_id')
+                if existing_sale_orders:
+                    continue  # Skip if sale order already exists
+                
+                # Prepare order lines for all vehicles of this customer
+                order_lines = []
+                for vehicle in customer_vehicles:
                     # Build description with vehicle details
                     description = f"{rec.name} - {vehicle.chassis_no}"
                     if vehicle.make_model:
@@ -91,26 +131,27 @@ class IbcoShipment(models.Model):
                         description += f" ({vehicle.year})"
                     if vehicle.color:
                         description += f" - {vehicle.color}"
-                    
-                    # Create Sale Order
-                    sale_order = self.env['sale.order'].create({
-                        'partner_id': vehicle.customer_id.id,
-                        'state': 'draft',
-                        'origin': rec.name,
-                    })
-                    
-                    # Create Sale Order Line
-                    sale_line = self.env['sale.order.line'].create({
-                        'order_id': sale_order.id,
+
+                    line_vals = {
                         'product_id': product.id,
                         'name': description,
                         'product_uom_qty': 1,
                         'price_unit': vehicle.final_price,
-                    })
-                    
-                    # Link sale line to vehicle
-                    vehicle.sale_line_id = sale_line.id
-            
+                    }
+                    order_lines.append((0, 0, line_vals))
+                
+                # Create consolidated Sale Order for this customer
+                sale_order = self.env['sale.order'].create({
+                    'partner_id': customer_id,
+                    'state': 'draft',
+                    'origin': rec.name,
+                    'order_line': order_lines,
+                })
+                
+                # Link each vehicle to its corresponding sale order line
+                for i, vehicle in enumerate(customer_vehicles):
+                    vehicle.sale_line_id = sale_order.order_line[i].id
+
             rec.state = 'validated'
 
     def action_set_in_progress(self):
@@ -131,13 +172,10 @@ class IbcoShipment(models.Model):
                 if sale_order.state == 'draft':
                     sale_order.action_confirm()
             
-            # Create Delivery Records for each Vehicle Line
-            for vehicle in vehicle_lines:
-                if vehicle.sale_line_id and not vehicle.delivery_id:
-                    # Auto-generate invoice from sale order if not exists
-                    sale_order = vehicle.sale_line_id.order_id
-                    invoice = None
-                    
+            # Create invoices for each unique sale order (avoiding duplicates)
+            created_invoices = {}
+            for sale_order in sale_orders:
+                if sale_order.id not in created_invoices:
                     # Check if invoice already exists for this sale order
                     existing_invoices = self.env['account.move'].search([
                         ('invoice_origin', '=', sale_order.name),
@@ -146,7 +184,7 @@ class IbcoShipment(models.Model):
                     ])
                     
                     if existing_invoices:
-                        invoice = existing_invoices[0]
+                        created_invoices[sale_order.id] = existing_invoices[0]
                     else:
                         # Create invoice from sale order
                         invoice_vals = sale_order._prepare_invoice()
@@ -157,6 +195,14 @@ class IbcoShipment(models.Model):
                             line_vals = line._prepare_invoice_line()
                             line_vals['move_id'] = invoice.id
                             self.env['account.move.line'].create(line_vals)
+                        
+                        created_invoices[sale_order.id] = invoice
+            
+            # Create Delivery Records for each Vehicle Line
+            for vehicle in vehicle_lines:
+                if vehicle.sale_line_id and not vehicle.delivery_id:
+                    sale_order = vehicle.sale_line_id.order_id
+                    invoice = created_invoices.get(sale_order.id)
                     
                     # Create Delivery Record
                     delivery = self.env['ibco.delivery'].create({
@@ -171,8 +217,50 @@ class IbcoShipment(models.Model):
                     
                     # Link delivery to vehicle
                     vehicle.delivery_id = delivery.id
-            
-            rec.state = 'in_progress'
+
+    def action_view_deliveries(self):
+        """Action to view all deliveries for this shipment"""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Deliveries',
+            'res_model': 'ibco.delivery',
+            'view_mode': 'list,form',
+            'domain': [('shipment_id', '=', self.id)],
+            'context': {'default_shipment_id': self.id},
+        }
+
+    def action_view_orders(self):
+        """Action to view all sale orders related to this shipment"""
+        self.ensure_one()
+        order_ids = []
+        for delivery in self.delivery_ids:
+            if delivery.sale_order_id:
+                order_ids.append(delivery.sale_order_id.id)
+        
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Sale Orders',
+            'res_model': 'sale.order',
+            'view_mode': 'list,form',
+            'domain': [('id', 'in', order_ids)],
+        }
+
+    def action_view_invoices(self):
+        """Action to view all invoices related to this shipment"""
+        self.ensure_one()
+        invoice_ids = []
+        for delivery in self.delivery_ids:
+            if delivery.invoice_id:
+                invoice_ids.append(delivery.invoice_id.id)
+        
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Invoices',
+            'res_model': 'account.move',
+            'view_mode': 'list,form',
+            'domain': [('id', 'in', invoice_ids)],
+        }
 
     def action_close(self):
         """Close Shipment - Only possible when all deliveries are delivered and all invoices are paid"""
