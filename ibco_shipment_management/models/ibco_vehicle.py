@@ -17,11 +17,17 @@ class IbcoVehicleLine(models.Model):
     sale_line_id = fields.Many2one('sale.order.line', string="Sale Order Line")
     delivery_id = fields.Many2one('ibco.delivery', string="Delivery")
     damage_ids = fields.One2many('ibco.damage', 'vehicle_id', string="Damages")
+    damage_amount = fields.Monetary(string="Damage Amount", compute='_compute_damage_amount', store=True, currency_field='company_currency_id')
     allocated_expense = fields.Monetary(string="Allocated Expense", compute='_compute_allocated_expense', store=True, currency_field='company_currency_id')
     commission_amount = fields.Monetary(string="Commission Amount", compute='_compute_commission', store=True, currency_field='company_currency_id')
     final_price = fields.Monetary(string="Final Price", compute='_compute_final_price', store=True, currency_field='company_currency_id')
     profit = fields.Monetary(string="Profit", compute='_compute_profit', store=True, currency_field='company_currency_id')
     company_currency_id = fields.Many2one('res.currency', string='Company Currency', default=lambda self: self.env.company.currency_id)
+
+    @api.depends('damage_ids.amount')
+    def _compute_damage_amount(self):
+        for rec in self:
+            rec.damage_amount = sum(rec.damage_ids.mapped('amount') or [0.0])
 
     @api.depends('container_id.total_volume','volume_m3','shipment_id.total_expense','shipment_id.expense_ids.state','shipment_id.expense_ids.total_amount')
     def _compute_allocated_expense(self):
@@ -59,11 +65,10 @@ class IbcoVehicleLine(models.Model):
         for rec in self:
             rec.final_price = (rec.allocated_expense or 0.0) + (rec.commission_amount or 0.0)
 
-    @api.depends('commission_amount', 'damage_ids.amount')
+    @api.depends('commission_amount', 'damage_amount')
     def _compute_profit(self):
         for rec in self:
             # Start with commission amount
             profit = rec.commission_amount or 0.0
-            # Deduct any damages for this specific vehicle
-            total_damage = sum(rec.damage_ids.mapped('amount') or [0.0])
-            rec.profit = profit - total_damage    
+            # Deduct damage amount
+            rec.profit = profit - (rec.damage_amount or 0.0)    

@@ -43,6 +43,7 @@ class IbcoShipment(models.Model):
     delivery_count = fields.Integer(string='Delivery Count', compute='_compute_counts')
     order_count = fields.Integer(string='Order Count', compute='_compute_counts')
     invoice_count = fields.Integer(string='Invoice Count', compute='_compute_counts')
+    expense_count = fields.Integer(string='Expense Count', compute='_compute_counts')
 
     @api.depends('expense_ids.state', 'expense_ids.total_amount', 'damage_ids.amount')
     def _compute_totals(self):
@@ -60,10 +61,11 @@ class IbcoShipment(models.Model):
             rec.total_revenue = sum(invoices.mapped('amount_total') or [])
             rec.profit = rec.total_revenue - (rec.total_expense + rec.total_damage)
 
-    @api.depends('delivery_ids')    
+    @api.depends('delivery_ids', 'expense_ids')    
     def _compute_counts(self):
         for rec in self:
             rec.delivery_count = len(rec.delivery_ids)
+            rec.expense_count = len(rec.expense_ids)
             
             # Count orders from deliveries
             orders = self.env['sale.order']
@@ -89,6 +91,12 @@ class IbcoShipment(models.Model):
             # Check commission rate is filled
             if not rec.commission_value:
                 raise UserError(_("Commission rate must be filled before validation"))
+            
+            # Check all HR expenses are in 'done' state
+            pending_expenses = rec.expense_ids.filtered(lambda exp: exp.state != 'done')
+            if pending_expenses:
+                pending_names = ', '.join(pending_expenses.mapped('name'))
+                raise UserError(_("All HR expenses must be approved before validation. Pending expenses: %s") % pending_names)
             
             # Check containers and vehicle lines exist
             vehicle_lines = self.env['ibco.vehicle.line']
@@ -285,6 +293,18 @@ class IbcoShipment(models.Model):
             'domain': [('id', 'in', invoice_ids)],
         }
 
+    def action_view_expenses(self):
+        """Action to view all HR expenses related to this shipment"""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'HR Expenses',
+            'res_model': 'hr.expense',
+            'view_mode': 'list,form',
+            'domain': [('shipment_id', '=', self.id)],
+            'context': {'default_shipment_id': self.id},
+        }
+
     def action_close(self):
         """Close Shipment - Only possible when all deliveries are delivered and all invoices are paid"""
         for rec in self:
@@ -303,3 +323,59 @@ class IbcoShipment(models.Model):
             if unpaid_invoices:
                 raise UserError(_("Cannot close: All invoices must be paid. Unpaid invoices"))
             rec.state = 'closed'
+
+    def action_reset_to_draft(self):
+        """Reset Shipment to Draft - With proper validations"""
+        for rec in self:
+            # Validation checks before allowing reset to draft
+            if rec.state == 'closed':
+                # Check if any invoices are already paid
+                paid_invoices = self.env['account.move']
+                for delivery in rec.delivery_ids:
+                    if delivery.invoice_id and delivery.invoice_id.payment_state == 'paid':
+                        paid_invoices |= delivery.invoice_id
+                
+                if paid_invoices:
+                    raise UserError(_("Cannot reset to draft: Some invoices are already paid. Please reverse payments first."))
+            
+            if rec.state in ['validated', 'in_progress', 'closed']:
+                # Check if any deliveries are in 'delivered' state
+                delivered_deliveries = rec.delivery_ids.filtered(lambda d: d.state == 'delivered')
+                if delivered_deliveries:
+                    # Allow reset but warn about delivered deliveries
+                    delivered_names = ', '.join(delivered_deliveries.mapped('name'))
+                    # Reset delivered deliveries to draft
+                    delivered_deliveries.write({'state': 'draft'})
+                
+                # Reset all sale orders to draft if they exist
+                sale_orders = self.env['sale.order']
+                for delivery in rec.delivery_ids:
+                    if delivery.sale_order_id and delivery.sale_order_id.state != 'draft':
+                        sale_orders |= delivery.sale_order_id
+                
+                if sale_orders:
+                    # Cancel sale orders first, then reset to draft
+                    confirmed_orders = sale_orders.filtered(lambda so: so.state in ['sale', 'done'])
+                    if confirmed_orders:
+                        confirmed_orders.action_cancel()
+                    sale_orders.action_draft()
+                
+                # Cancel and delete invoices if they are not paid
+                invoices_to_cancel = self.env['account.move']
+                for delivery in rec.delivery_ids:
+                    if delivery.invoice_id and delivery.invoice_id.state != 'draft':
+                        if delivery.invoice_id.payment_state != 'paid':
+                            invoices_to_cancel |= delivery.invoice_id
+                
+                if invoices_to_cancel:
+                    posted_invoices = invoices_to_cancel.filtered(lambda inv: inv.state == 'posted')
+                    if posted_invoices:
+                        posted_invoices.button_cancel()
+                    # Reset to draft
+                    invoices_to_cancel.write({'state': 'draft'})
+                
+                # Reset deliveries to draft
+                rec.delivery_ids.write({'state': 'draft'})
+            
+            # Finally reset shipment to draft
+            rec.state = 'draft'

@@ -24,12 +24,19 @@
       <form string="Shipment">
         <header>
           <button name="action_validate" type="object" string="Validate Shipment" 
+                  invisible="state != 'draft'"
                   class="btn-primary"/>
           <button name="action_set_in_progress" type="object" string="Confirm Shipment" 
+                  invisible="state != 'validated'"
                   class="btn-primary" />
           <button name="action_close" type="object" string="Close Shipment" 
-                  invisible="state != 'in_progress'" 
+                  invisible="state != 'in_progress'"
                   class="btn-primary"/>
+          <button name="action_reset_to_draft" type="object" string="Reset to Draft" 
+                  invisible="state == 'draft' "
+                  confirm="This will reset the shipment to draft state and may affect related orders, invoices, and deliveries. Are you sure?"
+                  class="btn-secondary"
+                  groups="base.group_system"/>
           <field name="state" widget="statusbar" statusbar_visible="draft,validated,in_progress,closed"/>
         </header>
         <sheet>
@@ -43,6 +50,9 @@
             <button name="action_view_invoices" type="object" class="oe_stat_button" icon="fa-money">
               <field name="invoice_count" widget="statinfo" string="Invoices"/>
             </button>
+            <button name="action_view_expenses" type="object" class="oe_stat_button" icon="fa-credit-card">
+              <field name="expense_count" widget="statinfo" string="Expenses"/>
+            </button>
           </div>
           <group>
             <field name="name" readonly="state != 'draft'"/>
@@ -50,7 +60,7 @@
             <field name="arrival_date" readonly="state in ['closed']"/>
           </group>
           <notebook>
-            <page string="Containers" invisible="state == 'closed'">
+            <page string="Containers">
               <field name="container_ids" readonly="state != 'draft'">
                 <form>
                   <group>
@@ -61,13 +71,13 @@
                   <separator/>
                   <field name="vehicle_ids" >
                     <list editable="bottom">
-                      <field name="name"/>
                       <field name="chassis_no"/>
                       <field name="make_model"/>
                       <field name="volume_m3"/>
                       <field name="customer_id"/>
                       <field name="allocated_expense"/>
                       <field name="commission_amount"/>
+                      <field name="damage_amount"/>
                       <field name="profit"/>
                       <field name="final_price"/>
                       <field name="delivery_id"/>
@@ -81,11 +91,6 @@
               <group>
                 <field name="commission_type" readonly="state != 'draft'"/>
                 <field name="commission_value" readonly="state != 'draft'"/>
-              </group>
-              <group>
-                <field name="total_expense" readonly="1"/>
-                <field name="total_revenue" readonly="1"/>
-                <field name="profit" readonly="1"/>
               </group>
             </page>
 
