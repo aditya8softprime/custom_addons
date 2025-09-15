@@ -11,9 +11,16 @@ class IbcoShipment(models.Model):
     arrival_date = fields.Date(string="Arrival Date")
     state = fields.Selection([('draft','Draft'),('validated','Validated'),('in_progress','In Progress'),('closed','Closed')], default='draft', string="Status")
     container_ids = fields.One2many('ibco.container','shipment_id', string="Containers")
-    expense_ids = fields.One2many('ibco.expense','shipment_id', string="Expenses")
     damage_ids = fields.One2many('ibco.damage','shipment_id', string="Damages")
     delivery_ids = fields.One2many('ibco.delivery','shipment_id', string="Deliveries")
+    
+    # HR Expense integration
+    expense_ids = fields.One2many(
+        'hr.expense', 
+        'shipment_id', 
+        string="HR Expenses",
+        help="HR expenses linked to this shipment"
+    )
 
     # Commission fields (shipment level)
     commission_type = fields.Selection([('percent','Percentage'),('fixed','Fixed Amount')], default='percent', string="Commission Type")
@@ -37,10 +44,13 @@ class IbcoShipment(models.Model):
     order_count = fields.Integer(string='Order Count', compute='_compute_counts')
     invoice_count = fields.Integer(string='Invoice Count', compute='_compute_counts')
 
-    @api.depends('expense_ids.amount','damage_ids.amount')
+    @api.depends('expense_ids.state', 'expense_ids.total_amount', 'damage_ids.amount')
     def _compute_totals(self):
         for rec in self:
-            rec.total_expense = sum(rec.expense_ids.mapped('amount') or [])
+            # Calculate total from approved HR expenses
+            approved_expenses = rec.expense_ids.filtered(lambda exp: exp.state == 'done')
+            rec.total_expense = sum(approved_expenses.mapped('total_amount'))
+            
             rec.total_damage = sum(rec.damage_ids.mapped('amount') or [])
             # revenue: sum invoices linked via deliveries' sale_order -> invoices. We'll compute naive: sum of invoice.amount_total for invoices linked
             invoices = self.env['account.move']
@@ -79,10 +89,6 @@ class IbcoShipment(models.Model):
             # Check commission rate is filled
             if not rec.commission_value:
                 raise UserError(_("Commission rate must be filled before validation"))
-            
-            # Check expense lines exist
-            if not rec.expense_ids:
-                raise UserError(_("Expense lines must be entered before validation"))
             
             # Check containers and vehicle lines exist
             vehicle_lines = self.env['ibco.vehicle.line']

@@ -21,17 +21,19 @@ class IbcoVehicleLine(models.Model):
     final_price = fields.Monetary(string="Final Price", compute='_compute_final_price', store=True, currency_field='company_currency_id')
     company_currency_id = fields.Many2one('res.currency', string='Company Currency', default=lambda self: self.env.company.currency_id)
 
-    @api.depends('container_id.expense_ids.amount','container_id.total_volume','volume_m3')
+    @api.depends('container_id.total_volume','volume_m3','shipment_id.total_expense','shipment_id.expense_ids.state','shipment_id.expense_ids.total_amount')
     def _compute_allocated_expense(self):
         for rec in self:
-            total_vol = rec.container_id.total_volume or 0.0
-            total_exp = sum(rec.container_id.expense_ids.mapped('amount') or [])
+            total_vol = rec.container_id.container_volume or 0.0
+            total_exp = sum(
+                rec.shipment_id.expense_ids.filtered(lambda e: e.container_id == rec.container_id).mapped('total_amount_currency') or []
+            )
             if total_vol > 0:
                 rec.allocated_expense = (rec.volume_m3 / total_vol) * total_exp
             else:
                 rec.allocated_expense = 0.0
 
-    @api.depends('allocated_expense','shipment_id.commission_value','shipment_id.commission_type')
+    @api.depends('allocated_expense','shipment_id.commission_value','shipment_id.commission_type','shipment_id.expense_ids.state','shipment_id.expense_ids.total_amount')
     def _compute_commission(self):
         for rec in self:
             sh = rec.shipment_id
@@ -50,7 +52,7 @@ class IbcoVehicleLine(models.Model):
                     vehicle_count = len(rec.container_id.vehicle_ids)
                     rec.commission_amount = (sh.commission_value / vehicle_count) if vehicle_count else 0.0
 
-    @api.depends('allocated_expense','commission_amount')
+    @api.depends('allocated_expense','commission_amount','shipment_id.expense_ids.state','shipment_id.expense_ids.total_amount')
     def _compute_final_price(self):
         for rec in self:
             rec.final_price = (rec.allocated_expense or 0.0) + (rec.commission_amount or 0.0)

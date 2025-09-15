@@ -25,6 +25,7 @@
       <form>
         <sheet>
           <group>
+            <field name="name"/>
             <field name="chassis_no"/>
             <field name="make_model"/>
             <field name="year"/>

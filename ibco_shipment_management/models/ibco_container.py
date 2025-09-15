@@ -5,12 +5,10 @@ class IbcoContainer(models.Model):
     _description = "IBCO Container"
 
     name = fields.Char(string="Container Number", required=True)
-    container_type = fields.Selection([('20ft','20ft'),('40ft','40ft')], string="Container Type")
+    container_volume = fields.Float(string="Container Volume (m³)")
     seal_no = fields.Char(string="Seal No")
     shipment_id = fields.Many2one('ibco.shipment', string="Shipment", ondelete='cascade')
     vehicle_ids = fields.One2many('ibco.vehicle.line','container_id', string="Vehicles/Cargo")
-    expense_ids = fields.One2many('ibco.expense','container_id', string="Container Expenses")
-
     total_volume = fields.Float(string="Total Volume (m³)", compute='_compute_total_volume', store=True)
 
     @api.depends('vehicle_ids.volume_m3')

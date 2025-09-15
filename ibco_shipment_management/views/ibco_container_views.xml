@@ -6,7 +6,7 @@
     <field name="arch" type="xml">
       <list>
         <field name="name"/>
-        <field name="container_type"/>
+        <field name="container_volume"/>
         <field name="shipment_id"/>
         <field name="total_volume"/>
       </list>
@@ -21,7 +21,7 @@
         <sheet>
           <group>
             <field name="name"/>
-            <field name="container_type"/>
+            <field name="container_volume"/>
             <field name="seal_no"/>
             <field name="shipment_id"/>
             <field name="total_volume" readonly="1"/>

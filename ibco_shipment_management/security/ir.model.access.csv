@@ -2,7 +2,7 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_ibco_shipment,access_ibco_shipment,model_ibco_shipment,base.group_user,1,1,1,1
 access_ibco_container,access_ibco_container,model_ibco_container,base.group_user,1,1,1,1
 access_ibco_vehicle,access_ibco_vehicle,model_ibco_vehicle_line,base.group_user,1,1,1,1
-access_ibco_expense,access_ibco_expense,model_ibco_expense,base.group_user,1,1,1,1
 access_ibco_damage,access_ibco_damage,model_ibco_damage,base.group_user,1,1,1,1
 access_ibco_delivery,access_ibco_delivery,model_ibco_delivery,base.group_user,1,1,1,1
 access_ibco_delivery_line,access_ibco_delivery_line,model_ibco_delivery_line,base.group_user,1,1,1,1
+access_hr_expense_shipment_user,hr.expense.shipment.user,hr_expense.model_hr_expense,base.group_user,1,1,1,1
