@@ -68,6 +68,7 @@
                       <field name="customer_id"/>
                       <field name="allocated_expense"/>
                       <field name="commission_amount"/>
+                      <field name="profit"/>
                       <field name="final_price"/>
                       <field name="delivery_id"/>
                     </list>
