@@ -7,8 +7,8 @@ class IbcoShipment(models.Model):
     _order = "id desc"
 
     name = fields.Char(string="Shipment Reference", required=True, copy=False, default=lambda self: self.env['ir.sequence'].next_by_code('ibco.shipment') or 'New')
-    vessel = fields.Char(string="Vessel")
-    arrival_date = fields.Date(string="Arrival Date")
+    vessel = fields.Char(string="Vessel", required=True)
+    arrival_date = fields.Date(string="Arrival Date", required=True)
     state = fields.Selection([('draft','Draft'),('validated','Validated'),('in_progress','In Progress'),('closed','Closed')], default='draft', string="Status")
     container_ids = fields.One2many('ibco.container','shipment_id', string="Containers")
     damage_ids = fields.One2many('ibco.damage','shipment_id', string="Damages")
@@ -82,22 +82,24 @@ class IbcoShipment(models.Model):
             rec.invoice_count = len(invoices)
 
     def action_validate(self):
-        """Validate Shipment - Create Sale Orders for each Vehicle Line"""
+        """Validate Shipment - Only perform validations, no sale order creation"""
         for rec in self:
             # Pre-validation checks
             if not rec.container_ids:
                 raise UserError(_("Add at least one container before Validation"))
             
-            # Check commission rate is filled
+            # Check commission type and value are filled
+            if not rec.commission_type:
+                raise UserError(_("Commission type must be selected before validation"))
+            
             if not rec.commission_value:
-                raise UserError(_("Commission rate must be filled before validation"))
+                raise UserError(_("Commission value must be filled before validation"))
             
-            # Check all HR expenses are in 'done' state
-            pending_expenses = rec.expense_ids.filtered(lambda exp: exp.state != 'done')
-            if pending_expenses:
-                pending_names = ', '.join(pending_expenses.mapped('name'))
-                raise UserError(_("All HR expenses must be approved before validation. Pending expenses: %s") % pending_names)
+            # Check if expenses exist and all HR expenses are in 'done' state
+            if not rec.expense_ids:
+                raise UserError(_("At least one HR expense must be added before validation"))
             
+           
             # Check containers and vehicle lines exist
             vehicle_lines = self.env['ibco.vehicle.line']
             for container in rec.container_ids:
@@ -105,6 +107,32 @@ class IbcoShipment(models.Model):
             
             if not vehicle_lines:
                 raise UserError(_("Containers and Vehicle lines must be added before validation"))
+            
+            # Check that all vehicle lines have customers assigned
+            vehicles_without_customer = vehicle_lines.filtered(lambda v: not v.customer_id)
+            if vehicles_without_customer:
+                chassis_numbers = ', '.join(vehicles_without_customer.mapped('chassis_no'))
+                raise UserError(_("All vehicle lines must have customers assigned. Missing customers for: %s") % chassis_numbers)
+
+            # All validations passed, set state to validated
+            rec.state = 'validated'
+
+    def action_set_in_progress(self):
+        """Confirm Shipment - Create Sale Orders, Auto-confirm them and create Deliveries"""
+        for rec in self:
+            if rec.state != 'validated':
+                raise UserError(_("Shipment must be validated first"))
+            
+            pending_expenses = rec.expense_ids.filtered(lambda exp: exp.state != 'done')
+            if pending_expenses:
+                pending_names = ', '.join(pending_expenses.mapped('name'))
+                raise UserError(_("All HR expenses must be approved before validation. Pending expenses: %s") % pending_names)
+            
+            
+            # Get all vehicle lines
+            vehicle_lines = self.env['ibco.vehicle.line']
+            for container in rec.container_ids:
+                vehicle_lines |= container.vehicle_ids
             
             # Create "Shipment Service" product if it doesn't exist
             product = self.env['product.product'].search([('name', '=', 'Shipment Service')], limit=1)
@@ -165,20 +193,8 @@ class IbcoShipment(models.Model):
                 # Link each vehicle to its corresponding sale order line
                 for i, vehicle in enumerate(customer_vehicles):
                     vehicle.sale_line_id = sale_order.order_line[i].id
-
-            rec.state = 'validated'
-
-    def action_set_in_progress(self):
-        """Confirm Shipment - Auto-confirm Sale Orders and create Deliveries"""
-        for rec in self:
-            if rec.state != 'validated':
-                raise UserError(_("Shipment must be validated first"))
             
-            # Get all vehicle lines with sale orders
-            vehicle_lines = self.env['ibco.vehicle.line']
-            for container in rec.container_ids:
-                vehicle_lines |= container.vehicle_ids
-            
+            # Get all vehicle lines with sale orders (now they should all have them)
             sale_orders = vehicle_lines.mapped('sale_line_id.order_id')
             
             # Auto-confirm all Sale Orders
@@ -211,6 +227,11 @@ class IbcoShipment(models.Model):
                             self.env['account.move.line'].create(line_vals)
                         
                         created_invoices[sale_order.id] = invoice
+            
+            # Confirm all created invoices
+            for invoice in created_invoices.values():
+                if invoice.state == 'draft':
+                    invoice.action_post()
             
             # Create Delivery Records grouped by customer
             vehicles_by_customer = {}
@@ -357,7 +378,8 @@ class IbcoShipment(models.Model):
                     # Cancel sale orders first, then reset to draft
                     confirmed_orders = sale_orders.filtered(lambda so: so.state in ['sale', 'done'])
                     if confirmed_orders:
-                        confirmed_orders.action_cancel()
+                        for so in confirmed_orders:
+                            so.action_cancel()
                     sale_orders.action_draft()
                 
                 # Cancel and delete invoices if they are not paid
@@ -369,8 +391,10 @@ class IbcoShipment(models.Model):
                 
                 if invoices_to_cancel:
                     posted_invoices = invoices_to_cancel.filtered(lambda inv: inv.state == 'posted')
+
                     if posted_invoices:
-                        posted_invoices.button_cancel()
+                        for inv in posted_invoices:
+                            inv.button_cancel()
                     # Reset to draft
                     invoices_to_cancel.write({'state': 'draft'})
                 
