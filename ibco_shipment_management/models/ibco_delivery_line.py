@@ -7,7 +7,7 @@ class IbcoDeliveryLine(models.Model):
 
     delivery_id = fields.Many2one('ibco.delivery', string="Delivery", required=True, ondelete='cascade')
     container_id = fields.Many2one('ibco.container', string="Container", required=True)
-    vehicle_id = fields.Many2one('ibco.vehicle.line', string="Vehicle", required=True)
+    vehicle_id = fields.Many2one('ibco.vehicle.line', string="Vehicle/cargo", required=True)
     sequence = fields.Integer(string="Sequence", default=10)
 
     @api.onchange('vehicle_id')

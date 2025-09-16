@@ -1,15 +1,44 @@
 from odoo import models, fields, api
+from odoo.exceptions import ValidationError
 
 class IbcoVehicleLine(models.Model):
     _name = "ibco.vehicle.line"
     _description = "IBCO Vehicle / Cargo Line"
-    _rec_name = 'chassis_no'
+    _rec_name = 'display_name'
 
-    name = fields.Char(string="Vehicle Description")
-    chassis_no = fields.Char(string="Chassis No", required=True)
-    make_model = fields.Char(string="Make/Model")
-    year = fields.Char(string="Year")
-    color = fields.Char(string="Color")
+    # Cargo/Vehicle Type Selection
+    cargo_type = fields.Selection([
+        ('vehicle', 'Vehicle'),
+        ('cargo', 'Cargo')
+    ], string="Type", required=True, default='vehicle', help="Select whether this is a vehicle or cargo")
+    
+    # Common fields for both vehicle and cargo
+    name = fields.Char(string="Description", help="Vehicle or cargo description")
+    display_name = fields.Char(string="Display Name", compute='_compute_display_name', store=True)
+    
+    # Vehicle-specific fields
+    chassis_no = fields.Char(string="Chassis No", help="Vehicle chassis number (for vehicles only)")
+    make_model = fields.Char(string="Make/Model", help="Vehicle make and model")
+    year = fields.Char(string="Year", help="Vehicle manufacturing year")
+    color = fields.Char(string="Color", help="Vehicle color")
+    
+    # Cargo-specific fields
+    cargo_description = fields.Text(string="Cargo Description", help="Detailed description of cargo contents")
+    cargo_weight = fields.Float(string="Weight (kg)", help="Cargo weight in kilograms")
+    cargo_category = fields.Selection([
+        ('electronics', 'Electronics'),
+        ('furniture', 'Furniture'),
+        ('machinery', 'Machinery'),
+        ('textiles', 'Textiles'),
+        ('food', 'Food & Beverages'),
+        ('automotive_parts', 'Automotive Parts'),
+        ('industrial', 'Industrial Equipment'),
+        ('personal_effects', 'Personal Effects'),
+        ('other', 'Other')
+    ], string="Cargo Category", help="Category of cargo being shipped")
+    is_hazardous = fields.Boolean(string="Hazardous Material", help="Check if cargo contains hazardous materials")
+    
+    # Common fields continued
     volume_m3 = fields.Float(string="Volume (m³)", required=True)
     customer_id = fields.Many2one('res.partner', string="Customer")
     container_id = fields.Many2one('ibco.container', string="Container", ondelete='cascade')
@@ -23,6 +52,52 @@ class IbcoVehicleLine(models.Model):
     final_price = fields.Monetary(string="Final Price", compute='_compute_final_price', store=True, currency_field='company_currency_id')
     profit = fields.Monetary(string="Profit", compute='_compute_profit', store=True, currency_field='company_currency_id')
     company_currency_id = fields.Many2one('res.currency', string='Company Currency', default=lambda self: self.env.company.currency_id)
+
+    @api.depends('cargo_type', 'chassis_no', 'name', 'cargo_description')
+    def _compute_display_name(self):
+        """Compute display name based on cargo type"""
+        for rec in self:
+            if rec.cargo_type == 'vehicle':
+                if rec.chassis_no:
+                    rec.display_name = rec.chassis_no
+                elif rec.name:
+                    rec.display_name = rec.name
+                else:
+                    rec.display_name = 'Vehicle'
+            else:  # cargo
+                if rec.name:
+                    rec.display_name = rec.name
+                elif rec.cargo_description:
+                    # Take first 50 characters of cargo description
+                    rec.display_name = rec.cargo_description[:50] + ('...' if len(rec.cargo_description) > 50 else '')
+                else:
+                    rec.display_name = 'Cargo'
+    
+    @api.onchange('cargo_type')
+    def _onchange_cargo_type(self):
+        """Clear type-specific fields when cargo type changes"""
+        if self.cargo_type == 'vehicle':
+            # Clear cargo-specific fields
+            self.cargo_description = False
+            self.cargo_weight = 0.0
+            self.cargo_category = False
+            self.is_hazardous = False
+        else:  # cargo
+            # Clear vehicle-specific fields
+            self.chassis_no = False
+            self.make_model = False
+            self.year = False
+            self.color = False
+
+    @api.constrains('cargo_type', 'chassis_no', 'name')
+    def _check_required_fields(self):
+        """Validate required fields based on cargo type"""
+        for rec in self:
+            if rec.cargo_type == 'vehicle' and not rec.chassis_no:
+                if not rec.name:
+                    raise ValidationError("Vehicle must have either a Chassis Number or Description.")
+            elif rec.cargo_type == 'cargo' and not rec.name:
+                raise ValidationError("Cargo must have a Description.")
 
     @api.depends('damage_ids.amount')
     def _compute_damage_amount(self):

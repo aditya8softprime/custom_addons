@@ -26,14 +26,93 @@
             <field name="shipment_id"/>
             <field name="total_volume" readonly="1"/>
           </group>
-          <field name="vehicle_ids">
-            <list>
-              <field name="chassis_no"/>
-              <field name="make_model"/>
-              <field name="customer_id"/>
-              <field name="volume_m3"/>
-            </list>
-          </field>
+          <notebook>
+            <page string="Vehicles" name="vehicles_tab">
+              <field name="vehicles_only_ids" context="{'default_cargo_type': 'vehicle'}">
+                <list string="Vehicles" editable="bottom">
+                  <field name="cargo_type" column_invisible="1"/>
+                  <field name="name"/>
+                  <field name="chassis_no"/>
+                  <field name="make_model"/>
+                  <field name="year"/>
+                  <field name="color"/>
+                  <field name="volume_m3"/>
+                  <field name="customer_id"/>
+                  <field name="allocated_expense" readonly="1"/>
+                  <field name="commission_amount"/>
+                  <field name="damage_amount" readonly="1"/>
+                  <field name="profit" readonly="1"/>
+                  <field name="final_price" readonly="1"/>
+                  <field name="delivery_id"/>
+                </list>
+                <form>
+                  <group>
+                    <group>
+                      <field name="cargo_type" invisible="1"/>
+                      <field name="name"/>
+                      <field name="chassis_no"/>
+                      <field name="make_model"/>
+                      <field name="year"/>
+                      <field name="color"/>
+                      <field name="volume_m3"/>
+                      <field name="customer_id"/>
+                    </group>
+                    <group>
+                      <field name="allocated_expense" readonly="1"/>
+                      <field name="commission_amount"/>
+                      <field name="damage_amount" readonly="1"/>
+                      <field name="profit" readonly="1"/>
+                      <field name="final_price" readonly="1"/>
+                      <field name="delivery_id"/>
+                    </group>
+                  </group>
+                </form>
+              </field>
+            </page>
+            <page string="Cargo" name="cargo_tab">
+              <field name="cargo_only_ids" context="{'default_cargo_type': 'cargo'}">
+                <list string="Cargo" editable="bottom">
+                  <field name="cargo_type" column_invisible="1"/>
+                  <field name="name"/>
+                  <field name="cargo_category"/>
+                  <field name="cargo_weight"/>
+                  <field name="is_hazardous"/>
+                  <field name="volume_m3"/>
+                  <field name="customer_id"/>
+                  <field name="allocated_expense" readonly="1"/>
+                  <field name="commission_amount"/>
+                  <field name="damage_amount" readonly="1"/>
+                  <field name="profit" readonly="1"/>
+                  <field name="final_price" readonly="1"/>
+                  <field name="delivery_id"/>
+                </list>
+                <form>
+                  <group>
+                    <group>
+                      <field name="cargo_type" invisible="1"/>
+                      <field name="name"/>
+                      <field name="cargo_category"/>
+                      <field name="cargo_weight"/>
+                      <field name="is_hazardous"/>
+                      <field name="volume_m3"/>
+                      <field name="customer_id"/>
+                    </group>
+                    <group>
+                      <field name="allocated_expense" readonly="1"/>
+                      <field name="commission_amount"/>
+                      <field name="damage_amount" readonly="1"/>
+                      <field name="profit" readonly="1"/>
+                      <field name="final_price" readonly="1"/>
+                      <field name="delivery_id"/>
+                    </group>
+                  </group>
+                  <group>
+                    <field name="cargo_description" placeholder="Enter detailed cargo description..."/>
+                  </group>
+                </form>
+              </field>
+            </page>
+          </notebook>
         </sheet>
       </form>
     </field>

@@ -5,15 +5,20 @@
     <field name="model">ibco.vehicle.line</field>
     <field name="arch" type="xml">
       <list>
-        <field name="chassis_no"/>
-        <field name="make_model"/>
+        <field name="cargo_type"/>
+        <field name="display_name"/>
+        <field name="chassis_no" optional="hide"/>
+        <field name="make_model" optional="hide"/>
+        <field name="cargo_category" optional="hide"/>
         <field name="customer_id"/>
         <field name="container_id"/>
         <field name="volume_m3"/>
-        <field name="allocated_expense"/>
-        <field name="commission_amount"/>
+        <field name="allocated_expense" optional="hide"/>
+        <field name="commission_amount" optional="hide"/>
+        <field name="damage_amount" optional="hide"/>
+        <field name="profit" optional="hide"/>
         <field name="final_price"/>
-        <field name="delivery_id"/>
+        <field name="delivery_id" optional="hide"/>
       </list>
     </field>
   </record>
@@ -25,20 +30,39 @@
       <form>
         <sheet>
           <group>
-            <field name="name"/>
-            <field name="chassis_no"/>
-            <field name="make_model"/>
-            <field name="year"/>
-            <field name="color"/>
-            <field name="customer_id"/>
-            <field name="container_id"/>
-            <field name="volume_m3"/>
+            <group string="Basic Information">
+              <field name="cargo_type"/>
+              <field name="name"/>
+              <field name="customer_id"/>
+              <field name="container_id"/>
+              <field name="volume_m3"/>
+            </group>
+            <group string="Vehicle Details" invisible="cargo_type != 'vehicle'">
+              <field name="chassis_no"/>
+              <field name="make_model"/>
+              <field name="year"/>
+              <field name="color"/>
+            </group>
+            <group string="Cargo Details" invisible="cargo_type != 'cargo'">
+              <field name="cargo_category"/>
+              <field name="cargo_weight"/>
+              <field name="is_hazardous"/>
+            </group>
           </group>
           <group>
-            <field name="allocated_expense" readonly="1"/>
-            <field name="commission_amount" readonly="1"/>
-            <field name="final_price" readonly="1"/>
-            <field name="delivery_id"/>
+            <field name="cargo_description" invisible="cargo_type != 'cargo'" placeholder="Enter detailed cargo description..."/>
+          </group>
+          <group>
+            <group string="Financial">
+              <field name="allocated_expense" readonly="1"/>
+              <field name="commission_amount"/>
+              <field name="damage_amount" readonly="1"/>
+              <field name="profit" readonly="1"/>
+              <field name="final_price" readonly="1"/>
+            </group>
+            <group string="Operations">
+              <field name="delivery_id"/>
+            </group>
           </group>
         </sheet>
       </form>
@@ -46,7 +70,7 @@
   </record>
 
   <record id="action_ibco_vehicles" model="ir.actions.act_window">
-    <field name="name">Vehicles</field>
+    <field name="name">Vehicles &amp; Cargo</field>
     <field name="res_model">ibco.vehicle.line</field>
     <field name="view_mode">list,form</field>
     <field name="context">{'create': False}</field>

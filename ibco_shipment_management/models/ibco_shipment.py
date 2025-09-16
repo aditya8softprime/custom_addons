@@ -107,12 +107,7 @@ class IbcoShipment(models.Model):
             if not vehicle_lines:
                 raise UserError(_("Containers and Vehicle lines must be added before validation"))
             
-            # Check that all vehicle lines have customers assigned
-            vehicles_without_customer = vehicle_lines.filtered(lambda v: not v.customer_id)
-            if vehicles_without_customer:
-                chassis_numbers = ', '.join(vehicles_without_customer.mapped('chassis_no'))
-                raise UserError(_("All vehicle lines must have customers assigned. Missing customers for: %s") % chassis_numbers)
-
+   
             # All validations passed, set state to validated
             rec.state = 'validated'
 

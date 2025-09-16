@@ -7,7 +7,7 @@ class IbcoDamage(models.Model):
     name = fields.Char(string="Damage Description")
     amount = fields.Monetary(string="Amount", required=True, currency_field='company_currency_id')
     shipment_id = fields.Many2one('ibco.shipment', string="Shipment", ondelete='cascade')
-    vehicle_id = fields.Many2one('ibco.vehicle.line', string="Vehicle", ondelete='cascade',domain="[('shipment_id', '=', shipment_id)]")
+    vehicle_id = fields.Many2one('ibco.vehicle.line', string="Vehicle/Cargo", ondelete='cascade',domain="[('shipment_id', '=', shipment_id)]")
     partner_id = fields.Many2one('res.partner', string="Vendor/Partner", help="Partner responsible for the damage")
     date = fields.Date(string='Date')
     expense_id = fields.Many2one('hr.expense', string="Related Expense", readonly=True)

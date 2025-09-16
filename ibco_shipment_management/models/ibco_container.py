@@ -9,6 +9,13 @@ class IbcoContainer(models.Model):
     seal_no = fields.Char(string="Seal No")
     shipment_id = fields.Many2one('ibco.shipment', string="Shipment", ondelete='cascade')
     vehicle_ids = fields.One2many('ibco.vehicle.line','container_id', string="Vehicles/Cargo")
+    
+    # Separate fields for vehicles and cargo
+    vehicles_only_ids = fields.One2many('ibco.vehicle.line', 'container_id', string="Vehicles", 
+                                       domain=[('cargo_type', '=', 'vehicle')])
+    cargo_only_ids = fields.One2many('ibco.vehicle.line', 'container_id', string="Cargo", 
+                                     domain=[('cargo_type', '=', 'cargo')])
+    
     total_volume = fields.Float(string="Total Volume (m³)", compute='_compute_total_volume', store=True)
 
     @api.depends('vehicle_ids.volume_m3')

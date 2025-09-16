@@ -1,8 +1,8 @@
 {
     "name": "IBCO Shipment Management",
     "version": "1.0.0",
-    "summary": "Shipment, Container, Vehicle, HR Expense integration, Commission, Delivery and Invoicing for IBCO",
-    "description": "Complete shipment workflow: containers, vehicle lines, HR expense integration, commission, auto SO/invoice, deliveries and damages.",
+    "summary": "Shipment, Container, Vehicle/Cargo, HR Expense integration, Commission, Delivery and Invoicing for IBCO",
+    "description": "Complete shipment workflow: containers, vehicle/cargo lines, HR expense integration, commission, auto SO/invoice, deliveries and damages.",
     "author": "Softprime Consulting",
     "website": "https://softprime.example",
     "category": "Operations/Shipping",
