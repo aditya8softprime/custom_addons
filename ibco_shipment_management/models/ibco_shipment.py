@@ -22,9 +22,6 @@ class IbcoShipment(models.Model):
         help="HR expenses linked to this shipment"
     )
 
-    # Commission fields (shipment level)
-    commission_type = fields.Selection([('percent','Percentage'),('fixed','Fixed Amount')], default='percent', string="Commission Type")
-    commission_value = fields.Float(string="Commission Value", help="Percentage (if percent) or Fixed amount (if fixed)")
     # Totals
     total_expense = fields.Monetary(string="Total Expenses", compute='_compute_totals', store=True, currency_field='company_currency_id')
     total_damage = fields.Monetary(string="Total Damage", compute='_compute_totals', store=True, currency_field='company_currency_id')
@@ -44,6 +41,7 @@ class IbcoShipment(models.Model):
     order_count = fields.Integer(string='Order Count', compute='_compute_counts')
     invoice_count = fields.Integer(string='Invoice Count', compute='_compute_counts')
     expense_count = fields.Integer(string='Expense Count', compute='_compute_counts')
+    damage_expense_count = fields.Integer(string='Damage Expense Count', compute='_compute_counts')
 
     @api.depends('expense_ids.state', 'expense_ids.total_amount', 'damage_ids.amount')
     def _compute_totals(self):
@@ -61,11 +59,15 @@ class IbcoShipment(models.Model):
             rec.total_revenue = sum(invoices.mapped('amount_total') or [])
             rec.profit = rec.total_revenue - (rec.total_expense + rec.total_damage)
 
-    @api.depends('delivery_ids', 'expense_ids')    
+    @api.depends('delivery_ids', 'expense_ids', 'damage_ids.expense_id')    
     def _compute_counts(self):
         for rec in self:
             rec.delivery_count = len(rec.delivery_ids)
             rec.expense_count = len(rec.expense_ids)
+            
+            # Count damage expenses
+            damage_expenses = rec.damage_ids.mapped('expense_id').filtered(lambda x: x)
+            rec.damage_expense_count = len(damage_expenses)
             
             # Count orders from deliveries
             orders = self.env['sale.order']
@@ -88,18 +90,15 @@ class IbcoShipment(models.Model):
             if not rec.container_ids:
                 raise UserError(_("Add at least one container before Validation"))
             
-            # Check commission type and value are filled
-            if not rec.commission_type:
-                raise UserError(_("Commission type must be selected before validation"))
-            
-            if not rec.commission_value:
-                raise UserError(_("Commission value must be filled before validation"))
-            
             # Check if expenses exist and all HR expenses are in 'done' state
             if not rec.expense_ids:
                 raise UserError(_("At least one HR expense must be added before validation"))
             
-           
+            pending_expenses = rec.expense_ids.filtered(lambda exp: exp.state != 'done')
+            if pending_expenses:
+                pending_names = ', '.join(pending_expenses.mapped('name'))
+                raise UserError(_("All HR expenses must be approved before validation. Pending expenses: %s") % pending_names)
+            
             # Check containers and vehicle lines exist
             vehicle_lines = self.env['ibco.vehicle.line']
             for container in rec.container_ids:
@@ -324,6 +323,18 @@ class IbcoShipment(models.Model):
             'view_mode': 'list,form',
             'domain': [('shipment_id', '=', self.id)],
             'context': {'default_shipment_id': self.id},
+        }
+
+    def action_view_damage_expenses(self):
+        """Action to view all damage expenses related to this shipment"""
+        self.ensure_one()
+        damage_expense_ids = self.damage_ids.mapped('expense_id').filtered(lambda x: x).ids
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Damage Expenses',
+            'res_model': 'hr.expense',
+            'view_mode': 'list,form',
+            'domain': [('id', 'in', damage_expense_ids)],
         }
 
     def action_close(self):

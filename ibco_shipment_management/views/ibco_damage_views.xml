@@ -4,11 +4,14 @@
     <field name="name">ibco.damage.list</field>
     <field name="model">ibco.damage</field>
     <field name="arch" type="xml">
-      <list>
+            <list>
         <field name="name"/>
-        <field name="vehicle_id"/>
         <field name="shipment_id"/>
+        <field name="vehicle_id"/>
+        <field name="partner_id"/>
         <field name="amount"/>
+        <field name="date"/>
+        <field name="expense_id"/>
       </list>
     </field>
   </record>
@@ -18,13 +21,27 @@
     <field name="model">ibco.damage</field>
     <field name="arch" type="xml">
         <form string="Damage Record">
+            <header>
+                <button name="action_create_expense" type="object" string="Create Expense" 
+                        invisible="expense_id != False"
+                        class="btn-primary"/>
+            </header>
             <sheet>
                 <group>
-                    <field name="name"/>
-                    <field name="shipment_id"/>
-                    <field name="vehicle_id"/>
-                    <field name="amount"/>
-                    <!-- <field name="attachment_ids" widget="many2many_binary"/> -->
+                    <group>
+                        <field name="name"/>
+                        <field name="shipment_id"/>
+                        <field name="vehicle_id"/>
+                        <field name="partner_id"/>
+                    </group>
+                    <group>
+                        <field name="amount"/>
+                        <field name="date"/>
+                        <field name="expense_id" readonly="1"/>
+                    </group>
+                </group>
+                <group>
+                    <field name="attachment_ids" widget="many2many_binary"/>
                 </group>
             </sheet>
         </form>

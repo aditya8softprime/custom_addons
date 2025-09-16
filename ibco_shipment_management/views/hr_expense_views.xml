@@ -9,6 +9,7 @@
             <field name="employee_id" position="after">
                 <field name="shipment_id" options="{'no_create': True, 'no_open': True}"/>
                 <field name="container_id" options="{'no_create': True, 'no_open': True}"/>
+                <field name="vehicle_id" options="{'no_create': True, 'no_open': True}"/>
             </field>
         </field>
     </record>
@@ -22,6 +23,7 @@
             <field name="employee_id" position="after">
                 <field name="shipment_id" optional="hide"/>
                 <field name="container_id" optional="hide"/>
+                <field name="vehicle_id"/>
             </field>
         </field>
     </record>

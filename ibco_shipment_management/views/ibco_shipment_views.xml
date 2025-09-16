@@ -53,6 +53,9 @@
             <button name="action_view_expenses" type="object" class="oe_stat_button" icon="fa-credit-card">
               <field name="expense_count" widget="statinfo" string="Expenses"/>
             </button>
+            <button name="action_view_damage_expenses" type="object" class="oe_stat_button" icon="fa-exclamation-triangle">
+              <field name="damage_expense_count" widget="statinfo" string="Damage Expenses"/>
+            </button>
           </div>
           <group>
             <field name="name" readonly="state != 'draft'"/>
@@ -71,8 +74,11 @@
                   <separator/>
                   <field name="vehicle_ids" >
                     <list editable="bottom">
+                      <field name="name"/>
                       <field name="chassis_no"/>
                       <field name="make_model"/>
+                      <field name="year"/>
+                      <field name="color"/>
                       <field name="volume_m3"/>
                       <field name="customer_id"/>
                       <field name="allocated_expense"/>
@@ -87,25 +93,20 @@
               </field>
             </page>
 
-            <page string="Commission">
-              <group>
-                <field name="commission_type" readonly="state != 'draft'"/>
-                <field name="commission_value" readonly="state != 'draft'"/>
-              </group>
-            </page>
-
             <page string="Damages">
               <field name="damage_ids">
                 <list>
                   <field name="vehicle_id"/>
+                  <field name="partner_id"/>
                   <field name="amount"/>
                   <field name="name"/>
-                  <field name="date"/>
-                  <field name="attachment_ids" widget="many2many_binary"/>
+                  <field name="expense_id"/>
+                  <button name="action_create_expense" type="object" string="Create Expense" 
+                          invisible="expense_id != False"
+                          class="btn-primary"/>
                 </list>
               </field>
-            </page>
-
+            </page>            
             <page string="Deliveries" invisible="state in ['draft']">
               <field name="delivery_ids" readonly="state == 'closed'">
                 <list>
