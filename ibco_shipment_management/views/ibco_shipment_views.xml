@@ -9,6 +9,7 @@
         <field name="name"/>
         <field name="vessel"/>
         <field name="arrival_date"/>
+        <field name="company_id" groups="base.group_multi_company"/>
         <field name="state"/>
         <field name="total_expense"/>
         <field name="total_revenue"/>
@@ -56,9 +57,16 @@
             <button name="action_view_damage_expenses" type="object" class="oe_stat_button" icon="fa-exclamation-triangle">
               <field name="damage_expense_count" widget="statinfo" string="Damage Expenses"/>
             </button>
+            <button name="action_view_profitability_report" type="object" class="oe_stat_button" icon="fa-bar-chart">
+              <div class="o_field_widget o_stat_info">
+                <span class="o_stat_text">View</span>
+                <span class="o_stat_text">Profitability</span>
+              </div>
+            </button>
           </div>
           <group>
             <field name="name" readonly="state != 'draft'"/>
+            <field name="company_id" groups="base.group_multi_company" readonly="state != 'draft'"/>
             <field name="vessel" readonly="state in ['closed']"/>
             <field name="arrival_date" readonly="state in ['closed']"/>
           </group>

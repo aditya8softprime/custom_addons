@@ -1,10 +1,11 @@
-from odoo import models, fields, api
+from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 
 class IbcoVehicleLine(models.Model):
     _name = "ibco.vehicle.line"
     _description = "IBCO Vehicle / Cargo Line"
     _rec_name = 'display_name'
+    _check_company_auto = True
 
     # Cargo/Vehicle Type Selection
     cargo_type = fields.Selection([
@@ -41,17 +42,19 @@ class IbcoVehicleLine(models.Model):
     # Common fields continued
     volume_m3 = fields.Float(string="Volume (m³)", required=True)
     customer_id = fields.Many2one('res.partner', string="Customer")
-    container_id = fields.Many2one('ibco.container', string="Container", ondelete='cascade')
+    company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company)
+    container_id = fields.Many2one('ibco.container', string="Container", ondelete='cascade', check_company=True)
     shipment_id = fields.Many2one('ibco.shipment', string="Shipment", related='container_id.shipment_id', store=True)
     sale_line_id = fields.Many2one('sale.order.line', string="Sale Order Line")
     delivery_id = fields.Many2one('ibco.delivery', string="Delivery")
     damage_ids = fields.One2many('ibco.damage', 'vehicle_id', string="Damages")
-    damage_amount = fields.Monetary(string="Damage Amount", compute='_compute_damage_amount', store=True, currency_field='company_currency_id')
-    allocated_expense = fields.Monetary(string="Allocated Expense", compute='_compute_allocated_expense', store=True, currency_field='company_currency_id')
-    commission_amount = fields.Monetary(string="Commission Amount",currency_field='company_currency_id')
-    final_price = fields.Monetary(string="Final Price", compute='_compute_final_price', store=True, currency_field='company_currency_id')
-    profit = fields.Monetary(string="Profit", compute='_compute_profit', store=True, currency_field='company_currency_id')
-    company_currency_id = fields.Many2one('res.currency', string='Company Currency', default=lambda self: self.env.company.currency_id)
+    
+    # Financial fields (converted from Monetary to Float)
+    damage_amount = fields.Float(string="Damage Amount", compute='_compute_damage_amount', store=True, digits=(16, 2))
+    allocated_expense = fields.Float(string="Allocated Expense", compute='_compute_allocated_expense', store=True, digits=(16, 2))
+    commission_amount = fields.Float(string="Commission Amount", digits=(16, 2))
+    final_price = fields.Float(string="Final Price", compute='_compute_final_price', store=True, digits=(16, 2))
+    profit = fields.Float(string="Profit", compute='_compute_profit', store=True, digits=(16, 2))
 
     @api.depends('cargo_type', 'chassis_no', 'name', 'cargo_description')
     def _compute_display_name(self):
@@ -98,6 +101,13 @@ class IbcoVehicleLine(models.Model):
                     raise ValidationError("Vehicle must have either a Chassis Number or Description.")
             elif rec.cargo_type == 'cargo' and not rec.name:
                 raise ValidationError("Cargo must have a Description.")
+    
+    @api.constrains('container_id', 'company_id')
+    def _check_container_company(self):
+        """Ensure vehicle company matches container company"""
+        for rec in self:
+            if rec.container_id and rec.container_id.company_id != rec.company_id:
+                raise ValidationError(_("Vehicle/Cargo company must match container company."))
 
     @api.depends('damage_ids.amount')
     def _compute_damage_amount(self):

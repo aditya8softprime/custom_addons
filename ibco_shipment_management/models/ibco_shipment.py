@@ -5,11 +5,13 @@ class IbcoShipment(models.Model):
     _name = "ibco.shipment"
     _description = "IBCO Shipment"
     _order = "id desc"
+    _check_company_auto = True
 
     name = fields.Char(string="Shipment Reference", required=True, copy=False, default=lambda self: self.env['ir.sequence'].next_by_code('ibco.shipment') or 'New')
     vessel = fields.Char(string="Vessel", required=True)
     arrival_date = fields.Date(string="Arrival Date", required=True)
     state = fields.Selection([('draft','Draft'),('validated','Validated'),('in_progress','In Progress'),('closed','Closed')], default='draft', string="Status")
+    company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company)
     container_ids = fields.One2many('ibco.container','shipment_id', string="Containers")
     damage_ids = fields.One2many('ibco.damage','shipment_id', string="Damages")
     delivery_ids = fields.One2many('ibco.delivery','shipment_id', string="Deliveries")
@@ -22,12 +24,11 @@ class IbcoShipment(models.Model):
         help="HR expenses linked to this shipment"
     )
 
-    # Totals
-    total_expense = fields.Monetary(string="Total Expenses", compute='_compute_totals', store=True, currency_field='company_currency_id')
-    total_damage = fields.Monetary(string="Total Damage", compute='_compute_totals', store=True, currency_field='company_currency_id')
-    total_revenue = fields.Monetary(string="Total Invoices Revenue", compute='_compute_totals', store=True, currency_field='company_currency_id')
-    profit = fields.Monetary(string="Profit", compute='_compute_totals', store=True, currency_field='company_currency_id')
-    company_currency_id = fields.Many2one('res.currency', string='Company Currency', default=lambda self: self.env.company.currency_id)
+    # Totals (converted from Monetary to Float to remove currency)
+    total_expense = fields.Float(string="Total Expenses", compute='_compute_totals', store=True, digits=(16, 2))
+    total_damage = fields.Float(string="Total Damage", compute='_compute_totals', store=True, digits=(16, 2))
+    total_revenue = fields.Float(string="Total Invoices Revenue", compute='_compute_totals', store=True, digits=(16, 2))
+    profit = fields.Float(string="Profit", compute='_compute_totals', store=True, digits=(16, 2))
     attachment_ids = fields.Many2many(
         'ir.attachment',           # Model for attachments
         'ibco_shipment_attachment_rel',  # Relation table name
@@ -409,3 +410,25 @@ class IbcoShipment(models.Model):
             
             # Finally reset shipment to draft
             rec.state = 'draft'
+    
+    def action_view_profitability_report(self):
+        """Open profitability report for this shipment"""
+        self.ensure_one()
+        
+        # Create or find existing report
+        report = self.env['ibco.shipment.profitability.report'].create({
+            'shipment_id': self.id,
+        })
+        
+        # Generate the report data
+        report.action_generate_report()
+        
+        return {
+            'type': 'ir.actions.act_window',
+            'name': f'Profitability Report - {self.name}',
+            'res_model': 'ibco.shipment.profitability.report',
+            'res_id': report.id,
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'create': False, 'edit': False}
+        }

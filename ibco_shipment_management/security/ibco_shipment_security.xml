@@ -1,4 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <!-- Security Groups and Rules -->
+    
+    <!-- Multi-company rules for shipments -->
+    <record id="ibco_shipment_company_rule" model="ir.rule">
+        <field name="name">IBCO Shipment: multi-company</field>
+        <field name="model_id" ref="model_ibco_shipment"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+    
+    <!-- Multi-company rules for containers -->
+    <record id="ibco_container_company_rule" model="ir.rule">
+        <field name="name">IBCO Container: multi-company</field>
+        <field name="model_id" ref="model_ibco_container"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+    
+    <!-- Multi-company rules for vehicle lines -->
+    <record id="ibco_vehicle_line_company_rule" model="ir.rule">
+        <field name="name">IBCO Vehicle Line: multi-company</field>
+        <field name="model_id" ref="model_ibco_vehicle_line"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+    
+    <!-- Multi-company rules for damages -->
+    <record id="ibco_damage_company_rule" model="ir.rule">
+        <field name="name">IBCO Damage: multi-company</field>
+        <field name="model_id" ref="model_ibco_damage"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+    
+    <!-- Multi-company rules for deliveries -->
+    <record id="ibco_delivery_company_rule" model="ir.rule">
+        <field name="name">IBCO Delivery: multi-company</field>
+        <field name="model_id" ref="model_ibco_delivery"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+    
+    <!-- Multi-company rules for delivery lines -->
+    <record id="ibco_delivery_line_company_rule" model="ir.rule">
+        <field name="name">IBCO Delivery Line: multi-company</field>
+        <field name="model_id" ref="model_ibco_delivery_line"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+    
 </odoo>

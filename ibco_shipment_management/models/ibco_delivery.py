@@ -4,9 +4,11 @@ from odoo.exceptions import UserError
 class IbcoDelivery(models.Model):
     _name = "ibco.delivery"
     _description = "IBCO Delivery"
+    _check_company_auto = True
 
     name = fields.Char(string="Delivery Reference", required=True, copy=False, default=lambda self: self.env['ir.sequence'].next_by_code('ibco.delivery') or 'DEL')
-    shipment_id = fields.Many2one('ibco.shipment', string="Shipment")
+    company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company)
+    shipment_id = fields.Many2one('ibco.shipment', string="Shipment", check_company=True)
     customer_id = fields.Many2one('res.partner', string="Customer", required=True)
     sale_order_id = fields.Many2one('sale.order', string="Sale Order")
     invoice_id = fields.Many2one('account.move', string="Invoice")

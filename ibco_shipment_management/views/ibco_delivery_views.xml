@@ -8,6 +8,7 @@
         <field name="name"/>
         <field name="shipment_id"/>
         <field name="customer_id"/>
+        <field name="company_id" groups="base.group_multi_company"/>
         <field name="state"/>
         <field name="delivery_date"/>
       </list>
@@ -37,6 +38,7 @@
               <field name="name"/>
               <field name="shipment_id"/>
               <field name="customer_id"/>
+              <field name="company_id" groups="base.group_multi_company"/>
             </group>
             <group>
               <field name="sale_order_id" readonly="state != 'draft'"/>

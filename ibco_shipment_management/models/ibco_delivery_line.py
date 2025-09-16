@@ -4,10 +4,12 @@ from odoo.exceptions import UserError
 class IbcoDeliveryLine(models.Model):
     _name = "ibco.delivery.line"
     _description = "IBCO Delivery Line"
+    _check_company_auto = True
 
     delivery_id = fields.Many2one('ibco.delivery', string="Delivery", required=True, ondelete='cascade')
-    container_id = fields.Many2one('ibco.container', string="Container", required=True)
-    vehicle_id = fields.Many2one('ibco.vehicle.line', string="Vehicle/cargo", required=True)
+    company_id = fields.Many2one('res.company', string='Company', related='delivery_id.company_id', store=True)
+    container_id = fields.Many2one('ibco.container', string="Container", required=True, check_company=True)
+    vehicle_id = fields.Many2one('ibco.vehicle.line', string="Vehicle/cargo", required=True, check_company=True)
     sequence = fields.Integer(string="Sequence", default=10)
 
     @api.onchange('vehicle_id')

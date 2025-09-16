@@ -12,6 +12,7 @@
         <field name="cargo_category" optional="hide"/>
         <field name="customer_id"/>
         <field name="container_id"/>
+        <field name="company_id" groups="base.group_multi_company"/>
         <field name="volume_m3"/>
         <field name="allocated_expense" optional="hide"/>
         <field name="commission_amount" optional="hide"/>
@@ -35,6 +36,7 @@
               <field name="name"/>
               <field name="customer_id"/>
               <field name="container_id"/>
+              <field name="company_id" groups="base.group_multi_company"/>
               <field name="volume_m3"/>
             </group>
             <group string="Vehicle Details" invisible="cargo_type != 'vehicle'">

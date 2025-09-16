@@ -8,6 +8,7 @@
         <field name="name"/>
         <field name="container_volume"/>
         <field name="shipment_id"/>
+        <field name="company_id" groups="base.group_multi_company"/>
         <field name="total_volume"/>
       </list>
     </field>
@@ -23,6 +24,7 @@
             <field name="name"/>
             <field name="container_volume"/>
             <field name="seal_no"/>
+            <field name="company_id" groups="base.group_multi_company"/>
             <field name="shipment_id"/>
             <field name="total_volume" readonly="1"/>
           </group>
