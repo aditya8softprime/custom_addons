@@ -137,4 +137,14 @@ class IbcoVehicleLine(models.Model):
             # Start with commission amount
             profit = rec.commission_amount or 0.0
             # Deduct damage amount
-            rec.profit = profit - (rec.damage_amount or 0.0)    
+            rec.profit = profit - (rec.damage_amount or 0.0)
+    
+    @api.model_create_multi
+    def create(self, vals_list):
+        """Override create to handle shipment-level creation"""
+        for vals in vals_list:
+            # If container_id is provided, ensure shipment_id is set correctly
+            if vals.get('container_id'):
+                container = self.env['ibco.container'].browse(vals['container_id'])
+                vals['shipment_id'] = container.shipment_id.id
+        return super().create(vals_list)    

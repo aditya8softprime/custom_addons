@@ -57,12 +57,6 @@
             <button name="action_view_damage_expenses" type="object" class="oe_stat_button" icon="fa-exclamation-triangle">
               <field name="damage_expense_count" widget="statinfo" string="Damage Expenses"/>
             </button>
-            <button name="action_view_profitability_report" type="object" class="oe_stat_button" icon="fa-bar-chart">
-              <div class="o_field_widget o_stat_info">
-                <span class="o_stat_text">View</span>
-                <span class="o_stat_text">Profitability</span>
-              </div>
-            </button>
           </div>
           <group>
             <field name="name" readonly="state != 'draft'"/>
@@ -166,6 +160,97 @@
                       </field>
                     </page>
                   </notebook>
+                </form>
+              </field>
+            </page>
+
+            <page string="All Vehicles">
+              <field name="all_vehicle_ids" context="{'default_cargo_type': 'vehicle'}" readonly="state != 'draft'">
+                <list editable="bottom" string="All Vehicles">
+                  <field name="cargo_type" column_invisible="1"/>
+                  <field name="container_id" domain="[('shipment_id', '=', parent.id)]" required="1"/>
+                  <field name="name"/>
+                  <field name="chassis_no"/>
+                  <field name="make_model"/>
+                  <field name="year"/>
+                  <field name="color"/>
+                  <field name="volume_m3"/>
+                  <field name="customer_id"/>
+                  <field name="allocated_expense"/>
+                  <field name="commission_amount"/>
+                  <field name="damage_amount"/>
+                  <field name="profit"/>
+                  <field name="final_price"/>
+                  <field name="delivery_id"/>
+                </list>
+                <form>
+                  <group>
+                    <group>
+                      <field name="cargo_type" invisible="1"/>
+                      <field name="container_id" domain="[('shipment_id', '=', parent.id)]" required="1"/>
+                      <field name="name"/>
+                      <field name="chassis_no"/>
+                      <field name="make_model"/>
+                      <field name="year"/>
+                      <field name="color"/>
+                      <field name="volume_m3"/>
+                      <field name="customer_id"/>
+                    </group>
+                    <group>
+                      <field name="allocated_expense"/>
+                      <field name="commission_amount"/>
+                      <field name="damage_amount"/>
+                      <field name="profit"/>
+                      <field name="final_price"/>
+                      <field name="delivery_id"/>
+                    </group>
+                  </group>
+                </form>
+              </field>
+            </page>
+
+            <page string="All Cargo">
+              <field name="all_cargo_ids" context="{'default_cargo_type': 'cargo'}" readonly="state != 'draft'">
+                <list editable="bottom" string="All Cargo">
+                  <field name="cargo_type" column_invisible="1"/>
+                  <field name="container_id" domain="[('shipment_id', '=', parent.id)]" required="1"/>
+                  <field name="name"/>
+                  <field name="cargo_category"/>
+                  <field name="cargo_weight"/>
+                  <field name="is_hazardous"/>
+                  <field name="volume_m3"/>
+                  <field name="customer_id"/>
+                  <field name="allocated_expense"/>
+                  <field name="commission_amount"/>
+                  <field name="damage_amount"/>
+                  <field name="profit"/>
+                  <field name="final_price"/>
+                  <field name="delivery_id"/>
+                </list>
+                <form>
+                  <group>
+                    <group>
+                      <field name="cargo_type" invisible="1"/>
+                      <field name="container_id" domain="[('shipment_id', '=', parent.id)]" required="1"/>
+                      <field name="name"/>
+                      <field name="cargo_category"/>
+                      <field name="cargo_weight"/>
+                      <field name="is_hazardous"/>
+                      <field name="volume_m3"/>
+                      <field name="customer_id"/>
+                    </group>
+                    <group>
+                      <field name="allocated_expense"/>
+                      <field name="commission_amount"/>
+                      <field name="damage_amount"/>
+                      <field name="profit"/>
+                      <field name="final_price"/>
+                      <field name="delivery_id"/>
+                    </group>
+                  </group>
+                  <group>
+                    <field name="cargo_description" placeholder="Enter detailed cargo description..."/>
+                  </group>
                 </form>
               </field>
             </page>

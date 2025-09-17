@@ -43,6 +43,12 @@ class IbcoShipment(models.Model):
     invoice_count = fields.Integer(string='Invoice Count', compute='_compute_counts')
     expense_count = fields.Integer(string='Expense Count', compute='_compute_counts')
     damage_expense_count = fields.Integer(string='Damage Expense Count', compute='_compute_counts')
+    
+    # Direct vehicle/cargo access fields
+    all_vehicle_ids = fields.One2many('ibco.vehicle.line', 'shipment_id', string="All Vehicles",
+                                     domain=[('cargo_type', '=', 'vehicle')])
+    all_cargo_ids = fields.One2many('ibco.vehicle.line', 'shipment_id', string="All Cargo",
+                                   domain=[('cargo_type', '=', 'cargo')])
 
     @api.depends('expense_ids.state', 'expense_ids.total_amount', 'damage_ids.amount')
     def _compute_totals(self):
@@ -410,25 +416,3 @@ class IbcoShipment(models.Model):
             
             # Finally reset shipment to draft
             rec.state = 'draft'
-    
-    def action_view_profitability_report(self):
-        """Open profitability report for this shipment"""
-        self.ensure_one()
-        
-        # Create or find existing report
-        report = self.env['ibco.shipment.profitability.report'].create({
-            'shipment_id': self.id,
-        })
-        
-        # Generate the report data
-        report.action_generate_report()
-        
-        return {
-            'type': 'ir.actions.act_window',
-            'name': f'Profitability Report - {self.name}',
-            'res_model': 'ibco.shipment.profitability.report',
-            'res_id': report.id,
-            'view_mode': 'form',
-            'target': 'new',
-            'context': {'create': False, 'edit': False}
-        }
