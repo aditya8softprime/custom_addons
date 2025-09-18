@@ -428,6 +428,12 @@
                                                     <label for="appointment_date" class="form-label">Preferred Date *</label>
                                                     <input type="date" class="form-control" id="appointment_date" name="appointment_date" required=""/>
                                                 </div>
+                                                <div class="form-group col-md-6 mb-3">
+                                                    <label for="slot_id">Available Time Slots *</label>
+                                                    <select class="form-control" id="slot_id" name="slot_id" required="required">
+                                                        <option value="">First select doctor and date</option>
+                                                    </select>
+                                                </div>
                                             </div>
                                             <div class="mb-3">
                                                 <label for="symptom" class="form-label">Symptoms/Reason for Visit *</label>
