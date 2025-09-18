@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Payment Wizard Form View -->
+    <record id="view_clinic_payment_wizard_form" model="ir.ui.view">
+        <field name="name">clinic.payment.wizard.form</field>
+        <field name="model">clinic.payment.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Process Payment">
+                <group>
+                    <group>
+                        <field name="appointment_id" readonly="1"/>
+                        <field name="patient_id" readonly="1"/>
+                        <field name="amount" widget="monetary"/>
+                        <field name="payment_date"/>
+                    </group>
+                    <group>
+                        <field name="payment_method_id" required="1"/>
+                        <field name="communication"/>
+                    </group>
+                </group>
+                
+                <footer>
+                    <button name="action_process_payment" 
+                            string="Process Payment" 
+                            type="object" 
+                            class="btn-primary"/>
+                    <button name="action_mark_paid_only" 
+                            string="Mark as Paid (External Payment)" 
+                            type="object" 
+                            class="btn-secondary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Payment Wizard Action -->
+    <record id="action_clinic_payment_wizard" model="ir.actions.act_window">
+        <field name="name">Process Payment</field>
+        <field name="res_model">clinic.payment.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>
