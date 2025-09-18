@@ -57,9 +57,15 @@ class ClinicAppointment(models.Model):
     lab_test_line_ids = fields.One2many('appointment.lab.line', 'appointment_id', string='Lab Test Lines')
     invoice_id = fields.Many2one('account.move', string='Invoice')
     
+    # Payment information
+    payment_id = fields.Many2one('account.payment', string='Payment')
+    payment_date = fields.Datetime(string='Payment Date')
+    payment_method_id = fields.Many2one('account.journal', string='Payment Method')
+    
     state = fields.Selection([
         ('draft', 'Draft'),
         ('confirmed', 'Confirmed'),
+        ('paid', 'Paid'),
         ('patient_in', 'Patient In'),
         ('in_consultation', 'In Consultation'),
         ('completed', 'Completed'),
@@ -160,6 +166,8 @@ class ClinicAppointment(models.Model):
                 appointment.color = 0  # White
             elif appointment.state == 'confirmed':
                 appointment.color = 4  # Light Blue
+            elif appointment.state == 'paid':
+                appointment.color = 9  # Light Green
             elif appointment.state == 'patient_in':
                 appointment.color = 2  # Green
             elif appointment.state == 'in_consultation':
@@ -391,6 +399,27 @@ class ClinicAppointment(models.Model):
                 appointment.consulting_fee = appointment.doctor_id.consultation_fee
             
             appointment.state = 'confirmed'
+    
+    def action_pay(self):
+        """Open payment wizard"""
+        self.ensure_one()
+        return {
+            'name': _('Process Payment'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'clinic.payment.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_appointment_id': self.id,
+                'default_amount': self.consulting_fee,
+            }
+        }
+    
+    def action_mark_paid(self):
+        """Mark appointment as paid"""
+        self.ensure_one()
+        if self.state == 'confirmed':
+            self.state = 'paid'
     
     def action_patient_in(self):
         """Mark patient as checked in"""

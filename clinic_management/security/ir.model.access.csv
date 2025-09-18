@@ -48,5 +48,11 @@ access_appointment_reschedule_wizard_system,appointment.reschedule.wizard system
 access_appointment_reschedule_wizard_receptionist,appointment.reschedule.wizard receptionist,model_appointment_reschedule_wizard,group_clinic_receptionist,1,1,1,0
 access_appointment_reschedule_wizard_doctor,appointment.reschedule.wizard doctor,model_appointment_reschedule_wizard,group_clinic_doctor,1,1,1,0
 
+access_clinic_payment_wizard_admin,clinic.payment.wizard admin,model_clinic_payment_wizard,group_clinic_admin,1,1,1,1
+access_clinic_payment_wizard_system,clinic.payment.wizard system,model_clinic_payment_wizard,base.group_system,1,1,1,1
+access_clinic_payment_wizard_receptionist,clinic.payment.wizard receptionist,model_clinic_payment_wizard,group_clinic_receptionist,1,1,1,0
+access_clinic_payment_wizard_doctor,clinic.payment.wizard doctor,model_clinic_payment_wizard,group_clinic_doctor,1,1,1,0
+
 access_clinic_website_settings_admin,clinic.website.settings admin,model_clinic_website_settings,group_clinic_admin,1,1,1,1
 access_clinic_website_settings_system,clinic.website.settings system,model_clinic_website_settings,base.group_system,1,1,1,1
+

@@ -56,6 +56,7 @@
         
         # Wizards
         'wizard/reschedule_appointment_views.xml',
+        'wizard/payment_wizard_views.xml',
         
         # Website
         'views/clinic_website_config.xml',

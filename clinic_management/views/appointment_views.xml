@@ -8,16 +8,18 @@
                 <header>
                     <button name="action_confirm" string="Confirm" type="object" 
                         invisible="state != 'draft'" class="btn-primary" groups="clinic_management.group_clinic_receptionist,clinic_management.group_clinic_admin"/>
+                    <button name="action_pay" string="Pay" type="object" 
+                        invisible="state != 'confirmed'" class="btn-success" groups="clinic_management.group_clinic_receptionist,clinic_management.group_clinic_admin"/>
                     <button name="action_patient_in" string="Patient In" type="object" 
-                        invisible="state != 'confirmed'" class="btn-primary" groups="clinic_management.group_clinic_receptionist,clinic_management.group_clinic_admin"/>
+                        invisible="state not in ('confirmed', 'paid')" class="btn-primary" groups="clinic_management.group_clinic_receptionist,clinic_management.group_clinic_admin"/>
                     <button name="action_start_consultation" string="Start Consultation" type="object" 
                         invisible="state != 'patient_in'" class="btn-primary" groups="clinic_management.group_clinic_doctor,clinic_management.group_clinic_admin"/>
                     <button name="action_complete" string="Complete" type="object" 
                         invisible="state != 'in_consultation'" class="btn-success" groups="clinic_management.group_clinic_doctor,clinic_management.group_clinic_admin"/>
                     <button name="action_mark_no_show" string="No Show" type="object" 
-                        invisible="state not in ('confirmed','draft')" class="btn-warning" groups="clinic_management.group_clinic_receptionist,clinic_management.group_clinic_admin"/>
+                        invisible="state not in ('confirmed','draft','paid')" class="btn-warning" groups="clinic_management.group_clinic_receptionist,clinic_management.group_clinic_admin"/>
                     <button name="action_cancel" string="Cancel" type="object" 
-                        invisible="state not in ('draft','confirmed','patient_in')" class="btn-danger" groups="clinic_management.group_clinic_receptionist,clinic_management.group_clinic_admin"/>
+                        invisible="state not in ('draft','confirmed','patient_in','paid')" class="btn-danger" groups="clinic_management.group_clinic_receptionist,clinic_management.group_clinic_admin"/>
                     <button name="action_reschedule" string="Reschedule" type="object" 
                             invisible="state not in ('cancelled')" class="btn-info"/>
                     <button name="action_reschedule" string="Reschedule for Next Visit" type="object" 
@@ -25,7 +27,7 @@
                     <button name="reset_to_in_consultation" string="Reset to In Consultation" type="object"
                             class="btn-warning"/>
                     <field name="state" widget="statusbar" 
-                           statusbar_visible="draft,confirmed,patient_in,in_consultation,completed"/>
+                           statusbar_visible="draft,confirmed,paid,patient_in,in_consultation,completed"/>
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
@@ -74,6 +76,8 @@
                             <field name="start_time" widget="float_time"/>
                             <field name="end_time" widget="float_time"/>
                             <field name="consulting_fee" readonly="1" />
+                            <field name="payment_date" readonly="1" invisible="state not in ('paid', 'patient_in', 'in_consultation', 'completed')"/>
+                            <field name="payment_method_id" readonly="1" invisible="state not in ('paid', 'patient_in', 'in_consultation', 'completed')"/>
                             <field name="currency_id" invisible="1"/>
                             <field name="company_id" groups="base.group_multi_company" invisible="1"/>
                             <field name="slots" invisible="1"/>
