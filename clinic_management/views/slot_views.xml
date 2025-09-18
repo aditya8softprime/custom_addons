@@ -23,12 +23,12 @@
                         <group>
                             <field name="doctor_id"/>
                             <field name="day_id"/>
+                            <field name="shift"/>
                             <field name="start_time" widget="float_time"/>
                             <field name="end_time" widget="float_time"/>
                         </group>
                         <group>
                             <field name="duration"/>
-                            <field name="max_patients"/>
                             <field name="current_patients"/>
                             <field name="status"/>
                             <field name="color" invisible="1"/>
@@ -58,12 +58,12 @@
             <list string="Slots">
                 <field name="doctor_id"/>
                 <field name="day_id"/>
+                <field name="shift"/>
                 <field name="slot_number"/>
                 <field name="start_time" widget="float_time"/>
                 <field name="end_time" widget="float_time"/>
                 <field name="duration"/>
                 <field name="current_patients"/>
-                <field name="max_patients"/>
                 <field name="status" decoration-success="status == 'available'" 
                        decoration-danger="status == 'booked'" 
                        decoration-warning="status == 'blocked'" 
@@ -109,7 +109,7 @@
                                 </div>
                                 <div t-if="status == 'booked'">
                                     <strong>Patients: </strong>
-                                    <field name="current_patients"/> / <field name="max_patients"/>
+                                    <field name="current_patients"/>
                                 </div>
                             </div>
                         </div>

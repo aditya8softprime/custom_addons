@@ -1,5 +1,5 @@
 from odoo import models, fields, api, _
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError, UserError
 from odoo.tools.translate import trans_export, trans_export_records
 
 
@@ -67,3 +67,58 @@ class ClinicPatient(models.Model):
             'domain': [('patient_id', '=', self.id)],
             'context': {'default_patient_id': self.id},
         }
+    
+    @api.constrains('phone')
+    def _check_duplicate_phone(self):
+        """Check for duplicate phone numbers and provide user selection"""
+        for record in self:
+            if record.phone:
+                existing_patients = self.search([
+                    ('phone', '=', record.phone),
+                    ('id', '!=', record.id)
+                ])
+                if existing_patients:
+                    # For website forms, we'll handle this differently
+                    # For backend forms, show the constraint error
+                    if self.env.context.get('from_website'):
+                        return  # Skip constraint for website forms
+                    else:
+                        raise ValidationError(_(
+                            'A patient with phone number "%s" already exists: %s\n'
+                            'Do you want to update the existing patient instead?'
+                        ) % (record.phone, ', '.join(existing_patients.mapped('name'))))
+    
+    @api.model
+    def find_or_create_patient(self, vals):
+        """Find existing patient by phone or create new one"""
+        phone = vals.get('phone')
+        if phone:
+            existing_patient = self.search([('phone', '=', phone)], limit=1)
+            if existing_patient:
+                # Update existing patient with new information
+                existing_patient.with_context(from_website=True).write({
+                    'name': vals.get('name', existing_patient.name),
+                    'email': vals.get('email', existing_patient.email),
+                    'age': vals.get('age', existing_patient.age),
+                    'gender': vals.get('gender', existing_patient.gender),
+                    'address': vals.get('address', existing_patient.address),
+                })
+                return existing_patient
+        
+        # Create new patient
+        return self.with_context(from_website=True).create(vals)
+    
+    @api.model
+    def get_patient_by_phone(self, phone):
+        """Get patient information by phone number for website auto-fill"""
+        if phone:
+            patient = self.search([('phone', '=', phone)], limit=1)
+            if patient:
+                return {
+                    'exists': True,
+                    'name': patient.name,
+                    'email': patient.email or '',
+                    'age': patient.age or '',
+                    'gender': patient.gender or '',
+                }
+        return {'exists': False}

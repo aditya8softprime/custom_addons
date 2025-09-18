@@ -17,7 +17,7 @@ class AppointmentDashboard extends Component {
             total_appointments: 0,
             total_draft: 0,
             total_confirmed: 0,
-            total_checked_in: 0,
+            total_patient_in: 0,
             total_in_consultation: 0,
             total_completed: 0,
             total_no_show: 0,
@@ -159,7 +159,7 @@ class AppointmentDashboard extends Component {
         console.log('Rendering pie chart with data:', {
             confirmed: this.state.total_confirmed,
             completed: this.state.total_completed,
-            checked_in: this.state.total_checked_in,
+            patient_in: this.state.total_patient_in,
             in_consultation: this.state.total_in_consultation,
             no_show: this.state.total_no_show,
             cancelled: this.state.total_cancelled,
@@ -169,12 +169,12 @@ class AppointmentDashboard extends Component {
         this.pieChart = new window.Chart(ctx, {
             type: 'pie',
             data: {
-                labels: ['Confirmed', 'Completed', 'Checked In', 'In Consultation', 'No Show', 'Cancelled', 'Draft'],
+                labels: ['Confirmed', 'Completed', 'Patient In', 'In Consultation', 'No Show', 'Cancelled', 'Draft'],
                 datasets: [{
                     data: [
                         this.state.total_confirmed,
                         this.state.total_completed,
-                        this.state.total_checked_in,
+                        this.state.total_patient_in,
                         this.state.total_in_consultation,
                         this.state.total_no_show,
                         this.state.total_cancelled,

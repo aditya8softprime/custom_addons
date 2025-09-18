@@ -8,16 +8,16 @@
                 <header>
                     <button name="action_confirm" string="Confirm" type="object" 
                         invisible="state != 'draft'" class="btn-primary" groups="clinic_management.group_clinic_receptionist,clinic_management.group_clinic_admin"/>
-                    <button name="action_check_in" string="Check In" type="object" 
+                    <button name="action_patient_in" string="Patient In" type="object" 
                         invisible="state != 'confirmed'" class="btn-primary" groups="clinic_management.group_clinic_receptionist,clinic_management.group_clinic_admin"/>
                     <button name="action_start_consultation" string="Start Consultation" type="object" 
-                        invisible="state != 'checked_in'" class="btn-primary" groups="clinic_management.group_clinic_doctor,clinic_management.group_clinic_admin"/>
+                        invisible="state != 'patient_in'" class="btn-primary" groups="clinic_management.group_clinic_doctor,clinic_management.group_clinic_admin"/>
                     <button name="action_complete" string="Complete" type="object" 
                         invisible="state != 'in_consultation'" class="btn-success" groups="clinic_management.group_clinic_doctor,clinic_management.group_clinic_admin"/>
                     <button name="action_mark_no_show" string="No Show" type="object" 
                         invisible="state not in ('confirmed','draft')" class="btn-warning" groups="clinic_management.group_clinic_receptionist,clinic_management.group_clinic_admin"/>
                     <button name="action_cancel" string="Cancel" type="object" 
-                        invisible="state not in ('draft','confirmed','checked_in')" class="btn-danger" groups="clinic_management.group_clinic_receptionist,clinic_management.group_clinic_admin"/>
+                        invisible="state not in ('draft','confirmed','patient_in')" class="btn-danger" groups="clinic_management.group_clinic_receptionist,clinic_management.group_clinic_admin"/>
                     <button name="action_reschedule" string="Reschedule" type="object" 
                             invisible="state not in ('cancelled')" class="btn-info"/>
                     <button name="action_reschedule" string="Reschedule for Next Visit" type="object" 
@@ -25,7 +25,7 @@
                     <button name="reset_to_in_consultation" string="Reset to In Consultation" type="object"
                             class="btn-warning"/>
                     <field name="state" widget="statusbar" 
-                           statusbar_visible="draft,confirmed,checked_in,in_consultation,completed"/>
+                           statusbar_visible="draft,confirmed,patient_in,in_consultation,completed"/>
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
@@ -64,11 +64,11 @@
                             <field name="patient_gender"/>
                             <field name="patient_phone"/>
                             <field name="patient_email"/>
-                            <field name="appointment_date" readonly="state != 'draft'"/>
                         </group>
                         <group>
                             <field name="service_id" readonly="state != 'draft'"/>
                                 <field name="doctor_id" readonly="state != 'draft'" />
+                            <field name="appointment_date" readonly="state != 'draft'"/>
                             <field name="slot_id" readonly="state != 'draft'"
                                    domain="[('id', 'in', slots)]"/>
                             <field name="start_time" widget="float_time"/>
@@ -113,8 +113,8 @@
                         <page string="Status Info" invisible="state in ('draft')">
                             <group>
                                 <group>
-                                    <field name="checked_in_time" readonly="1"
-                                           invisible="not checked_in_time"/>
+                                    <field name="patient_in_time" readonly="1"
+                                           invisible="not patient_in_time"/>
                                     <field name="consultation_start_time" readonly="1"
                                            invisible="not consultation_start_time"/>
                                     <field name="consultation_end_time" readonly="1"
@@ -154,7 +154,7 @@
                        decoration-info="state == 'confirmed'" 
                        decoration-danger="state in ('cancelled', 'no_show')"
                        decoration-warning="state == 'in_consultation'"
-                       decoration-primary="state == 'checked_in'"
+                       decoration-primary="state == 'patient_in'"
                        widget="badge"/>
             </list>
         </field>
@@ -242,7 +242,7 @@
                 <separator/>
                 <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
                 <filter string="Confirmed" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
-                <filter string="Checked In" name="checked_in" domain="[('state', '=', 'checked_in')]"/>
+                <filter string="Patient In" name="patient_in" domain="[('state', '=', 'patient_in')]"/>
                 <filter string="In Consultation" name="in_consultation" domain="[('state', '=', 'in_consultation')]"/>
                 <filter string="Completed" name="completed" domain="[('state', '=', 'completed')]"/>
                 <filter string="No Show" name="no_show" domain="[('state', '=', 'no_show')]"/>

@@ -15,7 +15,10 @@ class ClinicSlot(models.Model):
     end_time = fields.Float(string='End Time', required=True)
     duration = fields.Float(string='Duration (mins)', required=True)
     slot_number = fields.Char(string='Slot Number', required=True)
-    max_patients = fields.Integer(string='Max Patients', default=1)
+    shift = fields.Selection([
+        ('morning', 'Morning'),
+        ('evening', 'Evening')
+    ], string='Shift', required=True)
     current_patients = fields.Integer(string='Current Patients', compute='_compute_current_patients')
     
     status = fields.Selection([
@@ -38,7 +41,7 @@ class ClinicSlot(models.Model):
     ]
     display_name = fields.Char(compute='_compute_display_name', store=False)
 
-    @api.depends('start_time', 'end_time', 'day_id.name')
+    @api.depends('start_time', 'end_time', 'day_id.name', 'shift')
     def _compute_display_name(self):
         def fmt(t):
             h = int(t or 0)
@@ -46,10 +49,22 @@ class ClinicSlot(models.Model):
             return f"{h:02d}:{m:02d}"
 
         for rec in self:
+            # Take first 3 letters of day (MON, TUE...)
+            day_code = (rec.day_id.name[:3].upper()) if rec.day_id and rec.day_id.name else ""
+
+            # Shift text
+            shift_txt = dict(self._fields['shift'].selection).get(rec.shift, "")
+
+            # Time text
             if rec.start_time is not None and rec.end_time is not None:
-                rec.display_name = f"{fmt(rec.start_time)} - {fmt(rec.end_time)} ({rec.day_id.name or ''})"
+                time_txt = f"{fmt(rec.start_time)} - {fmt(rec.end_time)}"
             else:
-                rec.display_name = rec.day_id.name or "Slot"
+                time_txt = ""
+
+            # Combine
+            parts = [p for p in [day_code, shift_txt, time_txt] if p]
+            rec.display_name = " ".join(parts) or "Slot"
+
 
     @api.depends('status')
     def _compute_color(self):
@@ -79,12 +94,6 @@ class ClinicSlot(models.Model):
         for slot in self:
             if slot.start_time >= slot.end_time:
                 raise ValidationError(_("End Time must be greater than Start Time"))
-    
-    @api.constrains('current_patients', 'max_patients')
-    def _check_capacity(self):
-        for slot in self:
-            if slot.current_patients > slot.max_patients:
-                raise ValidationError(_("Cannot exceed maximum patient capacity for this slot"))
 
     def _float_time_convert(self, float_time):
         """Convert float time to formatted string (HH:MM)"""

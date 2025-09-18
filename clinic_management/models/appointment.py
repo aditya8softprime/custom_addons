@@ -60,7 +60,7 @@ class ClinicAppointment(models.Model):
     state = fields.Selection([
         ('draft', 'Draft'),
         ('confirmed', 'Confirmed'),
-        ('checked_in', 'Checked In'),
+        ('patient_in', 'Patient In'),
         ('in_consultation', 'In Consultation'),
         ('completed', 'Completed'),
         ('no_show', 'No Show'),
@@ -69,7 +69,7 @@ class ClinicAppointment(models.Model):
     ], string='Status', default='draft', tracking=True)
     
     cancellation_reason = fields.Text(string='Cancellation Reason')
-    checked_in_time = fields.Datetime(string='Checked In Time')
+    patient_in_time = fields.Datetime(string='Patient In Time')
     consultation_start_time = fields.Datetime(string='Consultation Start Time')
     consultation_end_time = fields.Datetime(string='Consultation End Time')
     
@@ -160,7 +160,7 @@ class ClinicAppointment(models.Model):
                 appointment.color = 0  # White
             elif appointment.state == 'confirmed':
                 appointment.color = 4  # Light Blue
-            elif appointment.state == 'checked_in':
+            elif appointment.state == 'patient_in':
                 appointment.color = 2  # Green
             elif appointment.state == 'in_consultation':
                 appointment.color = 1  # Red
@@ -392,11 +392,11 @@ class ClinicAppointment(models.Model):
             
             appointment.state = 'confirmed'
     
-    def action_check_in(self):
+    def action_patient_in(self):
         """Mark patient as checked in"""
         self.write({
-            'state': 'checked_in',
-            'checked_in_time': fields.Datetime.now()
+            'state': 'patient_in',
+            'patient_in_time': fields.Datetime.now()
         })
     
     def action_start_consultation(self):
@@ -739,7 +739,7 @@ class ClinicAppointment(models.Model):
         # Filter by state
         draft = appointments.filtered(lambda r: r.state == 'draft')
         confirmed = appointments.filtered(lambda r: r.state == 'confirmed')
-        checked_in = appointments.filtered(lambda r: r.state == 'checked_in')
+        patient_in = appointments.filtered(lambda r: r.state == 'patient_in')
         in_consultation = appointments.filtered(lambda r: r.state == 'in_consultation')
         completed = appointments.filtered(lambda r: r.state == 'completed')
         no_show = appointments.filtered(lambda r: r.state == 'no_show')
@@ -756,7 +756,7 @@ class ClinicAppointment(models.Model):
             'total_appointments': len(appointments),
             'total_draft': len(draft),
             'total_confirmed': len(confirmed),
-            'total_checked_in': len(checked_in),
+            'total_patient_in': len(patient_in),
             'total_in_consultation': len(in_consultation),
             'total_completed': len(completed),
             'total_no_show': len(no_show),

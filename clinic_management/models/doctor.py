@@ -31,8 +31,17 @@ class ClinicDoctor(models.Model):
     email = fields.Char(string='Email', tracking=True)
     department = fields.Many2one('hr.department', string='Department', tracking=True, index=True)
     available_days = fields.Many2many('clinic.days', string='Available Days', tracking=True)
-    working_start_time = fields.Float(string='Working Start Time', tracking=True)
-    working_end_time = fields.Float(string='Working End Time', tracking=True)
+    
+    # Morning shift configuration
+    morning_shift = fields.Boolean(string='Morning Shift Available', default=True, tracking=True)
+    morning_start_time = fields.Float(string='Morning Start Time', tracking=True)
+    morning_end_time = fields.Float(string='Morning End Time', tracking=True)
+    
+    # Evening shift configuration
+    evening_shift = fields.Boolean(string='Evening Shift Available', default=False, tracking=True)
+    evening_start_time = fields.Float(string='Evening Start Time', tracking=True)
+    evening_end_time = fields.Float(string='Evening End Time', tracking=True)
+    
     slot_duration = fields.Selection([
         ('15', '15 minutes'),
         ('20', '20 minutes'),
@@ -40,7 +49,6 @@ class ClinicDoctor(models.Model):
         ('45', '45 minutes'),
         ('60', '60 minutes'),
     ], string='Slot Duration', default='30', tracking=True)
-    max_patients_per_slot = fields.Integer(string='Max Patients Per Slot', default=1, tracking=True)
     bio = fields.Html(string='Bio/Description')  # Removed tracking as it's not supported for HTML fields
     special_tag_ids = fields.Many2many('clinic.doctor.special.tag', string='Special Tags')
     consultation_fee = fields.Monetary(string='Consultation Fee', currency_field='currency_id', tracking=True)
@@ -99,17 +107,24 @@ class ClinicDoctor(models.Model):
             'price_unit': self.consultation_fee,
             'description': f"Consultation – {self.name}"
         }
-    @api.constrains('working_start_time', 'working_end_time')
-    def _check_working_hours(self):
-        for record in self:
-            if record.working_start_time >= record.working_end_time:
-                raise ValidationError(_('Working End Time must be greater than Working Start Time'))
     
-    @api.constrains('max_patients_per_slot')
-    def _check_max_patients(self):
+    @api.constrains('morning_start_time', 'morning_end_time', 'morning_shift')
+    def _check_morning_hours(self):
         for record in self:
-            if record.max_patients_per_slot <= 0:
-                raise ValidationError(_('Maximum patients per slot must be greater than 0'))
+            if record.morning_shift and record.morning_start_time >= record.morning_end_time:
+                raise ValidationError(_('Morning End Time must be greater than Morning Start Time'))
+    
+    @api.constrains('evening_start_time', 'evening_end_time', 'evening_shift')
+    def _check_evening_hours(self):
+        for record in self:
+            if record.evening_shift and record.evening_start_time >= record.evening_end_time:
+                raise ValidationError(_('Evening End Time must be greater than Evening Start Time'))
+    
+    @api.constrains('morning_shift', 'evening_shift')
+    def _check_at_least_one_shift(self):
+        for record in self:
+            if not record.morning_shift and not record.evening_shift:
+                raise ValidationError(_('At least one shift (Morning or Evening) must be enabled'))
     
     @api.model_create_multi
     def create(self, vals_list):
@@ -122,8 +137,9 @@ class ClinicDoctor(models.Model):
     def write(self, vals):
         res = super(ClinicDoctor, self).write(vals)
         # If availability related fields changed, update slots
-        slot_related_fields = ['available_days', 'working_start_time', 'working_end_time', 
-                              'slot_duration', 'max_patients_per_slot']
+        slot_related_fields = ['available_days', 'morning_start_time', 'morning_end_time', 
+                              'evening_start_time', 'evening_end_time', 'morning_shift', 
+                              'evening_shift', 'slot_duration']
         if any(field in vals for field in slot_related_fields):
             self._create_slots()
         return res
@@ -141,33 +157,64 @@ class ClinicDoctor(models.Model):
         ])
         existing_slots.unlink()
         
-        # Create new slots
+        # Convert slot_duration from string to float
+        slot_duration_minutes = float(self.slot_duration)
+        slot_duration_hours = slot_duration_minutes / 60
+        
+        # Create new slots for each available day
         for day in self.available_days:
-            current_time = self.working_start_time
             slot_number = 1
             
-            # Convert slot_duration from string to float
-            slot_duration_minutes = float(self.slot_duration)
+            # Morning shift slots
+            if self.morning_shift and self.morning_start_time and self.morning_end_time:
+                current_time = self.morning_start_time
+                
+                while current_time + slot_duration_hours <= self.morning_end_time:
+                    end_time = current_time + slot_duration_hours
+                    
+                    # Create morning slot
+                    slot_vals = {
+                        'doctor_id': self.id,
+                        'day_id': day.id,
+                        'start_time': current_time,
+                        'end_time': end_time,
+                        'duration': slot_duration_minutes,
+                        'shift': 'morning',
+                        'slot_number': f"{day.code}-M-{slot_number:03d}",
+                        'status': 'available',
+                    }
+                    Slot.create(slot_vals)
+                    
+                    # Move to next slot
+                    current_time = end_time
+                    slot_number += 1
             
-            while current_time + (slot_duration_minutes / 60) <= self.working_end_time:
-                end_time = current_time + (slot_duration_minutes / 60)
+            # Reset slot number for evening shift
+            slot_number = 1
+            
+            # Evening shift slots
+            if self.evening_shift and self.evening_start_time and self.evening_end_time:
+                current_time = self.evening_start_time
                 
-                # Create slot
-                slot_vals = {
-                    'doctor_id': self.id,
-                    'day_id': day.id,
-                    'start_time': current_time,
-                    'end_time': end_time,
-                    'duration': slot_duration_minutes,
-                    'max_patients': self.max_patients_per_slot,
-                    'slot_number': f"{day.code}-{slot_number:03d}",
-                    'status': 'available',
-                }
-                Slot.create(slot_vals)
-                
-                # Move to next slot
-                current_time = end_time
-                slot_number += 1
+                while current_time + slot_duration_hours <= self.evening_end_time:
+                    end_time = current_time + slot_duration_hours
+                    
+                    # Create evening slot
+                    slot_vals = {
+                        'doctor_id': self.id,
+                        'day_id': day.id,
+                        'start_time': current_time,
+                        'end_time': end_time,
+                        'duration': slot_duration_minutes,
+                        'shift': 'evening',
+                        'slot_number': f"{day.code}-E-{slot_number:03d}",
+                        'status': 'available',
+                    }
+                    Slot.create(slot_vals)
+                    
+                    # Move to next slot
+                    current_time = end_time
+                    slot_number += 1
     
     def action_create_employee(self):
         """Create an employee record for this doctor"""

@@ -88,15 +88,25 @@
                             <group>
                                 <group string="Working Hours">
                                     <field name="available_days" widget="many2many_tags" options="{'no_create': True}"/>
-                                    <label for="working_start_time"/>
-                                    <div class="o_row">
-                                        <field name="working_start_time" widget="float_time"/> - 
-                                        <field name="working_end_time" widget="float_time"/>
+                                </group>
+                                <group string="Morning Shift">
+                                    <field name="morning_shift"/>
+                                    <label for="morning_start_time" invisible="not morning_shift"/>
+                                    <div class="o_row" invisible="not morning_shift">
+                                        <field name="morning_start_time" widget="float_time"/> - 
+                                        <field name="morning_end_time" widget="float_time"/>
+                                    </div>
+                                </group>
+                                <group string="Evening Shift">
+                                    <field name="evening_shift"/>
+                                    <label for="evening_start_time" invisible="not evening_shift"/>
+                                    <div class="o_row" invisible="not evening_shift">
+                                        <field name="evening_start_time" widget="float_time"/> - 
+                                        <field name="evening_end_time" widget="float_time"/>
                                     </div>
                                 </group>
                                 <group string="Slot Configuration">
                                     <field name="slot_duration"/>
-                                    <field name="max_patients_per_slot"/>
                                 </group>
                             </group>
                         </page>
@@ -104,11 +114,11 @@
                             <field name="slot_ids">
                                 <list>
                                     <field name="day_id"/>
+                                    <field name="shift"/>
                                     <field name="slot_number"/>
                                     <field name="start_time" widget="float_time"/>
                                     <field name="end_time" widget="float_time"/>
                                     <field name="duration"/>
-                                    <field name="max_patients"/>
                                     <field name="current_patients"/>
                                     <field name="status" decoration-success="status == 'available'" 
                                            decoration-warning="status == 'partially_booked'" 

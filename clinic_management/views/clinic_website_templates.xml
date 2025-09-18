@@ -1001,67 +1001,6 @@
         </t>
     </template>
 
-    <!-- Custom Navigation Header with Dropdowns -->
-        <!-- Custom Navigation Header with Proper Menu Structure -->
-        <!-- Custom Navigation Header with Proper Menu Structure -->
-    <template id="clinic_header_nav" inherit_id="website.template_header_default" priority="20">
-        <xpath expr="//t[@t-foreach='website.menu_id.child_id']" position="replace">
-            <!-- Empty to remove default menu items -->
-        </xpath>
-        <xpath expr="//ul[hasclass('navbar-nav')]" position="replace">
-            <ul class="navbar-nav ms-auto">
-                <!-- Home -->
-                <li class="nav-item">
-                    <a class="nav-link" href="/clinic">Home</a>
-                </li>
-                
-                <!-- Services Dropdown -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="servicesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Services
-                    </a>
-                    <ul class="dropdown-menu" aria-labelledby="servicesDropdown">
-                        <li><a class="dropdown-item" href="/clinic/services">All Services</a></li>
-                        <li><hr class="dropdown-divider"/></li>
-                        <t t-set="services" t-value="request.env['clinic.service'].sudo().search([('active', '=', True)], limit=8)"/>
-                        <t t-foreach="services" t-as="service">
-                            <li><a class="dropdown-item" t-attf-href="/clinic/service/#{service.id}" t-esc="service.name"/></li>
-                        </t>
-                    </ul>
-                </li>
-                
-                <!-- Doctors Dropdown -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="doctorsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Doctors
-                    </a>
-                    <ul class="dropdown-menu" aria-labelledby="doctorsDropdown">
-                        <li><a class="dropdown-item" href="/clinic/doctors">All Doctors</a></li>
-                        <li><hr class="dropdown-divider"/></li>
-                        <t t-set="doctors" t-value="request.env['clinic.doctor'].sudo().search([('active', '=', True)], limit=8)"/>
-                        <t t-foreach="doctors" t-as="doctor">
-                            <li><a class="dropdown-item" t-attf-href="/clinic/doctor/#{doctor.id}">Dr. <span t-esc="doctor.name"/></a></li>
-                        </t>
-                    </ul>
-                </li>
-                
-                <!-- Booking -->
-                <li class="nav-item">
-                    <a class="nav-link" href="/clinic/booking">Booking</a>
-                </li>
-                
-                <!-- About Us -->
-                <li class="nav-item">
-                    <a class="nav-link" href="/clinic/about">About Us</a>
-                </li>
-                
-                <!-- Contact Us -->
-                <li class="nav-item">
-                    <a class="nav-link" href="/clinic/contact">Contact Us</a>
-                </li>
-            </ul>
-        </xpath>
-    </template>
 
     <!-- Doctors List Page -->
     <template id="doctors_page" name="Doctors List Page">

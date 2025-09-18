@@ -10,7 +10,7 @@
             <field name="end_time">9.5</field>
             <field name="duration">30</field>
             <field name="slot_number">MON-09:00</field>
-            <field name="max_patients">1</field>
+            <field name="shift">morning</field>
             <field name="status">available</field>
         </record>
         
@@ -21,7 +21,7 @@
             <field name="end_time">10.0</field>
             <field name="duration">30</field>
             <field name="slot_number">MON-09:30</field>
-            <field name="max_patients">1</field>
+            <field name="shift">morning</field>
             <field name="status">available</field>
         </record>
         
@@ -32,7 +32,7 @@
             <field name="end_time">10.5</field>
             <field name="duration">30</field>
             <field name="slot_number">MON-10:00</field>
-            <field name="max_patients">1</field>
+            <field name="shift">morning</field>
             <field name="status">available</field>
         </record>
         
@@ -43,7 +43,7 @@
             <field name="end_time">11.0</field>
             <field name="duration">30</field>
             <field name="slot_number">MON-10:30</field>
-            <field name="max_patients">1</field>
+            <field name="shift">morning</field>
             <field name="status">available</field>
         </record>
         
@@ -54,7 +54,7 @@
             <field name="end_time">14.5</field>
             <field name="duration">30</field>
             <field name="slot_number">TUE-14:00</field>
-            <field name="max_patients">1</field>
+            <field name="shift">morning</field>
             <field name="status">available</field>
         </record>
         
@@ -65,7 +65,7 @@
             <field name="end_time">15.0</field>
             <field name="duration">30</field>
             <field name="slot_number">TUE-14:30</field>
-            <field name="max_patients">1</field>
+            <field name="shift">morning</field>
             <field name="status">available</field>
         </record>
         
@@ -77,7 +77,7 @@
             <field name="end_time">10.5</field>
             <field name="duration">30</field>
             <field name="slot_number">MON-10:00</field>
-            <field name="max_patients">1</field>
+            <field name="shift">morning</field>
             <field name="status">available</field>
         </record>
         
@@ -88,7 +88,7 @@
             <field name="end_time">11.0</field>
             <field name="duration">30</field>
             <field name="slot_number">MON-10:30</field>
-            <field name="max_patients">1</field>
+            <field name="shift">morning</field>
             <field name="status">available</field>
         </record>
         
@@ -99,7 +99,7 @@
             <field name="end_time">15.5</field>
             <field name="duration">30</field>
             <field name="slot_number">WED-15:00</field>
-            <field name="max_patients">1</field>
+            <field name="shift">morning</field>
             <field name="status">available</field>
         </record>
         
@@ -110,7 +110,7 @@
             <field name="end_time">11.5</field>
             <field name="duration">30</field>
             <field name="slot_number">FRI-11:00</field>
-            <field name="max_patients">1</field>
+            <field name="shift">morning</field>
             <field name="status">available</field>
         </record>
         
@@ -122,7 +122,7 @@
             <field name="end_time">8.33</field>
             <field name="duration">20</field>
             <field name="slot_number">TUE-08:00</field>
-            <field name="max_patients">2</field>
+            <field name="shift">morning</field>
             <field name="status">available</field>
         </record>
         
@@ -133,7 +133,7 @@
             <field name="end_time">8.67</field>
             <field name="duration">20</field>
             <field name="slot_number">TUE-08:20</field>
-            <field name="max_patients">2</field>
+            <field name="shift">morning</field>
             <field name="status">available</field>
         </record>
         
@@ -144,7 +144,7 @@
             <field name="end_time">9.33</field>
             <field name="duration">20</field>
             <field name="slot_number">THU-09:00</field>
-            <field name="max_patients">2</field>
+            <field name="shift">morning</field>
             <field name="status">available</field>
         </record>
         
@@ -155,7 +155,7 @@
             <field name="end_time">10.33</field>
             <field name="duration">20</field>
             <field name="slot_number">FRI-10:00</field>
-            <field name="max_patients">2</field>
+            <field name="shift">morning</field>
             <field name="status">available</field>
         </record>
         
@@ -167,7 +167,7 @@
             <field name="end_time">9.75</field>
             <field name="duration">45</field>
             <field name="slot_number">MON-09:00</field>
-            <field name="max_patients">1</field>
+            <field name="shift">morning</field>
             <field name="status">available</field>
         </record>
         
@@ -178,7 +178,7 @@
             <field name="end_time">10.5</field>
             <field name="duration">45</field>
             <field name="slot_number">MON-09:45</field>
-            <field name="max_patients">1</field>
+            <field name="shift">morning</field>
             <field name="status">available</field>
         </record>
         
@@ -189,7 +189,7 @@
             <field name="end_time">14.75</field>
             <field name="duration">45</field>
             <field name="slot_number">WED-14:00</field>
-            <field name="max_patients">1</field>
+            <field name="shift">morning</field>
             <field name="status">available</field>
         </record>
         
@@ -201,7 +201,7 @@
             <field name="end_time">11.0</field>
             <field name="duration">60</field>
             <field name="slot_number">MON-10:00</field>
-            <field name="max_patients">1</field>
+            <field name="shift">morning</field>
             <field name="status">available</field>
         </record>
         
@@ -212,7 +212,7 @@
             <field name="end_time">12.0</field>
             <field name="duration">60</field>
             <field name="slot_number">WED-11:00</field>
-            <field name="max_patients">1</field>
+            <field name="shift">morning</field>
             <field name="status">available</field>
         </record>
         
@@ -223,7 +223,7 @@
             <field name="end_time">14.0</field>
             <field name="duration">60</field>
             <field name="slot_number">FRI-13:00</field>
-            <field name="max_patients">1</field>
+            <field name="shift">morning</field>
             <field name="status">available</field>
         </record>
         
@@ -235,7 +235,7 @@
             <field name="end_time">9.5</field>
             <field name="duration">30</field>
             <field name="slot_number">TUE-09:00</field>
-            <field name="max_patients">1</field>
+            <field name="shift">morning</field>
             <field name="status">available</field>
         </record>
         
@@ -246,7 +246,7 @@
             <field name="end_time">10.5</field>
             <field name="duration">30</field>
             <field name="slot_number">THU-10:00</field>
-            <field name="max_patients">1</field>
+            <field name="shift">morning</field>
             <field name="status">available</field>
         </record>
         
@@ -257,7 +257,7 @@
             <field name="end_time">11.5</field>
             <field name="duration">30</field>
             <field name="slot_number">SAT-11:00</field>
-            <field name="max_patients">1</field>
+            <field name="shift">morning</field>
             <field name="status">available</field>
         </record>
         
@@ -269,7 +269,7 @@
             <field name="end_time">12.0</field>
             <field name="duration">60</field>
             <field name="slot_number">MON-11:00</field>
-            <field name="max_patients">1</field>
+            <field name="shift">morning</field>
             <field name="status">available</field>
         </record>
         
@@ -280,7 +280,7 @@
             <field name="end_time">16.0</field>
             <field name="duration">60</field>
             <field name="slot_number">TUE-15:00</field>
-            <field name="max_patients">1</field>
+            <field name="shift">morning</field>
             <field name="status">available</field>
         </record>
         
@@ -291,7 +291,7 @@
             <field name="end_time">18.0</field>
             <field name="duration">60</field>
             <field name="slot_number">FRI-17:00</field>
-            <field name="max_patients">1</field>
+            <field name="shift">morning</field>
             <field name="status">available</field>
         </record>
         
