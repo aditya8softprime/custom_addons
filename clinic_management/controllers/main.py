@@ -114,28 +114,33 @@ class ClinicWebsite(http.Controller):
     def booking_form(self, **kw):
         """Display the appointment booking form"""
         services = request.env['clinic.service'].sudo().search([('active', '=', True)])
+        doctors = request.env['clinic.doctor'].sudo().search([('active', '=', True)])
         clinic_settings = self._get_clinic_settings()
         return request.render('clinic_management.booking_form', {
             'services': services,
+            'doctors': doctors,
             'clinic_settings': clinic_settings,
             'page_name': 'booking_form',
             'datetime': datetime,
         })
     
     @http.route(['/clinic/booking/doctors'], type='json', auth='public', website=True)
-    def get_doctors_for_service(self, service_id, **kw):
-        """AJAX endpoint to get doctors who offer a specific service"""
+    def get_doctors_for_service(self, service_id=None, **kw):
+        """AJAX endpoint to get doctors who offer a specific service or all doctors"""
         try:
             _logger.info(f"Getting doctors for service_id: {service_id}")
             
-            if not service_id:
-                return []
-            
-            # Find doctors who have this service in their specializations
-            doctors = request.env['clinic.doctor'].sudo().search([
-                ('specialization_ids', 'in', int(service_id)),
-                ('active', '=', True)
-            ])
+            if service_id:
+                # Find doctors who have this service in their specializations
+                doctors = request.env['clinic.doctor'].sudo().search([
+                    ('specialization_ids', 'in', int(service_id)),
+                    ('active', '=', True)
+                ])
+            else:
+                # Get all active doctors
+                doctors = request.env['clinic.doctor'].sudo().search([
+                    ('active', '=', True)
+                ])
             
             doctor_list = []
             for doctor in doctors:
@@ -211,6 +216,35 @@ class ClinicWebsite(http.Controller):
         except Exception as e:
             _logger.exception(f"Error in get_available_slots: {str(e)}")
             return []    
+
+    @http.route(['/clinic/booking/patient-lookup'], type='json', auth='public', website=True)
+    def patient_lookup(self, phone, **kw):
+        """AJAX endpoint to lookup patient by phone number"""
+        try:
+            _logger.info(f"Looking up patient with phone: {phone}")
+            
+            if not phone:
+                return {}
+            
+            # Find patient by phone
+            patient = request.env['clinic.patient'].sudo().search([
+                ('phone', '=', phone)
+            ], limit=1)
+            
+            if patient:
+                return {
+                    'found': True,
+                    'name': patient.name,
+                    'email': patient.email or '',
+                    'age': patient.age,
+                    'gender': patient.gender,
+                }
+            else:
+                return {'found': False}
+                
+        except Exception as e:
+            _logger.exception(f"Error in patient lookup: {str(e)}")
+            return {'found': False}    
             
     @http.route(['/clinic/booking/submit'], type='http', auth='public', website=True, methods=['POST'], csrf=True)
     def submit_booking(self, **post):
@@ -273,7 +307,7 @@ class ClinicWebsite(http.Controller):
                 'consulting_fee': doctor.consultation_fee,
                 'currency_id': doctor.currency_id.id,
                 'symptom': post.get('symptom') or False,
-                'state': 'confirmed',  # Fixed: use 'confirmed' instead of 'confirm'
+                'state': 'draft',  # Fixed: use 'draft' instead of 'confirmed'
             }
             
             # Handle slot if provided
@@ -310,9 +344,8 @@ class ClinicWebsite(http.Controller):
                 # Simple appointment without slots
                 appointment = request.env['clinic.appointment'].sudo().create(appointment_vals)
             
-            # Confirm appointment
-            if hasattr(appointment, 'action_confirm'):
-                appointment.sudo().action_confirm()
+            # Don't confirm appointment - leave it in draft state for admin review
+            # This way admin can review and confirm appointments manually
             
             # Return success page
             clinic_settings = self._get_clinic_settings()

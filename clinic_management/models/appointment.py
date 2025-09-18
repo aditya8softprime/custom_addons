@@ -23,7 +23,7 @@ class ClinicAppointment(models.Model):
     
     service_id = fields.Many2one('clinic.service', string='Service', required=True, tracking=True)
     doctor_id = fields.Many2one('clinic.doctor', string='Doctor', required=True, tracking=True)
-    slot_id = fields.Many2one('clinic.slot', string='Slot', required=True, tracking=True,)
+    slot_id = fields.Many2one('clinic.slot', string='Slot', tracking=True)
     slots = fields.Many2many('clinic.slot', string='Slots')
 
     appointment_date = fields.Date(string='Appointment Date', required=True, tracking=True)
@@ -387,12 +387,13 @@ class ClinicAppointment(models.Model):
     def action_confirm(self):
         """Confirm the appointment"""
         for appointment in self:
-            # Check if slot is still available
-            if appointment.slot_id.status != 'available' and appointment.state == 'draft':
+            # Check if slot is still available (only if slot is specified)
+            if appointment.slot_id and appointment.slot_id.status != 'available' and appointment.state == 'draft':
                 raise ValidationError(_("The selected slot is no longer available"))
             
-            # Update slot status
-            appointment.slot_id.sudo().status = 'booked'
+            # Update slot status (only if slot is specified)
+            if appointment.slot_id:
+                appointment.slot_id.sudo().status = 'booked'
             
             # Set consulting fee if not set
             if not appointment.consulting_fee and appointment.doctor_id:
