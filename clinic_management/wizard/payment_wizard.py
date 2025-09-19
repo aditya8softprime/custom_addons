@@ -53,6 +53,7 @@ class ClinicPaymentWizard(models.TransientModel):
             'amount': self.amount,
             'journal_id': self.payment_method_id.id,
             'date': self.payment_date,
+            'invoice_ids': [(6, 0, [invoice.id])],  # FIXED: Pass list of IDs
             'payment_method_line_id': self._get_payment_method_line(),
         }
 
@@ -98,18 +99,39 @@ class ClinicPaymentWizard(models.TransientModel):
     def _reconcile_payment_with_invoice(self, payment, invoice):
         """Reconcile payment with invoice"""
         try:
-            # Find move lines to reconcile
-            payment_line = payment.line_ids.filtered(lambda l: l.account_id.account_type == 'asset_receivable')
-            invoice_line = invoice.line_ids.filtered(lambda l: l.account_id.account_type == 'asset_receivable')
+            # Use Odoo's standard reconciliation approach
+            # Get the receivable account from the invoice
+            receivable_account = invoice.line_ids.filtered(
+                lambda line: line.account_id.account_type == 'asset_receivable'
+            ).account_id
             
-            if payment_line and invoice_line:
-                (payment_line + invoice_line).reconcile()
+            if receivable_account:
+                # Get the payment move line for the receivable account
+                payment_line = payment.move_id.line_ids.filtered(
+                    lambda line: line.account_id == receivable_account
+                )
+                
+                # Get the invoice move line for the receivable account
+                invoice_line = invoice.line_ids.filtered(
+                    lambda line: line.account_id == receivable_account
+                )
+                
+                if payment_line and invoice_line:
+                    # Reconcile the lines
+                    (payment_line + invoice_line).reconcile()
                 
         except Exception as e:
             # Log error but don't fail the payment process
             import logging
             _logger = logging.getLogger(__name__)
-            _logger.warning(f"Failed to reconcile payment with invoice: {str(e)}")
+            _logger.warning("Failed to reconcile payment with invoice: %s", str(e))
+            
+            # Try alternative reconciliation method
+            try:
+                # Use Odoo's built-in method for assigning payments to invoices
+                invoice.js_assign_outstanding_line(payment.id)
+            except Exception as fallback_error:
+                _logger.error("Fallback reconciliation also failed: %s", str(fallback_error))
 
     def action_mark_paid_only(self):
         """Mark as paid without creating payment record (for external payments)"""

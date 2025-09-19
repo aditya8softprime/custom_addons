@@ -86,9 +86,6 @@
                         </page>
                         <page string="Availability" name="availability">
                             <group>
-                                <group string="Working Hours">
-                                    <field name="available_days" widget="many2many_tags" options="{'no_create': True}"/>
-                                </group>
                                 <group string="Morning Shift">
                                     <field name="morning_shift"/>
                                     <label for="morning_start_time" invisible="not morning_shift"/>
@@ -104,6 +101,9 @@
                                         <field name="evening_start_time" widget="float_time"/> - 
                                         <field name="evening_end_time" widget="float_time"/>
                                     </div>
+                                </group>
+                                 <group string="Working Hours">
+                                    <field name="available_days" widget="many2many_tags" options="{'no_create': True}"/>
                                 </group>
                                 <group string="Slot Configuration">
                                     <field name="slot_duration"/>
