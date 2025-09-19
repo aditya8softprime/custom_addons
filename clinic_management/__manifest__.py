@@ -51,6 +51,7 @@
         'views/holiday_views.xml',
         'views/testimonial_views.xml',
         'views/clinic_website_settings_views.xml',
+        'views/res_company_views.xml',
         'views/appointment_dashboard.xml',
     # prescription dashboard actions removed
         

@@ -1,7 +1,8 @@
 /** @odoo-module **/
 import { registry } from "@web/core/registry";
-import { Component, onMounted, useRef } from "@odoo/owl";
+import { Component, onMounted, onWillDestroy, useRef } from "@odoo/owl";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
+import { rpc } from "@web/core/network/rpc";
 
 class DrawCanvasWidget extends Component {
     static template = "clinic_management.DrawCanvasWidget";
@@ -9,7 +10,16 @@ class DrawCanvasWidget extends Component {
 
     setup() {
         this.canvasRef = useRef("canvas");
+        this.saveTimeout = null;
+        this.isDrawing = false;
+        
         onMounted(this.renderCanvas.bind(this));
+        onWillDestroy(() => {
+            this.saveDrawing();
+            if (this.saveTimeout) {
+                clearTimeout(this.saveTimeout);
+            }
+        });
     }
 
     renderCanvas() {
@@ -21,16 +31,16 @@ class DrawCanvasWidget extends Component {
         ctx.lineJoin = "round";
         ctx.lineCap = "round";
 
-        let isDrawing = false;
+        // Load existing prescription if available
+        this.loadExistingPrescription(canvas, ctx);
+
         let lastX = 0;
         let lastY = 0;
 
         const pointerPos = (ev) => {
             const rect = canvas.getBoundingClientRect();
-            // Support touch events: use first touch if present
             const clientX = (ev.touches && ev.touches[0]) ? ev.touches[0].clientX : ev.clientX;
             const clientY = (ev.touches && ev.touches[0]) ? ev.touches[0].clientY : ev.clientY;
-            // When canvas display size (CSS) differs from its pixel buffer, scale coordinates
             const scaleX = canvas.width / rect.width;
             const scaleY = canvas.height / rect.height;
             return {
@@ -40,7 +50,7 @@ class DrawCanvasWidget extends Component {
         };
 
         const draw = (e) => {
-            if (!isDrawing) return;
+            if (!this.isDrawing) return;
             const pos = pointerPos(e);
             ctx.beginPath();
             ctx.moveTo(lastX, lastY);
@@ -51,161 +61,98 @@ class DrawCanvasWidget extends Component {
         };
 
         canvas.addEventListener("pointerdown", (e) => {
-            isDrawing = true;
+            this.isDrawing = true;
             const pos = pointerPos(e);
             lastX = pos.x;
             lastY = pos.y;
         });
+        
         canvas.addEventListener("pointermove", draw);
+        
         canvas.addEventListener("pointerup", () => {
-            isDrawing = false;
-            this.saveDrawing();
+            this.isDrawing = false;
+            this.debouncedSave();
         });
+        
         canvas.addEventListener("pointerout", () => {
-            isDrawing = false;
+            this.isDrawing = false;
+            this.debouncedSave();
         });
     }
 
-    saveDrawing() {
+    loadExistingPrescription(canvas, ctx) {
+        const rd = (this.props.record && this.props.record.data) ? this.props.record.data : {};
+        const existingImage = rd[this.props.name];
+        
+        if (existingImage) {
+            const img = new Image();
+            img.onload = () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            };
+            img.src = 'data:image/png;base64,' + existingImage;
+        }
+    }
+
+    debouncedSave() {
+        if (this.saveTimeout) {
+            clearTimeout(this.saveTimeout);
+        }
+        
+        this.saveTimeout = setTimeout(() => {
+            this.saveDrawing();
+        }, 500);
+    }
+
+    async saveDrawing() {
         const canvas = this.canvasRef.el;
         if (!canvas) return;
-        // Build a composite image that includes header, the handwriting canvas and footer
-        // so the stored binary matches the full template visible in the form.
+        
         try {
-            const width = canvas.width;
-            const height = canvas.height;
+            // Try to get company images
+            const companyData = await this.fetchCompanyData();
+            this.createCompositeImage(canvas, companyData);
+        } catch (e) {
+            // Fallback: just save the raw canvas drawing
+            this.saveSimpleCanvas(canvas);
+        }
+        
+        if (this.saveTimeout) {
+            clearTimeout(this.saveTimeout);
+            this.saveTimeout = null;
+        }
+    }
 
-            // Create an offscreen composite canvas
-            const composite = document.createElement('canvas');
-            composite.width = width;
-            composite.height = height;
-            const ctx = composite.getContext('2d');
-
-            // White background
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, width, height);
-
-            // Estimate header/footer heights as fractions of the A4 buffer
-            const headerH = Math.round(height * 0.12); // ~12% for header
-            const footerH = Math.round(height * 0.04); // ~4% for footer
-
-            // Get record data for header/footer text
-            const rd = (this.props.record && this.props.record.data) ? this.props.record.data : {};
-            const companyName = rd.company_name || 'Clinic Name';
-            const companyStreet = rd.company_street || '';
-            const companyCity = rd.company_city || '';
-            const companyZip = rd.company_zip || '';
-            const companyPhone = rd.company_phone || '';
-            const patientName = (rd.patient_id && rd.patient_id[1]) ? rd.patient_id[1] : '';
-            const patientAge = rd.patient_age || '';
-            const prescriptionDate = rd.prescription_date || new Date().toLocaleDateString();
-
-            // Header background gradient to match template
-            const headerGrad = ctx.createLinearGradient(0, 0, width, 0);
-            headerGrad.addColorStop(0, '#4e73df');
-            headerGrad.addColorStop(1, '#1cc88a');
-            ctx.fillStyle = headerGrad;
-            ctx.fillRect(0, 0, width, headerH + 6);
-
-            // Divider (green) under header (thin)
-            ctx.fillStyle = '#1cc88a';
-            ctx.fillRect(0, headerH + 6, width, 3);
-
-            // Header text (left)
-            ctx.fillStyle = '#ffffff';
-            ctx.textBaseline = 'top';
-            ctx.font = Math.round(headerH * 0.40) + 'px sans-serif';
-            ctx.fillText(companyName, 60, 18);
-            ctx.font = Math.round(headerH * 0.18) + 'px sans-serif';
-            let addrY = 18 + Math.round(headerH * 0.40) + 6;
-            if (companyStreet) { ctx.fillStyle = 'rgba(224,240,255,0.95)'; ctx.fillText(companyStreet, 60, addrY); addrY += Math.round(headerH * 0.18) + 4; }
-            let cityLine = '';
-            if (companyCity) cityLine += companyCity;
-            if (companyZip) cityLine += (cityLine ? ', ' : '') + companyZip;
-            if (cityLine) { ctx.fillStyle = 'rgba(224,240,255,0.95)'; ctx.fillText(cityLine, 60, addrY); addrY += Math.round(headerH * 0.18) + 4; }
-            if (companyPhone) { ctx.fillStyle = 'rgba(224,240,255,0.95)'; ctx.fillText('Tel: ' + companyPhone, 60, addrY); }
-
-            // Header right: patient info box with translucent background
-            const boxW = Math.round(width * 0.34);
-            const boxH = Math.round(headerH * 0.9);
-            const boxX = width - boxW - 60;
-            const boxY = 18;
-            // rounded rect function
-            function roundRect(ctx, x, y, w, h, r) {
-                const radius = Math.min(r, h / 2, w / 2);
-                ctx.beginPath();
-                ctx.moveTo(x + radius, y);
-                ctx.arcTo(x + w, y, x + w, y + h, radius);
-                ctx.arcTo(x + w, y + h, x, y + h, radius);
-                ctx.arcTo(x, y + h, x, y, radius);
-                ctx.arcTo(x, y, x + w, y, radius);
-                ctx.closePath();
-            }
-            ctx.fillStyle = 'rgba(255,255,255,0.15)';
-            roundRect(ctx, boxX, boxY, boxW, boxH, 12);
-            ctx.fill();
-            // patient text inside box
-            ctx.fillStyle = '#ffffff';
-            ctx.textAlign = 'left';
-            ctx.font = Math.round(headerH * 0.20) + 'px sans-serif';
-            const px = boxX + 12;
-            let py = boxY + 8;
-            ctx.fillText('Patient: ' + patientName, px, py);
-            py += Math.round(headerH * 0.22) + 6;
-            ctx.fillText('Age: ' + patientAge + ' yrs', px, py);
-            py += Math.round(headerH * 0.22) + 6;
-            ctx.fillText('Date: ' + prescriptionDate, px, py);
-            ctx.textAlign = 'left';
-
-            // Draw the handwriting canvas into the composite area (scale to fit remaining space)
-            // We'll scale the original canvas to occupy the area between header and footer.
-            const drawingH = height - headerH - footerH - 40; // small padding
-            const drawingY = headerH + 20;
-            try {
-                // Draw original canvas content into composite synchronously.
-                // Drawing a canvas onto another canvas is synchronous and avoids load races.
-                ctx.drawImage(canvas, 0, drawingY, width, drawingH);
-            } catch (e) {
-                // ignore and continue
-            }
-
-            // Footer gradient and text
-            const footerGrad = ctx.createLinearGradient(0, height - footerH - 4, width, height - footerH - 4);
-            footerGrad.addColorStop(0, '#1cc88a');
-            footerGrad.addColorStop(1, '#4e73df');
-            ctx.fillStyle = footerGrad;
-            ctx.fillRect(0, height - footerH - 4, width, footerH + 8);
-            ctx.fillStyle = '#ffffff';
-            ctx.font = Math.round(footerH * 0.35) + 'px sans-serif';
-            const footerY = height - footerH + Math.round(footerH * 0.15);
-            const footerText = (companyName ? companyName + ' - ' : '') + (companyStreet || '');
-            ctx.textAlign = 'center';
-            ctx.fillText(footerText, width / 2, footerY);
-
-            // Export composite to base64
-            const dataURL = composite.toDataURL('image/png');
-            const base64 = dataURL.split(',')[1];
-
-            // Persist into record using record.update when possible
-            try {
-                if (this.props.record && this.props.name) {
-                    this.props.record.update({ [this.props.name]: base64 });
-                    return;
-                }
-            } catch (e) {
-                // fallback
-            }
-            if (this.props.onChange) {
-                this.props.onChange(base64);
-            }
-            return;
-        } catch (err) {
-            // Fallback to previous behaviour: save raw canvas image
+    async fetchCompanyData() {
+        const rd = (this.props.record && this.props.record.data) ? this.props.record.data : {};
+        const companyId = rd.company_id ? (Array.isArray(rd.company_id) ? rd.company_id[0] : rd.company_id) : null;
+        
+        if (!companyId) {
+            throw new Error('No company_id found');
         }
 
-        // Fallback: just save the raw canvas drawing
+        // Fetch company data
+        const result = await rpc('/web/dataset/call_kw', {
+            model: 'res.company',
+            method: 'read',
+            args: [[companyId], ['header_image', 'footer_image']],
+            kwargs: {}
+        });
+
+        if (result && result.length > 0) {
+            return {
+                company_header_image: result[0].header_image,
+                company_footer_image: result[0].footer_image
+            };
+        }
+        
+        throw new Error('Company not found');
+    }
+
+    saveSimpleCanvas(canvas) {
         const dataURL = canvas.toDataURL("image/png");
-        const base64 = dataURL.split(",")[1]; // strip "data:image/png;base64,"
+        const base64 = dataURL.split(",")[1];
+        
         try {
             if (this.props.record && this.props.name) {
                 this.props.record.update({ [this.props.name]: base64 });
@@ -214,6 +161,113 @@ class DrawCanvasWidget extends Component {
         } catch (e) {
             // ignore
         }
+        if (this.props.onChange) {
+            this.props.onChange(base64);
+        }
+    }
+
+    createCompositeImage(canvas, companyData) {
+        const width = canvas.width;
+        const height = canvas.height;
+
+        // Create an offscreen composite canvas
+        const composite = document.createElement('canvas');
+        composite.width = width;
+        composite.height = height;
+        const ctx = composite.getContext('2d');
+
+        // White background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, height);
+
+        // Calculate proportional heights
+        const headerH = Math.round(height * 0.12);
+        const footerH = Math.round(height * 0.06);
+        const drawingH = height - headerH - footerH;
+        const drawingY = headerH;
+
+        let operationsCompleted = 0;
+        const totalOperations = 2; // header + footer
+
+        const checkComplete = () => {
+            operationsCompleted++;
+            if (operationsCompleted >= totalOperations) {
+                // Draw the canvas content
+                ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, drawingY, width, drawingH);
+                
+                // Save the composite
+                this.saveComposite(composite);
+            }
+        };
+
+        // Render header image or fallback
+        if (companyData.company_header_image) {
+            const headerImg = new Image();
+            headerImg.onload = () => {
+                ctx.drawImage(headerImg, 0, 0, width, headerH);
+                checkComplete();
+            };
+            headerImg.onerror = () => {
+                // Fallback gradient
+                const headerGrad = ctx.createLinearGradient(0, 0, width, 0);
+                headerGrad.addColorStop(0, '#4e73df');
+                headerGrad.addColorStop(1, '#1cc88a');
+                ctx.fillStyle = headerGrad;
+                ctx.fillRect(0, 0, width, headerH);
+                checkComplete();
+            };
+            headerImg.src = 'data:image/png;base64,' + companyData.company_header_image;
+        } else {
+            // Fallback gradient
+            const headerGrad = ctx.createLinearGradient(0, 0, width, 0);
+            headerGrad.addColorStop(0, '#4e73df');
+            headerGrad.addColorStop(1, '#1cc88a');
+            ctx.fillStyle = headerGrad;
+            ctx.fillRect(0, 0, width, headerH);
+            checkComplete();
+        }
+
+        // Render footer image or fallback
+        if (companyData.company_footer_image) {
+            const footerImg = new Image();
+            footerImg.onload = () => {
+                ctx.drawImage(footerImg, 0, height - footerH, width, footerH);
+                checkComplete();
+            };
+            footerImg.onerror = () => {
+                // Fallback gradient
+                const footerGrad = ctx.createLinearGradient(0, height - footerH, width, height - footerH);
+                footerGrad.addColorStop(0, '#1cc88a');
+                footerGrad.addColorStop(1, '#4e73df');
+                ctx.fillStyle = footerGrad;
+                ctx.fillRect(0, height - footerH, width, footerH);
+                checkComplete();
+            };
+            footerImg.src = 'data:image/png;base64,' + companyData.company_footer_image;
+        } else {
+            // Fallback gradient
+            const footerGrad = ctx.createLinearGradient(0, height - footerH, width, height - footerH);
+            footerGrad.addColorStop(0, '#1cc88a');
+            footerGrad.addColorStop(1, '#4e73df');
+            ctx.fillStyle = footerGrad;
+            ctx.fillRect(0, height - footerH, width, footerH);
+            checkComplete();
+        }
+    }
+
+    saveComposite(composite) {
+        const dataURL = composite.toDataURL('image/png');
+        const base64 = dataURL.split(',')[1];
+
+        try {
+            if (this.props.record && this.props.name) {
+                this.props.record.update({ [this.props.name]: base64 });
+                return;
+            }
+        } catch (e) {
+            // ignore
+        }
+        
         if (this.props.onChange) {
             this.props.onChange(base64);
         }

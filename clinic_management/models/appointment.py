@@ -38,6 +38,9 @@ class ClinicAppointment(models.Model):
     company_id = fields.Many2one('res.company', string='Company', 
                                  default=lambda self: self.env.company)
     
+    # Company fields removed as we now fetch directly in JavaScript
+    # Related company fields removed - now fetched directly via RPC
+    
     symptom = fields.Text(string='Symptoms/Problem', tracking=True)
 
     # Follow-up information
@@ -465,26 +468,40 @@ class ClinicAppointment(models.Model):
                     try:
                         import img2pdf
                         pdf_bytes = img2pdf.convert(image_b)
-                    except Exception:
+                        logging.getLogger(__name__).info('PDF created using img2pdf for appointment %s', appointment.id)
+                    except Exception as e:
+                        logging.getLogger(__name__).warning('img2pdf failed for appointment %s: %s', appointment.id, str(e))
                         # Fall back to Pillow
                         try:
                             from PIL import Image
                             img_buf = io.BytesIO(image_b)
                             img = Image.open(img_buf)
-                            # Ensure RGB for PDF
-                            if img.mode in ('RGBA', 'LA'):
-                                background = Image.new('RGB', img.size, (255, 255, 255))
-                                background.paste(img, mask=img.split()[-1])
-                                img = background
+                            
+                            # Validate image
+                            if img.size[0] < 100 or img.size[1] < 100:
+                                logging.getLogger(__name__).warning('Image too small for appointment %s: %s', appointment.id, img.size)
+                                pdf_bytes = None
                             else:
-                                img = img.convert('RGB')
-                            out_buf = io.BytesIO()
-                            img.save(out_buf, format='PDF')
-                            pdf_bytes = out_buf.getvalue()
-                        except Exception:
+                                # Ensure RGB for PDF
+                                if img.mode in ('RGBA', 'LA'):
+                                    background = Image.new('RGB', img.size, (255, 255, 255))
+                                    background.paste(img, mask=img.split()[-1])
+                                    img = background
+                                elif img.mode == 'P':
+                                    img = img.convert('RGB')
+                                elif img.mode != 'RGB':
+                                    img = img.convert('RGB')
+                                
+                                # Create PDF with proper settings
+                                out_buf = io.BytesIO()
+                                img.save(out_buf, format='PDF', quality=95, optimize=True)
+                                pdf_bytes = out_buf.getvalue()
+                                logging.getLogger(__name__).info('PDF created using Pillow for appointment %s', appointment.id)
+                        except Exception as e:
+                            logging.getLogger(__name__).error('Pillow PDF conversion failed for appointment %s: %s', appointment.id, str(e))
                             pdf_bytes = None
 
-                    if pdf_bytes:
+                    if pdf_bytes and len(pdf_bytes) > 100:  # Ensure PDF is not empty
                         # Save PDF on the appointment record and create an attachment linked to it
                         pdf_b64 = base64.b64encode(pdf_bytes).decode()
                         pdf_name = f"Prescription_{appointment.name or ''}.pdf"

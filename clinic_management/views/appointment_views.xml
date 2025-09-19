@@ -109,6 +109,7 @@
                                 <field name="medicine_pdf" filename="medicine_pdf_filename" invisible="not medicine_pdf"/>
                                 <field name="medicine_image_filename" invisible="1"/>
                                 <field name="medicine_pdf_filename" invisible="1"/>
+                                <!-- Company fields removed - now fetched directly via RPC in JavaScript -->
                             </group>
                         </page>
                         <page string="Lab Test Lines" invisible="not is_lab_test_required">

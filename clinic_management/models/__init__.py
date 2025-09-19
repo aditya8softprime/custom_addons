@@ -10,3 +10,4 @@ from . import res_config_settings
 from . import testimonial
 from . import clinic_website_settings
 from . import website_menu
+from . import res_company
