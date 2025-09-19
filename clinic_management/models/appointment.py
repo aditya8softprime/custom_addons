@@ -25,8 +25,20 @@ class ClinicAppointment(models.Model):
     
     service_id = fields.Many2one('clinic.service', string='Service', required=True, tracking=True)
     doctor_id = fields.Many2one('clinic.doctor', string='Doctor', required=True, tracking=True)
+    
+    # Appointment Type
+    appointment_type = fields.Selection([
+        ('scheduled', 'Scheduled'),
+        ('walkin', 'Walk-in')
+    ], string='Appointment Type', default='scheduled', required=True, tracking=True)
+    
+    # Slot for scheduled appointments only
     slot_id = fields.Many2one('clinic.slot', string='Slot', tracking=True)
     slots = fields.Many2many('clinic.slot', string='Slots')
+    
+    # Queue system for walk-in appointments
+    queue_number = fields.Char(string='Queue Number', readonly=True, copy=False)
+    queue_position = fields.Integer(string='Position in Queue', compute='_compute_queue_position', store=True)
 
     appointment_date = fields.Date(string='Appointment Date', required=True, tracking=True)
     
@@ -68,9 +80,10 @@ class ClinicAppointment(models.Model):
     payment_method_id = fields.Many2one('account.journal', string='Payment Method')
     
     state = fields.Selection([
-        ('draft', 'Draft'),
+        ('draft', 'New'),
         ('confirmed', 'Confirmed'),
         ('paid', 'Paid'),
+        ('waiting', 'Waiting'),
         ('patient_in', 'Patient In'),
         ('in_consultation', 'In Consultation'),
         ('completed', 'Completed'),
@@ -171,6 +184,8 @@ class ClinicAppointment(models.Model):
                 appointment.color = 0  # White
             elif appointment.state == 'confirmed':
                 appointment.color = 4  # Light Blue
+            elif appointment.state == 'waiting':
+                appointment.color = 5  # Yellow/Orange
             elif appointment.state == 'paid':
                 appointment.color = 9  # Light Green
             elif appointment.state == 'patient_in':
@@ -200,6 +215,29 @@ class ClinicAppointment(models.Model):
                 appointment.next_visit_date = appointment.appointment_date + timedelta(days=appointment.next_visit_days)
             else:
                 appointment.next_visit_date = False
+    
+    @api.depends('queue_number', 'doctor_id', 'appointment_date', 'state')
+    def _compute_queue_position(self):
+        """Compute position in queue for walk-in appointments"""
+        for appointment in self:
+            if appointment.appointment_type == 'walkin' and appointment.queue_number and appointment.state == 'waiting':
+                # Get all waiting walk-in appointments for the same doctor and date
+                waiting_appointments = self.search([
+                    ('doctor_id', '=', appointment.doctor_id.id),
+                    ('appointment_date', '=', appointment.appointment_date),
+                    ('appointment_type', '=', 'walkin'),
+                    ('state', '=', 'waiting'),
+                    ('queue_number', '!=', False)
+                ], order='queue_number')
+                
+                position = 1
+                for idx, app in enumerate(waiting_appointments):
+                    if app.id == appointment.id:
+                        position = idx + 1
+                        break
+                appointment.queue_position = position
+            else:
+                appointment.queue_position = 0
     
     def _get_root_appointment(self):
         """Get the root appointment of the chain"""
@@ -249,13 +287,25 @@ class ClinicAppointment(models.Model):
                     # Fallback if sequence is not found
                     vals['name'] = f"APT{self.env['clinic.appointment'].search_count([]) + 1:05d}"
             
+            # Set today's date for walk-in appointments if not provided
+            if vals.get('appointment_type') == 'walkin' and not vals.get('appointment_date'):
+                vals['appointment_date'] = fields.Date.context_today(self)
+            
             # Set consulting fee if not provided and doctor is specified
             if not vals.get('consulting_fee') and vals.get('doctor_id'):
                 doctor = self.env['clinic.doctor'].browse(vals['doctor_id'])
                 if doctor.consultation_fee:
                     vals['consulting_fee'] = doctor.consultation_fee
-                    
-        return super(ClinicAppointment, self).create(vals_list)
+        
+        appointments = super(ClinicAppointment, self).create(vals_list)
+        
+        # Handle walk-in appointments after creation
+        for appointment in appointments:
+            if appointment.appointment_type == 'walkin':
+                # Generate queue number for walk-in appointments
+                appointment._generate_queue_number()
+                
+        return appointments
     
     def write(self, vals):
         # If state changes to completed, update patient's symptom
@@ -332,20 +382,25 @@ class ClinicAppointment(models.Model):
         
         domain = [('id', 'in', doctors.ids)]
         return {'domain': {'doctor_id': domain}}
-    
+
     @api.onchange('doctor_id')
     def _onchange_doctor_id(self):
-        """Set consulting fee when doctor is selected"""
-        if self.doctor_id and not self.consulting_fee:
-            self.consulting_fee = self.doctor_id.consultation_fee
-
-    @api.onchange('doctor_id', 'appointment_date')
-    def _onchange_doctor_appointment_date(self):
-        self.slot_id = False  # reset previous selection
-
+        """Set consulting fee and validate if appointment date is already selected"""
+        if self.doctor_id:
+            # Set consulting fee if not already set
+            if not self.consulting_fee:
+                self.consulting_fee = self.doctor_id.consultation_fee
+            
+            # If appointment date is already selected, validate availability
+            if self.appointment_date:
+                return self._validate_doctor_availability()
+        return {}
+    
+    def _validate_doctor_availability(self):
+        """Helper method to validate doctor availability on selected date"""
         if not self.doctor_id or not self.appointment_date:
-            return
-
+            return {}
+        
         # Determine day of week
         weekday = self.appointment_date.weekday()  # 0 = Monday
         day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
@@ -354,18 +409,23 @@ class ClinicAppointment(models.Model):
         # Find day record
         day = self.env['clinic.days'].search([('name', '=', day_name)], limit=1)
         if not day:
-            return
+            return {
+                'warning': {
+                    'title': 'Invalid Day',
+                    'message': f"No day configuration found for {day_name}"
+                }
+            }
 
         # Check doctor availability
         if day not in self.doctor_id.available_days:
             return {
                 'warning': {
                     'title': 'Doctor Not Available',
-                    'message': f"Doctor {self.doctor_id.name} is not available on {day_name}"
+                    'message': f"Doctor {self.doctor_id.name} is not available on {day_name}. Please select a different date or doctor."
                 }
             }
 
-        # Check holidays
+        # Check if doctor is on leave
         holidays = self.env['clinic.holiday'].search([
             ('doctor_id', '=', self.doctor_id.id),
             ('state', '=', 'approved'),
@@ -376,29 +436,84 @@ class ClinicAppointment(models.Model):
             return {
                 'warning': {
                     'title': 'Doctor on Leave',
-                    'message': f"Doctor {self.doctor_id.name} is on leave on {self.appointment_date.strftime('%Y-%m-%d')}"
+                    'message': f"Doctor {self.doctor_id.name} is on leave on {self.appointment_date.strftime('%Y-%m-%d')}. Please select a different date or doctor."
                 }
             }
-        slots = self.env['clinic.slot'].search([
-            ('doctor_id', '=', self.doctor_id.id),
-            ('day_id', '=', day.id),
-            ('status', '=', 'available')
-        ])
-        self.slots = slots
-        return {'domain': {'slot_id': [('id', 'in', slots.ids)]}}
+        
+        return {}  # No warnings, doctor is available
+ 
+    
+    @api.onchange('appointment_type')
+    def _onchange_appointment_type(self):
+        """Handle appointment type change logic"""
+        if self.appointment_type == 'walkin':
+            # Clear slot for walk-in appointments and set today's date
+            self.slot_id = False
+            self.slots = False
+            self.appointment_date = fields.Date.context_today(self)
+            
+            # If doctor is already selected, validate availability for today
+            if self.doctor_id:
+                return self._validate_doctor_availability()
+                
+        elif self.appointment_type == 'scheduled':
+            # Clear queue number for scheduled appointments
+            self.queue_number = False
+        
+        return {}
+
+    @api.onchange('doctor_id', 'appointment_date')
+    def _onchange_doctor_appointment_date(self):
+        self.slot_id = False  # reset previous selection
+
+        if not self.doctor_id or not self.appointment_date:
+            return {}
+        
+        # First validate doctor availability (applies to both scheduled and walk-in)
+        availability_warning = self._validate_doctor_availability()
+        if availability_warning.get('warning'):
+            return availability_warning
+        
+        # For scheduled appointments, also handle slot availability
+        if self.appointment_type == 'scheduled':
+            # Determine day of week
+            weekday = self.appointment_date.weekday()  # 0 = Monday
+            day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+            day_name = day_names[weekday]
+
+            # Find day record
+            day = self.env['clinic.days'].search([('name', '=', day_name)], limit=1)
+            if day:
+                slots = self.env['clinic.slot'].search([
+                    ('doctor_id', '=', self.doctor_id.id),
+                    ('day_id', '=', day.id),
+                    ('status', '=', 'available')
+                ])
+                self.slots = slots
+                return {'domain': {'slot_id': [('id', 'in', slots.ids)]}}
+        
+        # For walk-in appointments, no slot validation needed but availability is confirmed
+        return {}
+        return True
 
 
 
     def action_confirm(self):
         """Confirm the appointment"""
         for appointment in self:
-            # Check if slot is still available (only if slot is specified)
-            if appointment.slot_id and appointment.slot_id.status != 'available' and appointment.state == 'draft':
-                raise ValidationError(_("The selected slot is no longer available"))
+            # For scheduled appointments, check if slot is still available
+            if appointment.appointment_type == 'scheduled':
+                if appointment.slot_id and appointment.slot_id.status != 'available' and appointment.state == 'draft':
+                    raise ValidationError(_("The selected slot is no longer available"))
+                
+                # Update slot status
+                if appointment.slot_id:
+                    appointment.slot_id.sudo().status = 'booked'
             
-            # Update slot status (only if slot is specified)
-            if appointment.slot_id:
-                appointment.slot_id.sudo().status = 'booked'
+            # For walk-in appointments, generate queue number if not present
+            elif appointment.appointment_type == 'walkin':
+                if not appointment.queue_number:
+                    appointment._generate_queue_number()
             
             # Set consulting fee if not set
             if not appointment.consulting_fee and appointment.doctor_id:
@@ -436,10 +551,18 @@ class ClinicAppointment(models.Model):
     
     def action_start_consultation(self):
         """Start the consultation"""
+        current_time = fields.Datetime.now()
         self.write({
             'state': 'in_consultation',
-            'consultation_start_time': fields.Datetime.now()
+            'consultation_start_time': current_time
         })
+        
+        # For walk-in appointments, also update start_time
+        if self.appointment_type == 'walkin':
+            # Convert datetime to float time (hours)
+            local_time = fields.Datetime.context_timestamp(self, current_time)
+            start_time_float = local_time.hour + local_time.minute / 60.0
+            self.start_time = start_time_float
 
     def reset_to_in_consultation(self):
         """Reset the appointment state to in consultation"""
@@ -452,10 +575,18 @@ class ClinicAppointment(models.Model):
         """Complete the appointment: set state, optionally create follow-up, generate PDF from medicine_image,
         attach it and send completion email to patient."""
         for appointment in self:
+            current_time = fields.Datetime.now()
             appointment.write({
                 'state': 'completed',
-                'consultation_end_time': fields.Datetime.now()
+                'consultation_end_time': current_time
             })
+            
+            # For walk-in appointments, also update end_time
+            if appointment.appointment_type == 'walkin':
+                # Convert datetime to float time (hours)
+                local_time = fields.Datetime.context_timestamp(appointment, current_time)
+                end_time_float = local_time.hour + local_time.minute / 60.0
+                appointment.end_time = end_time_float
 
             # Prepare attachments list
             attachment_ids = []
@@ -895,3 +1026,80 @@ class ClinicAppointment(models.Model):
         hours = int(float_time)
         minutes = int((float_time - hours) * 60)
         return f"{hours:02d}:{minutes:02d}"
+    
+    # ===============================
+    # Queue Management Methods
+    # ===============================
+    
+    def _generate_queue_number(self):
+        """Generate queue number for walk-in appointments"""
+        self.ensure_one()
+        if self.appointment_type == 'walkin':
+            # Generate queue number based on date and doctor
+            today_str = self.appointment_date.strftime('%Y%m%d')
+            doctor_initial = self.doctor_id.name[0] if self.doctor_id.name else 'D'
+            
+            # Get count of walk-in appointments for this doctor today
+            existing_count = self.search_count([
+                ('doctor_id', '=', self.doctor_id.id),
+                ('appointment_date', '=', self.appointment_date),
+                ('appointment_type', '=', 'walkin'),
+                ('queue_number', '!=', False)
+            ])
+            
+            queue_num = existing_count + 1
+            self.queue_number = f"{doctor_initial}{today_str}{queue_num:03d}"
+    
+    def action_move_to_waiting(self):
+        """Move walk-in appointment to waiting state and generate queue number"""
+        for appointment in self:
+            if appointment.appointment_type == 'walkin' and appointment.state == 'paid':
+                if not appointment.queue_number:
+                    appointment._generate_queue_number()
+                appointment.state = 'waiting'
+    
+    def get_queue_data(self, doctor_id, date):
+        """Get queue data for a specific doctor and date"""
+        queue_appointments = self.search([
+            ('doctor_id', '=', doctor_id),
+            ('appointment_date', '=', date),
+            ('appointment_type', '=', 'walkin'),
+            ('state', 'in', ['waiting', 'patient_in', 'in_consultation'])
+        ], order='queue_number')
+        
+        queue_data = []
+        for appointment in queue_appointments:
+            queue_data.append({
+                'id': appointment.id,
+                'queue_number': appointment.queue_number,
+                'patient_name': appointment.patient_id.name,
+                'state': appointment.state,
+                'queue_position': appointment.queue_position
+            })
+        
+        return queue_data
+    
+    @api.model
+    def get_doctor_queue_status(self, doctor_id, date=None):
+        """Get current queue status for doctor dashboard"""
+        if not date:
+            date = fields.Date.context_today(self)
+        
+        waiting_count = self.search_count([
+            ('doctor_id', '=', doctor_id),
+            ('appointment_date', '=', date),
+            ('appointment_type', '=', 'walkin'),
+            ('state', '=', 'waiting')
+        ])
+        
+        current_patient = self.search([
+            ('doctor_id', '=', doctor_id),
+            ('appointment_date', '=', date),
+            ('state', 'in', ['patient_in', 'in_consultation'])
+        ], limit=1, order='queue_number')
+        
+        return {
+            'waiting_count': waiting_count,
+            'current_patient': current_patient.patient_id.name if current_patient else None,
+            'current_queue_number': current_patient.queue_number if current_patient else None
+        }

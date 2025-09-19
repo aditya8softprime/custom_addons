@@ -74,12 +74,14 @@ class ClinicPaymentWizard(models.TransientModel):
         if invoice.state == 'posted':
             self._reconcile_payment_with_invoice(payment, invoice)
 
+        message = _('Payment of %.2f has been processed for appointment %s.') % (self.amount, self.appointment_id.name)
+
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
                 'title': _('Payment Processed'),
-                'message': _('Payment of %s has been processed successfully. Appointment is now paid.') % self.amount,
+                'message': message,
                 'type': 'success',
                 'sticky': False,
             }
@@ -137,18 +139,29 @@ class ClinicPaymentWizard(models.TransientModel):
         """Mark as paid without creating payment record (for external payments)"""
         self.ensure_one()
         
-        self.appointment_id.write({
-            'state': 'paid',
-            'payment_date': fields.Datetime.now(),
-            'payment_method_id': self.payment_method_id.id,
-        })
+        if self.appointment_id.appointment_type == 'walkin':
+            # For walk-in appointments, move to waiting state
+            self.appointment_id.write({
+                'state': 'waiting',
+                'payment_date': fields.Datetime.now(),
+                'payment_method_id': self.payment_method_id.id,
+            })
+            message = _('Appointment has been marked as paid and moved to waiting queue.')
+        else:
+            # For scheduled appointments, move to paid state
+            self.appointment_id.write({
+                'state': 'paid',
+                'payment_date': fields.Datetime.now(),
+                'payment_method_id': self.payment_method_id.id,
+            })
+            message = _('Appointment has been marked as paid.')
 
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
                 'title': _('Marked as Paid'),
-                'message': _('Appointment has been marked as paid.'),
+                'message': message,
                 'type': 'success',
                 'sticky': False,
             }

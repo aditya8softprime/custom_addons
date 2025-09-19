@@ -10,8 +10,14 @@
                         invisible="state != 'draft'" class="btn-primary" groups="clinic_management.group_clinic_receptionist,clinic_management.group_clinic_admin"/>
                     <button name="action_pay" string="Pay" type="object" 
                         invisible="state != 'confirmed'" class="btn-success" groups="clinic_management.group_clinic_receptionist,clinic_management.group_clinic_admin"/>
+                    <button name="action_move_to_waiting" string="Move to Waiting" type="object" 
+                        invisible="not (appointment_type == 'walkin' and state == 'paid')" 
+                        class="btn-primary" 
+                        groups="clinic_management.group_clinic_receptionist,clinic_management.group_clinic_admin"/>
                     <button name="action_patient_in" string="Patient In" type="object" 
-                        invisible="state not in ('confirmed', 'paid')" class="btn-primary" groups="clinic_management.group_clinic_receptionist,clinic_management.group_clinic_admin"/>
+                        invisible="not ((state == 'waiting') or (appointment_type != 'walkin' and state == 'paid'))" 
+                        class="btn-primary" 
+                        groups="clinic_management.group_clinic_receptionist,clinic_management.group_clinic_admin"/>
                     <button name="action_start_consultation" string="Start Consultation" type="object" 
                         invisible="state != 'patient_in'" class="btn-primary" groups="clinic_management.group_clinic_doctor,clinic_management.group_clinic_admin"/>
                     <button name="action_complete" string="Complete" type="object" 
@@ -27,7 +33,7 @@
                     <button name="reset_to_in_consultation" string="Reset to In Consultation" type="object"
                             class="btn-warning"/>
                     <field name="state" widget="statusbar" 
-                           statusbar_visible="draft,confirmed,paid,patient_in,in_consultation,completed"/>
+                           statusbar_visible="draft,confirmed,waiting,paid,patient_in,in_consultation,completed"/>
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
@@ -69,15 +75,18 @@
                         </group>
                         <group>
                             <field name="service_id" readonly="state != 'draft'"/>
-                                <field name="doctor_id" readonly="state != 'draft'" />
-                            <field name="appointment_date" readonly="state != 'draft'"/>
+                            <field name="doctor_id" readonly="state != 'draft'" />
+                            <field name="appointment_type" readonly="state != 'draft'"/>
+                            <field name="appointment_date" readonly="appointment_type == 'walkin' or state != 'draft'"/>
                             <field name="slot_id" readonly="state != 'draft'"
-                                   domain="[('id', 'in', slots)]"/>
-                            <field name="start_time" widget="float_time"/>
-                            <field name="end_time" widget="float_time"/>
+                                   domain="[('id', 'in', slots)]" invisible="appointment_type == 'walkin'"/>
+                            <field name="queue_number" readonly="1" invisible="appointment_type != 'walkin'"/>
+                            <field name="queue_position" readonly="1" invisible="appointment_type != 'walkin' or state != 'waiting'"/>
+                            <field name="start_time" widget="float_time" readonly="appointment_type == 'walkin'"/>
+                            <field name="end_time" widget="float_time" readonly="appointment_type == 'walkin'"/>
                             <field name="consulting_fee" readonly="1" />
-                            <field name="payment_date" readonly="1" invisible="state not in ('paid', 'patient_in', 'in_consultation', 'completed')"/>
-                            <field name="payment_method_id" readonly="1" invisible="state not in ('paid', 'patient_in', 'in_consultation', 'completed')"/>
+                            <field name="payment_date" readonly="1" invisible="state not in ('paid', 'patient_in', 'in_consultation', 'completed', 'waiting')"/>
+                            <field name="payment_method_id" readonly="1" invisible="state not in ('paid', 'patient_in', 'in_consultation', 'completed', 'waiting')"/>
                             <field name="currency_id" invisible="1"/>
                             <field name="company_id" groups="base.group_multi_company" invisible="1"/>
                             <field name="slots" invisible="1"/>
@@ -151,14 +160,17 @@
                 <field name="patient_id"/>
                 <field name="service_id"/>
                 <field name="doctor_id"/>
+                <field name="appointment_type"/>
                 <field name="appointment_date"/>
-                <field name="start_time" widget="float_time"/>
-                <field name="end_time" widget="float_time"/>
+                <field name="start_time" widget="float_time" optional="hide" invisible="appointment_type == 'walkin'"/>
+                <field name="end_time" widget="float_time" optional="hide" invisible="appointment_type == 'walkin'"/>
+                <field name="queue_number" optional="show" invisible="appointment_type != 'walkin'"/>
+                <field name="queue_position" optional="show" invisible="appointment_type != 'walkin' or state != 'waiting'"/>
                 <field name="consulting_fee"/>
                 <field name="state" decoration-success="state == 'completed'" 
                        decoration-info="state == 'confirmed'" 
                        decoration-danger="state in ('cancelled', 'no_show')"
-                       decoration-warning="state == 'in_consultation'"
+                       decoration-warning="state in ('in_consultation', 'waiting')"
                        decoration-primary="state == 'patient_in'"
                        widget="badge"/>
             </list>
@@ -174,8 +186,11 @@
                 <field name="service_id"/>
                 <field name="doctor_id"/>
                 <field name="appointment_date"/>
+                <field name="appointment_type"/>
                 <field name="start_time"/>
                 <field name="end_time"/>
+                <field name="queue_number"/>
+                <field name="queue_position"/>
                 <field name="state"/>
                 <field name="color"/>
                 <templates>
@@ -184,6 +199,7 @@
                             <div class="oe_kanban_details">
                                 <strong class="o_kanban_record_title">
                                     <field name="name"/>
+                                    <span t-if="record.appointment_type.raw_value == 'walkin'" class="badge badge-info ml-2">Walk-in</span>
                                 </strong>
                                 <div class="o_kanban_record_subtitle">
                                     <field name="patient_id"/>
@@ -200,9 +216,16 @@
                                     <strong>Date: </strong>
                                     <field name="appointment_date"/>
                                 </div>
-                                <div>
+                                <div t-if="record.appointment_type.raw_value == 'scheduled'">
                                     <strong>Time: </strong>
                                     <field name="start_time" widget="float_time"/> - <field name="end_time" widget="float_time"/>
+                                </div>
+                                <div t-if="record.appointment_type.raw_value == 'walkin' and record.queue_number.value">
+                                    <strong>Queue: </strong>
+                                    <field name="queue_number"/>
+                                    <span t-if="record.state.raw_value == 'waiting' and record.queue_position.value" class="ml-2">
+                                        (Position: <field name="queue_position"/>)
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -237,16 +260,23 @@
                 <field name="service_id"/>
                 <field name="doctor_id"/>
                 <field name="appointment_date"/>
+                <field name="appointment_type"/>
+                <field name="queue_number"/>
                 <separator/>
                 <filter string="Today" name="today" domain="[('appointment_date', '=', context_today().strftime('%Y-%m-%d'))]"/>
                 <filter string="Tomorrow" name="tomorrow" domain="[('appointment_date', '=', (context_today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d'))]"/>
                 <filter string="This Week" name="this_week" domain="[('appointment_date', '>=', (context_today() - datetime.timedelta(days=context_today().weekday())).strftime('%Y-%m-%d')), ('appointment_date', '&lt;=', (context_today() + datetime.timedelta(days=6-context_today().weekday())).strftime('%Y-%m-%d'))]"/>
                 <separator/>
+                <filter string="Scheduled" name="scheduled" domain="[('appointment_type', '=', 'scheduled')]"/>
+                <filter string="Walk-in" name="walkin" domain="[('appointment_type', '=', 'walkin')]"/>
+                <separator/>
                 <filter string="Filter by Doctor" name="filter_doctor" context="{'group_by': 'doctor_id'}"/>
                 <filter string="Filter by State" name="filter_state" context="{'group_by': 'state'}"/>
+                <filter string="Filter by Type" name="filter_type" context="{'group_by': 'appointment_type'}"/>
                 <separator/>
                 <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
                 <filter string="Confirmed" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
+                <filter string="Waiting" name="waiting" domain="[('state', '=', 'waiting')]"/>
                 <filter string="Patient In" name="patient_in" domain="[('state', '=', 'patient_in')]"/>
                 <filter string="In Consultation" name="in_consultation" domain="[('state', '=', 'in_consultation')]"/>
                 <filter string="Completed" name="completed" domain="[('state', '=', 'completed')]"/>
@@ -258,9 +288,30 @@
                     <filter name="group_by_service" string="Service" context="{'group_by': 'service_id'}"/>
                     <filter name="group_by_doctor" string="Doctor" context="{'group_by': 'doctor_id'}"/>
                     <filter name="group_by_date" string="Date" context="{'group_by': 'appointment_date'}"/>
+                    <filter name="group_by_type" string="Type" context="{'group_by': 'appointment_type'}"/>
                     <filter name="group_by_state" string="Status" context="{'group_by': 'state'}"/>
                 </group>
             </search>
+        </field>
+    </record>
+
+    <record id="action_clinic_appointment_queue" model="ir.actions.act_window">
+        <field name="name">Walk-in Queue</field>
+        <field name="res_model">clinic.appointment</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('appointment_type', '=', 'walkin'), ('state', 'in', ['waiting', 'patient_in', 'in_consultation'])]</field>
+        <field name="context">{
+            'search_default_today': 1,
+            'search_default_filter_doctor': 1,
+            'default_appointment_type': 'walkin'
+        }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No walk-in patients in queue!
+            </p>
+            <p>
+                Walk-in patients will appear here after payment and moving to waiting status.
+            </p>
         </field>
     </record>
 
