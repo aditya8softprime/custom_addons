@@ -6,6 +6,8 @@ import io
 import base64
 import logging
 
+_logger = logging.getLogger(__name__)
+
 
 
 class ClinicAppointment(models.Model):
@@ -753,7 +755,9 @@ class ClinicAppointment(models.Model):
             domain.append(('doctor_id', '=', int(doctor_id)))
             
         # Apply time filter
-        if time_filter:
+        start_date = None
+        end_date = None
+        if time_filter and time_filter != 'till_now':
             user_tz = self.env.user.tz or 'UTC'
             tz = pytz.timezone(user_tz)
             now = datetime.now(tz)
@@ -799,7 +803,7 @@ class ClinicAppointment(models.Model):
         # Count lab tests (prescription model removed; handwritten image stored on appointment)
         total_lab_tests = sum(len(a.lab_tes) for a in appointments)
 
-        return {
+        result = {
             'total_appointments': len(appointments),
             'total_draft': len(draft),
             'total_confirmed': len(confirmed),
@@ -812,6 +816,12 @@ class ClinicAppointment(models.Model):
             'total_revenue': total_revenue,
             'total_lab_tests': total_lab_tests,
         }
+        
+        _logger.info(f"Dashboard data result: {result}")
+        _logger.info(f"Domain used: {domain}")
+        _logger.info(f"Total appointments found: {len(appointments)}")
+        
+        return result
     
     @api.model
     def get_appointment_list_data(self, doctor_id=None, time_filter=None, state=None, offset=0, limit=15):

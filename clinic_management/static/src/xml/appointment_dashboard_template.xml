@@ -88,15 +88,15 @@
                     </div>
                 </div>
                 
-                <!-- Checked In -->
+                <!-- Patient In -->
                 <div class="col-md-3 col-sm-6">
-                    <div class="card h-100 shadow-sm clickable-card" style="background-color: #17a2b8; color: white;" t-on-click="(event) => this._open_list_view('checked_in')">
+                    <div class="card h-100 shadow-sm clickable-card" style="background-color: #17a2b8; color: white;" t-on-click="(event) => this._open_list_view('patient_in')">
                         <div class="card-body text-center">
                             <div class="d-flex align-items-center justify-content-center mb-2">
                                 <i class="fa fa-user-check fa-2x me-3"></i>
-                                <h2 class="mb-0 fw-bold"><t t-esc="state.total_checked_in"/></h2>
+                                <h2 class="mb-0 fw-bold"><t t-esc="state.total_patient_in"/></h2>
                             </div>
-                            <h5 class="card-title mb-2">Checked In</h5>
+                            <h5 class="card-title mb-2">Patient In</h5>
                         </div>
                     </div>
                 </div>
@@ -182,7 +182,7 @@
                                     <td><t t-esc="record.appointment_date || '-'"/></td>
                                     <td><t t-esc="record.time_slot || '-'"/></td>
                                     <td>
-                                        <span t-att-class="'badge bg-' + (record.state === 'completed' ? 'success' : record.state === 'confirmed' ? 'primary' : record.state === 'checked_in' ? 'info' : record.state === 'in_consultation' ? 'warning' : record.state === 'cancelled' ? 'danger' : record.state === 'no_show' ? 'secondary' : 'light text-dark')">
+                                        <span t-att-class="'badge bg-' + (record.state === 'completed' ? 'success' : record.state === 'confirmed' ? 'primary' : record.state === 'patient_in' ? 'info' : record.state === 'in_consultation' ? 'warning' : record.state === 'cancelled' ? 'danger' : record.state === 'no_show' ? 'secondary' : 'light text-dark')">
                                             <t t-esc="record.state.toUpperCase().replace('_', ' ')"/>
                                         </span>
                                     </td>

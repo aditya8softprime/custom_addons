@@ -72,7 +72,18 @@ class AppointmentDashboard extends Component {
                 this.state.doctor_id, this.state.time_filter
             ]);
             
+            console.log('Dashboard data received:', result);
+            console.log('Current doctor_id:', this.state.doctor_id);
+            console.log('Current time_filter:', this.state.time_filter);
+            
             Object.assign(this.state, result);
+            
+            console.log('State after assignment:', {
+                total_appointments: this.state.total_appointments,
+                total_confirmed: this.state.total_confirmed,
+                total_completed: this.state.total_completed,
+                total_draft: this.state.total_draft
+            });
 
             // Fetch list data for the table
             await this._fetch_list_data();
@@ -240,7 +251,7 @@ class AppointmentDashboard extends Component {
         console.log('Rendering bar chart with data:', {
             confirmed: this.state.total_confirmed,
             completed: this.state.total_completed,
-            checked_in: this.state.total_checked_in,
+            patient_in: this.state.total_patient_in,
             in_consultation: this.state.total_in_consultation,
             no_show: this.state.total_no_show,
             cancelled: this.state.total_cancelled,
@@ -256,7 +267,7 @@ class AppointmentDashboard extends Component {
                     data: [
                         this.state.total_confirmed,
                         this.state.total_completed,
-                        this.state.total_checked_in,
+                        this.state.total_patient_in,
                         this.state.total_in_consultation,
                         this.state.total_no_show,
                         this.state.total_cancelled,
@@ -314,7 +325,13 @@ class AppointmentDashboard extends Component {
 
     // Event handlers
     on_time_filter_change(filter) {
-        this.state.time_filter = this.state.time_filter === filter ? null : filter;
+        if (filter === 'till_now') {
+            // All Time button - set to null to show all records
+            this.state.time_filter = null;
+        } else {
+            // Toggle between selected filter and null
+            this.state.time_filter = this.state.time_filter === filter ? null : filter;
+        }
         this.state.current_page = 1;
         this._fetch_data();
     }
