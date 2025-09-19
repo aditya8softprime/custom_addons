@@ -296,6 +296,7 @@ class ClinicWebsite(http.Controller):
             service_id = int(post.get('service_id'))
             doctor_id = int(post.get('doctor_id'))
             appointment_date = post.get('appointment_date')
+            slot_id = post.get('slot_id')
             
             doctor = request.env['clinic.doctor'].sudo().browse(doctor_id)
             
@@ -307,6 +308,7 @@ class ClinicWebsite(http.Controller):
                 'consulting_fee': doctor.consultation_fee,
                 'currency_id': doctor.currency_id.id,
                 'symptom': post.get('symptom') or False,
+                'slot_id': slot_id,
                 'state': 'draft',  # Fixed: use 'draft' instead of 'confirmed'
             }
             
