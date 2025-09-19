@@ -449,6 +449,178 @@
                         </div>
                     </section>
 
+                    <!-- JavaScript for dynamic slot loading and patient lookup -->
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const serviceSelect = document.getElementById('service_id');
+                            const doctorSelect = document.getElementById('doctor_id');
+                            const dateInput = document.getElementById('appointment_date');
+                            const slotSelect = document.getElementById('slot_id');
+                            const phoneInput = document.getElementById('phone');
+                            const nameInput = document.getElementById('patient_name');
+                            const emailInput = document.getElementById('email');
+                            const ageInput = document.getElementById('age');
+                            const genderSelect = document.getElementById('gender');
+                            
+                            // Store all doctors for filtering
+                            let allDoctors = [];
+                            Array.from(doctorSelect.options).forEach(option => {
+                                if (option.value) {
+                                    allDoctors.push({
+                                        id: option.value,
+                                        text: option.text,
+                                        option: option
+                                    });
+                                }
+                            });
+                            
+                            // Patient lookup by phone
+                            function lookupPatient() {
+                                const phone = phoneInput.value.trim();
+                                if (phone.length >= 10) {
+                                    fetch('/clinic/booking/patient-lookup', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-Requested-With': 'XMLHttpRequest'
+                                        },
+                                        body: JSON.stringify({
+                                            jsonrpc: '2.0',
+                                            method: 'call',
+                                            params: { phone: phone }
+                                        })
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.result &amp;&amp; data.result.found) {
+                                            const patient = data.result;
+                                            nameInput.value = patient.name;
+                                            emailInput.value = patient.email || '';
+                                            ageInput.value = patient.age;
+                                            genderSelect.value = patient.gender;
+                                        }
+                                    })
+                                    .catch(error => console.error('Error looking up patient:', error));
+                                }
+                            }
+                            
+                            // Filter doctors based on selected service
+                            function filterDoctorsByService() {
+                                const serviceId = serviceSelect.value;
+                                
+                                if (serviceId) {
+                                    // Clear current options except placeholder
+                                    doctorSelect.innerHTML = '<option value="">Loading...</option>';
+                                    
+                                    // Make AJAX request to get doctors for this service
+                                    fetch('/clinic/booking/doctors', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-Requested-With': 'XMLHttpRequest'
+                                        },
+                                        body: JSON.stringify({
+                                            jsonrpc: '2.0',
+                                            method: 'call',
+                                            params: { service_id: serviceId }
+                                        })
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        doctorSelect.innerHTML = '<option value="">Select Doctor</option>';
+                                        if (data.result &amp;&amp; data.result.length &gt; 0) {
+                                            data.result.forEach(doctor => {
+                                                const option = document.createElement('option');
+                                                option.value = doctor.id;
+                                                option.textContent = 'Dr. ' + doctor.name + ' - ' + doctor.specializations;
+                                                doctorSelect.appendChild(option);
+                                            });
+                                        } else {
+                                            doctorSelect.innerHTML = '<option value="">No doctors available for this service</option>';
+                                        }
+                                        // Clear slots when doctors change
+                                        clearSlots();
+                                    })
+                                    .catch(error => {
+                                        console.error('Error loading doctors:', error);
+                                        doctorSelect.innerHTML = '<option value="">Error loading doctors</option>';
+                                    });
+                                } else {
+                                    // Reset to show all doctors
+                                    doctorSelect.innerHTML = '<option value="">Select Doctor</option>';
+                                    allDoctors.forEach(doctor => {
+                                        doctorSelect.appendChild(doctor.option.cloneNode(true));
+                                    });
+                                    clearSlots();
+                                }
+                            }
+                            
+                            // Load slots when doctor and date are selected
+                            function loadSlots() {
+                                const doctorId = doctorSelect.value;
+                                const date = dateInput.value;
+                                
+                                console.log('Loading slots for doctor:', doctorId, 'date:', date);
+                                
+                                if (doctorId &amp;&amp; date) {
+                                    slotSelect.innerHTML = '<option value="">Loading slots...</option>';
+                                    
+                                    fetch('/clinic/booking/slots', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-Requested-With': 'XMLHttpRequest'
+                                        },
+                                        body: JSON.stringify({
+                                            jsonrpc: '2.0',
+                                            method: 'call',
+                                            params: {
+                                                doctor_id: doctorId,
+                                                date_str: date
+                                            }
+                                        })
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        console.log('Slots response:', data);
+                                        slotSelect.innerHTML = '<option value="">Select Time Slot</option>';
+                                        if (data.result &amp;&amp; data.result.length &gt; 0) {
+                                            data.result.forEach(slot => {
+                                                const option = document.createElement('option');
+                                                option.value = slot.id;
+                                                option.textContent = `${slot.start_time} - ${slot.end_time}`;
+                                                slotSelect.appendChild(option);
+                                            });
+                                        } else {
+                                            slotSelect.innerHTML = '<option value="">No slots available for this date</option>';
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('Error loading slots:', error);
+                                        slotSelect.innerHTML = '<option value="">Error loading slots</option>';
+                                    });
+                                } else {
+                                    slotSelect.innerHTML = '<option value="">First select doctor and date</option>';
+                                }
+                            }
+                            
+                            function clearSlots() {
+                                slotSelect.innerHTML = '<option value="">Select doctor and date to see available slots</option>';
+                            }
+                            
+                            // Event listeners
+                            phoneInput.addEventListener('blur', lookupPatient);
+                            serviceSelect.addEventListener('change', filterDoctorsByService);
+                            doctorSelect.addEventListener('change', loadSlots);
+                            dateInput.addEventListener('change', loadSlots);
+                            
+                            // Set minimum date to today
+                            const today = new Date().toISOString().split('T')[0];
+                            dateInput.setAttribute('min', today);
+                        });
+                    </script>
+                    
+
                     <!-- Contact Us Section -->
                     <section id="contact">
                         <div class="row mb-5">
@@ -882,8 +1054,10 @@
                         const date = dateInput.value;
                         
                         if (doctorId &amp;&amp; date) {
+                            // Clear slots
                             slotSelect.innerHTML = '<option value="">Loading...</option>';
                             
+                            // Make AJAX request to get slots
                             fetch('/clinic/booking/slots', {
                                 method: 'POST',
                                 headers: {
@@ -901,14 +1075,16 @@
                             })
                             .then(response => response.json())
                             .then(data => {
-                                slotSelect.innerHTML = '<option value="">No specific time (we will assign)</option>';
-                                if (data.result &amp;&amp; data.result.length &gt; 0) {
+                                slotSelect.innerHTML = '<option value="">Select Time Slot</option>';
+                                if (data.result &amp;&amp; data.result.length > 0) {
                                     data.result.forEach(slot => {
                                         const option = document.createElement('option');
                                         option.value = slot.id;
                                         option.textContent = slot.start_time + ' - ' + slot.end_time;
                                         slotSelect.appendChild(option);
                                     });
+                                } else {
+                                    slotSelect.innerHTML = '<option value="">No slots available</option>';
                                 }
                             })
                             .catch(error => {
@@ -916,10 +1092,9 @@
                                 slotSelect.innerHTML = '<option value="">Error loading slots</option>';
                             });
                         } else {
-                            clearSlots();
+                            slotSelect.innerHTML = '<option value="">First select doctor and date</option>';
                         }
                     }
-                    
                     function clearSlots() {
                         slotSelect.innerHTML = '<option value="">Select doctor and date to see available slots</option>';
                     }
