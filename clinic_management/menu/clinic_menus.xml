@@ -25,6 +25,8 @@
               action="action_clinic_appointment_today"
               groups="group_clinic_receptionist,group_clinic_doctor,group_clinic_admin"
               sequence="2"/>
+
+    
     
     <menuitem id="menu_clinic_appointment_all"
               name="All Appointments"
@@ -32,6 +34,13 @@
               action="action_clinic_appointment"
               groups="group_clinic_receptionist,group_clinic_doctor,group_clinic_admin"
               sequence="3"/>
+
+    <menuitem id="menu_clinic_appointment_walkin"
+              name="Walk-in Appointments"
+              parent="menu_clinic_appointments"
+              action="action_clinic_appointment_walkin"
+              groups="group_clinic_receptionist,group_clinic_doctor,group_clinic_admin"
+              sequence="4"/>
 
     <!-- Website Menu -->
     <menuitem id="menu_clinic_website_root"

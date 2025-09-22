@@ -393,7 +393,7 @@ class ClinicAppointment(models.Model):
             
             # If appointment date is already selected, validate availability
             if self.appointment_date:
-                return self._validate_doctor_availability()
+                self._validate_doctor_availability()
         return {}
     
     def _validate_doctor_availability(self):
@@ -409,21 +409,15 @@ class ClinicAppointment(models.Model):
         # Find day record
         day = self.env['clinic.days'].search([('name', '=', day_name)], limit=1)
         if not day:
-            return {
-                'warning': {
-                    'title': 'Invalid Day',
-                    'message': f"No day configuration found for {day_name}"
-                }
-            }
+            raise ValidationError(f"No day configuration found for {day_name}.")
+
 
         # Check doctor availability
         if day not in self.doctor_id.available_days:
-            return {
-                'warning': {
-                    'title': 'Doctor Not Available',
-                    'message': f"Doctor {self.doctor_id.name} is not available on {day_name}. Please select a different date or doctor."
-                }
-            }
+            raise ValidationError(
+                f"Doctor {self.doctor_id.name} is not available on {day_name}. "
+                f"Please select a different date or doctor."
+            )
 
         # Check if doctor is on leave
         holidays = self.env['clinic.holiday'].search([
@@ -433,13 +427,11 @@ class ClinicAppointment(models.Model):
             ('to_date', '>=', self.appointment_date)
         ])
         if holidays:
-            return {
-                'warning': {
-                    'title': 'Doctor on Leave',
-                    'message': f"Doctor {self.doctor_id.name} is on leave on {self.appointment_date.strftime('%Y-%m-%d')}. Please select a different date or doctor."
-                }
-            }
-        
+           raise ValidationError(
+            f"Doctor {self.doctor_id.name} is on leave on {self.appointment_date}. "
+            f"Please select a different date or doctor."
+            )
+
         return {}  # No warnings, doctor is available
  
     
@@ -448,14 +440,16 @@ class ClinicAppointment(models.Model):
         """Handle appointment type change logic"""
         if self.appointment_type == 'walkin':
             # Clear slot for walk-in appointments and set today's date
+
+            if self.doctor_id:
+                self._validate_doctor_availability()
+                
             self.slot_id = False
             self.slots = False
             self.appointment_date = fields.Date.context_today(self)
             
             # If doctor is already selected, validate availability for today
-            if self.doctor_id:
-                return self._validate_doctor_availability()
-                
+           
         elif self.appointment_type == 'scheduled':
             # Clear queue number for scheduled appointments
             self.queue_number = False

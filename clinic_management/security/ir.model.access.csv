@@ -20,7 +20,7 @@ access_clinic_patient_receptionist,clinic.patient receptionist,model_clinic_pati
 access_clinic_patient_doctor,clinic.patient doctor,model_clinic_patient,group_clinic_doctor,1,0,0,0
 
 access_clinic_appointment_admin,clinic.appointment admin,model_clinic_appointment,group_clinic_admin,1,1,1,1
-access_clinic_appointment_receptionist,clinic.appointment receptionist,model_clinic_appointment,group_clinic_receptionist,1,1,1,0
+access_clinic_appointment_receptionist,clinic.appointment receptionist,model_clinic_appointment,group_clinic_receptionist,1,1,1,1
 access_clinic_appointment_doctor,clinic.appointment doctor,model_clinic_appointment,group_clinic_doctor,1,1,0,0
 
 

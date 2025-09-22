@@ -73,19 +73,7 @@ class ClinicPaymentWizard(models.TransientModel):
         # Reconcile payment with invoice
         if invoice.state == 'posted':
             self._reconcile_payment_with_invoice(payment, invoice)
-
-        message = _('Payment of %.2f has been processed for appointment %s.') % (self.amount, self.appointment_id.name)
-
-        return {
-            'type': 'ir.actions.client',
-            'tag': 'display_notification',
-            'params': {
-                'title': _('Payment Processed'),
-                'message': message,
-                'type': 'success',
-                'sticky': False,
-            }
-        }
+    
 
     def _get_payment_method_line(self):
         """Get the appropriate payment method line for the journal"""
