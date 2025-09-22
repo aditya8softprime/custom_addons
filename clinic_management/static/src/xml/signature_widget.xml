@@ -6,10 +6,13 @@
              style="position: relative; width:100%; max-width:100%; aspect-ratio:210/297;
                     background:#fdfdfd; border:1px solid #ccc; border-radius:6px; display:flex; flex-direction:column;">
 
-            <!-- Header (visual preview only, actual header comes from company image) -->
-            <div style="width:100%; height:120px; flex:0 0 auto; position:relative; overflow:hidden;">
+            <!-- Header (shows company header image if available) -->
+            <div class="company-header" style="width:100%; height:120px; flex:0 0 auto; position:relative; overflow:hidden;">
                 <div style="width:100%; height:100%; 
-                            background:linear-gradient(90deg, #4e73df, #1cc88a);"></div>
+                            background:linear-gradient(90deg, #4e73df, #1cc88a); 
+                            display:flex; align-items:center; justify-content:center; color:white; font-weight:bold;">
+                    Header Area (Upload company header image)
+                </div>
             </div>
 
             <!-- Canvas Area -->
@@ -17,10 +20,13 @@
                 <canvas t-ref="canvas" width="2480" height="3508" style="width:100%; height:100%; display:block;"></canvas>
             </div>
 
-            <!-- Footer (visual preview only, actual footer comes from company image) -->
-            <div style="width:100%; height:60px; flex:0 0 auto; position:relative; overflow:hidden;">
+            <!-- Footer (shows company footer image if available) -->
+            <div class="company-footer" style="width:100%; height:60px; flex:0 0 auto; position:relative; overflow:hidden;">
                 <div style="width:100%; height:100%; 
-                            background:linear-gradient(90deg, #1cc88a, #4e73df);"></div>
+                            background:linear-gradient(90deg, #1cc88a, #4e73df);
+                            display:flex; align-items:center; justify-content:center; color:white; font-size:12px;">
+                    Footer Area (Upload company footer image)
+                </div>
             </div>
         </div>
     </t>

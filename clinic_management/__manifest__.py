@@ -21,7 +21,6 @@
         'calendar',
         'website',
         'contacts',
-        'stock',
         'sale',
         'hr',
         'account',

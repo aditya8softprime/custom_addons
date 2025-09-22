@@ -12,14 +12,47 @@ class DrawCanvasWidget extends Component {
         this.canvasRef = useRef("canvas");
         this.saveTimeout = null;
         this.isDrawing = false;
+        this.companyImages = { header: null, footer: null };
         
-        onMounted(this.renderCanvas.bind(this));
+        onMounted(this.onMounted.bind(this));
         onWillDestroy(() => {
             this.saveDrawing();
             if (this.saveTimeout) {
                 clearTimeout(this.saveTimeout);
             }
         });
+    }
+
+    async onMounted() {
+        await this.loadCompanyImages();
+        this.renderCanvas();
+    }
+
+    async loadCompanyImages() {
+        try {
+            const companyData = await this.fetchCompanyData();
+            
+            // Update header preview
+            const headerDiv = document.querySelector('.o_draw_canvas_widget .company-header');
+            if (headerDiv && companyData.company_header_image) {
+                headerDiv.innerHTML = `<img src="data:image/png;base64,${companyData.company_header_image}" 
+                                             style="width:100%; height:100%; object-fit:cover; object-position:center;" />`;
+            }
+            
+            // Update footer preview  
+            const footerDiv = document.querySelector('.o_draw_canvas_widget .company-footer');
+            if (footerDiv && companyData.company_footer_image) {
+                footerDiv.innerHTML = `<img src="data:image/png;base64,${companyData.company_footer_image}" 
+                                             style="width:100%; height:100%; object-fit:cover; object-position:center;" />`;
+            }
+            
+            // Store for later use
+            this.companyImages.header = companyData.company_header_image;
+            this.companyImages.footer = companyData.company_footer_image;
+            
+        } catch (e) {
+            console.warn('Could not load company images:', e.message);
+        }
     }
 
     renderCanvas() {
