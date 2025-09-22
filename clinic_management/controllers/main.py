@@ -329,10 +329,7 @@ class ClinicWebsite(http.Controller):
                         # Create appointment
                         appointment = request.env['clinic.appointment'].sudo().create(appointment_vals)
                         
-                        # Mark slot as booked
-                        slot.sudo().write({
-                            'status': 'booked'
-                        })
+                        
                     else:
                         return request.render('clinic_management.booking_form', {
                             'services': request.env['clinic.service'].sudo().search([('active', '=', True)]),

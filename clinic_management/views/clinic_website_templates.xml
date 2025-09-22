@@ -413,7 +413,14 @@
                                                         </t>
                                                     </select>
                                                 </div>
-                                                <div class="col-md-6 mb-3">
+                                                 <div class="col-md-6 mb-3">
+                                                    <label for="appointment_date" class="form-label">Preferred Date *</label>
+                                                    <input type="date" class="form-control" id="appointment_date" name="appointment_date" required=""/>
+                                                </div>
+        
+                                            </div>
+                                            <div class="row">
+                                               <div class="col-md-6 mb-3">
                                                     <label for="doctor_id" class="form-label">Doctor *</label>
                                                     <select class="form-control" id="doctor_id" name="doctor_id" required="">
                                                         <option value="">Select Doctor</option>
@@ -421,12 +428,6 @@
                                                             <option t-att-value="doctor.id" t-esc="doctor.name"/>
                                                         </t>
                                                     </select>
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-md-6 mb-3">
-                                                    <label for="appointment_date" class="form-label">Preferred Date *</label>
-                                                    <input type="date" class="form-control" id="appointment_date" name="appointment_date" required=""/>
                                                 </div>
                                                 <div class="form-group col-md-6 mb-3">
                                                     <label for="slot_id">Available Time Slots *</label>
