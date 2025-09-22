@@ -1,16 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <!-- Inherit Company Form View to Add Header and Footer Images -->
+        <!-- Inherit Company Form View to Add Tab for Header and Footer Images -->
         <record id="view_company_form_inherit_clinic" model="ir.ui.view">
             <field name="name">res.company.form.inherit.clinic</field>
             <field name="model">res.company</field>
             <field name="inherit_id" ref="base.view_company_form"/>
             <field name="arch" type="xml">
-                <xpath expr="//field[@name='logo']" position="after">
-                    <field name="header_image" widget="image" class="oe_avatar" options="{'size': [150, 90]}"/>
-                    <field name="footer_image" widget="image" class="oe_avatar" options="{'size': [150, 90]}"/>
+
+                <!-- Insert new page (tab) inside the notebook -->
+                <xpath expr="//notebook" position="inside">
+                    <page string="Clinic Settings">
+                        <group>
+                            <group>
+                                <field name="header_image" widget="image" class="oe_avatar" options="{'size': [150, 90]}"/>
+                            </group>
+                            <group>
+                                <field name="footer_image" widget="image" class="oe_avatar" options="{'size': [150, 90]}"/>
+                            </group>
+                        </group>
+                    </page>
                 </xpath>
+
             </field>
         </record>
     </data>
