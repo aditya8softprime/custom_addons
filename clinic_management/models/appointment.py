@@ -926,7 +926,7 @@ class ClinicAppointment(models.Model):
         total_revenue = sum(completed.mapped('consulting_fee'))
 
         # Count lab tests (prescription model removed; handwritten image stored on appointment)
-        total_lab_tests = sum(len(a.lab_tes) for a in appointments)
+        # total_lab_tests = sum(len(a.lab_tes) for a in appointments)
 
         result = {
             'total_appointments': len(appointments),
@@ -939,7 +939,6 @@ class ClinicAppointment(models.Model):
             'total_cancelled': len(cancelled),
             'total_rescheduled': len(rescheduled),
             'total_revenue': total_revenue,
-            'total_lab_tests': total_lab_tests,
         }
         
         _logger.info(f"Dashboard data result: {result}")
