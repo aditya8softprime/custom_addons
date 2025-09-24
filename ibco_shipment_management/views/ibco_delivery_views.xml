@@ -53,11 +53,13 @@
                   <field name="sequence" widget="handle"/>
                   <field name="container_id"/>
                   <field name="vehicle_id"/>
+                  <field name="quantity"/>
                 </list>
                 <form>
                   <group>
                     <field name="container_id"/>
                     <field name="vehicle_id"/>
+                    <field name="quantity"/>
                   </group>
                 </form>
               </field>

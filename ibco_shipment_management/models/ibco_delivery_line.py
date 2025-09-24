@@ -10,12 +10,14 @@ class IbcoDeliveryLine(models.Model):
     company_id = fields.Many2one('res.company', string='Company', related='delivery_id.company_id', store=True)
     container_id = fields.Many2one('ibco.container', string="Container", required=True, check_company=True)
     vehicle_id = fields.Many2one('ibco.vehicle.line', string="Vehicle/cargo", required=True, check_company=True)
+    quantity = fields.Integer(string="Quantity", help="Quantity from vehicle/cargo line")
     sequence = fields.Integer(string="Sequence", default=10)
 
     @api.onchange('vehicle_id')
     def _onchange_vehicle(self):
         if self.vehicle_id:
             self.container_id = self.vehicle_id.container_id
+            self.quantity = self.vehicle_id.quantity
 
     @api.constrains('delivery_id', 'vehicle_id')
     def _check_unique_vehicle(self):

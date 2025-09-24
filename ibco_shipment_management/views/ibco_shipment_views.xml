@@ -34,7 +34,7 @@
                   invisible="state != 'in_progress'"
                   class="btn-primary"/>
           <button name="report_shipment" type="object" string="Print Profitability Report" 
-                  class="btn-info" icon="fa-print"/>
+                  class="btn-info" icon="fa-print" invisible="state not in ['in_progress', 'closed']"/>
           <button name="action_reset_to_draft" type="object" string="Reset to Draft" 
                   invisible="state == 'draft' "
                   confirm="This will reset the shipment to draft state and may affect related orders, invoices, and deliveries. Are you sure?"
@@ -86,6 +86,7 @@
                           <field name="year"/>
                           <field name="color"/>
                           <field name="volume_m3"/>
+                          <field name="quantity" readonly="1"/>
                           <field name="customer_id"/>
                           <field name="allocated_expense"/>
                           <field name="commission_amount"/>
@@ -127,6 +128,7 @@
                           <field name="cargo_weight"/>
                           <field name="is_hazardous"/>
                           <field name="volume_m3"/>
+                          <field name="quantity"/>
                           <field name="customer_id"/>
                           <field name="allocated_expense"/>
                           <field name="commission_amount"/>
@@ -176,6 +178,7 @@
                   <field name="make_model"/>
                   <field name="year"/>
                   <field name="color"/>
+                  <field name="quantity" readonly="cargo_type == 'vehicle'"/>
                   <field name="volume_m3"/>
                   <field name="customer_id"/>
                   <field name="allocated_expense"/>
@@ -191,6 +194,7 @@
                       <field name="cargo_type" invisible="1"/>
                       <field name="container_id" domain="[('shipment_id', '=', parent.id)]" required="1"/>
                       <field name="name"/>
+                      <field name="quantity" readonly="cargo_type == 'vehicle'"/>
                       <field name="chassis_no"/>
                       <field name="make_model"/>
                       <field name="year"/>
@@ -220,6 +224,7 @@
                   <field name="cargo_category"/>
                   <field name="cargo_weight"/>
                   <field name="is_hazardous"/>
+                  <field name="quantity"/>
                   <field name="volume_m3"/>
                   <field name="customer_id"/>
                   <field name="allocated_expense"/>
@@ -235,6 +240,7 @@
                       <field name="cargo_type" invisible="1"/>
                       <field name="container_id" domain="[('shipment_id', '=', parent.id)]" required="1"/>
                       <field name="name"/>
+                      <field name="quantity"/>
                       <field name="cargo_category"/>
                       <field name="cargo_weight"/>
                       <field name="is_hazardous"/>

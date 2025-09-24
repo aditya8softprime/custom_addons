@@ -197,7 +197,7 @@ class IbcoShipment(models.Model):
                     line_vals = {
                         'product_id': product.id,
                         'name': description,
-                        'product_uom_qty': 1,
+                        'product_uom_qty':1,
                         'price_unit': vehicle.final_price,
                     }
                     order_lines.append((0, 0, line_vals))
@@ -283,6 +283,7 @@ class IbcoShipment(models.Model):
                         'delivery_id': delivery.id,
                         'container_id': vehicle.container_id.id,
                         'vehicle_id': vehicle.id,
+                        'quantity': vehicle.quantity or 1,
                     })
                     
                     # Link delivery to vehicle

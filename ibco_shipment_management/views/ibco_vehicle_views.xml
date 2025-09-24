@@ -14,6 +14,7 @@
         <field name="container_id"/>
         <field name="company_id" groups="base.group_multi_company"/>
         <field name="volume_m3"/>
+        <field name="quantity"/>
         <field name="allocated_expense" optional="hide"/>
         <field name="commission_amount" optional="hide"/>
         <field name="damage_amount" optional="hide"/>
@@ -38,6 +39,7 @@
               <field name="container_id"/>
               <field name="company_id" groups="base.group_multi_company"/>
               <field name="volume_m3"/>
+              <field name="quantity" readonly="cargo_type == 'vehicle'"/>
             </group>
             <group string="Vehicle Details" invisible="cargo_type != 'vehicle'">
               <field name="chassis_no"/>

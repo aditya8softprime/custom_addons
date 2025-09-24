@@ -34,6 +34,7 @@
                 <list string="Vehicles" editable="bottom">
                   <field name="cargo_type" column_invisible="1"/>
                   <field name="name"/>
+                  <field name="quantity" readonly="cargo_type == 'vehicle'"/>
                   <field name="chassis_no"/>
                   <field name="make_model"/>
                   <field name="year"/>
@@ -52,6 +53,7 @@
                     <group>
                       <field name="cargo_type" invisible="1"/>
                       <field name="name"/>
+                      <field name="quantity" readonly="cargo_type == 'vehicle'"/>
                       <field name="chassis_no"/>
                       <field name="make_model"/>
                       <field name="year"/>
@@ -76,6 +78,7 @@
                 <list string="Cargo" editable="bottom">
                   <field name="cargo_type" column_invisible="1"/>
                   <field name="name"/>
+                  <field name="quantity" readonly="cargo_type == 'vehicle'"/>
                   <field name="cargo_category"/>
                   <field name="cargo_weight"/>
                   <field name="is_hazardous"/>
@@ -93,6 +96,7 @@
                     <group>
                       <field name="cargo_type" invisible="1"/>
                       <field name="name"/>
+                      <field name="quantity" readonly="cargo_type == 'vehicle'"/>
                       <field name="cargo_category"/>
                       <field name="cargo_weight"/>
                       <field name="is_hazardous"/>

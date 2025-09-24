@@ -41,6 +41,7 @@ class IbcoVehicleLine(models.Model):
     
     # Common fields continued
     volume_m3 = fields.Float(string="Volume (m³)", required=True)
+    quantity = fields.Integer(string="Quantity", default=1, help="Quantity - defaults to 1 for vehicles, can be modified for cargo")
     customer_id = fields.Many2one('res.partner', string="Customer")
     company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company)
     container_id = fields.Many2one('ibco.container', string="Container", ondelete='cascade', check_company=True)
@@ -78,7 +79,7 @@ class IbcoVehicleLine(models.Model):
     
     @api.onchange('cargo_type')
     def _onchange_cargo_type(self):
-        """Clear type-specific fields when cargo type changes"""
+        """Clear type-specific fields when cargo type changes and set default quantity"""
         if self.cargo_type == 'vehicle':
             # Clear cargo-specific fields
             self.cargo_description = False
