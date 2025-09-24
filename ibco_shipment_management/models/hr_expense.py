@@ -24,3 +24,8 @@ class HrExpense(models.Model):
         help="Link this expense to a specific vehicle/cargo within the container",
         check_company=True
     )
+
+    is_damage_expense = fields.Boolean(
+        string="Is Damage Expense",default=False,
+        help="Indicates if this expense is related to a damage record"
+    )

@@ -61,15 +61,23 @@
             </button>
           </div>
           <group>
+          <group>
             <field name="name" readonly="state != 'draft'"/>
-            <field name="company_id" groups="base.group_multi_company" readonly="state != 'draft'"/>
             <field name="vessel" readonly="state in ['closed']"/>
             <field name="arrival_date" readonly="state in ['closed']"/>
           </group>
+          <group>
+            <field name="company_id" groups="base.group_multi_company" readonly="state != 'draft'"/>
+            <field name="total_expense" readonly="1"/>
+            <field name="total_revenue" readonly="1"/>
+            <field name="profit" readonly="1"/>
+          </group>
+          </group>
+            
           <notebook>
             <page string="Containers">
               <field name="container_ids" readonly="state != 'draft'">
-                <form>
+                <form delete="0">
                   <group>
                     <field name="name"/>
                     <field name="container_volume"/>
@@ -93,30 +101,7 @@
                           <field name="damage_amount"/>
                           <field name="profit"/>
                           <field name="final_price"/>
-                          <field name="delivery_id"/>
-                        </list>
-                        <form>
-                          <group>
-                            <group>
-                              <field name="cargo_type" invisible="1"/>
-                              <field name="name"/>
-                              <field name="chassis_no"/>
-                              <field name="make_model"/>
-                              <field name="year"/>
-                              <field name="color"/>
-                              <field name="volume_m3"/>
-                              <field name="customer_id"/>
-                            </group>
-                            <group>
-                              <field name="allocated_expense"/>
-                              <field name="commission_amount"/>
-                              <field name="damage_amount"/>
-                              <field name="profit"/>
-                              <field name="final_price"/>
-                              <field name="delivery_id"/>
-                            </group>
-                          </group>
-                        </form>
+                        </list>                       
                       </field>
                     </page>
                     <page string="Cargo" name="cargo_tab">
@@ -124,6 +109,7 @@
                         <list editable="bottom" string="Cargo">
                           <field name="cargo_type" column_invisible="1"/>
                           <field name="name"/>
+                          <field name="cargo_description"/>
                           <field name="cargo_category"/>
                           <field name="cargo_weight"/>
                           <field name="is_hazardous"/>
@@ -135,32 +121,7 @@
                           <field name="damage_amount"/>
                           <field name="profit"/>
                           <field name="final_price"/>
-                          <field name="delivery_id"/>
                         </list>
-                        <form>
-                          <group>
-                            <group>
-                              <field name="cargo_type" invisible="1"/>
-                              <field name="name"/>
-                              <field name="cargo_category"/>
-                              <field name="cargo_weight"/>
-                              <field name="is_hazardous"/>
-                              <field name="volume_m3"/>
-                              <field name="customer_id"/>
-                            </group>
-                            <group>
-                              <field name="allocated_expense"/>
-                              <field name="commission_amount"/>
-                              <field name="damage_amount"/>
-                              <field name="profit"/>
-                              <field name="final_price"/>
-                              <field name="delivery_id"/>
-                            </group>
-                          </group>
-                          <group>
-                            <field name="cargo_description" placeholder="Enter detailed cargo description..."/>
-                          </group>
-                        </form>
                       </field>
                     </page>
                   </notebook>
@@ -170,7 +131,7 @@
 
             <page string="All Vehicles">
               <field name="all_vehicle_ids" context="{'default_cargo_type': 'vehicle'}" readonly="state != 'draft'">
-                <list editable="bottom" string="All Vehicles">
+                <list editable="bottom" string="All Vehicles" delete="0">
                   <field name="cargo_type" column_invisible="1"/>
                   <field name="container_id" domain="[('shipment_id', '=', parent.id)]" required="1"/>
                   <field name="name"/>
@@ -186,41 +147,17 @@
                   <field name="damage_amount"/>
                   <field name="profit"/>
                   <field name="final_price"/>
-                  <field name="delivery_id"/>
                 </list>
-                <form>
-                  <group>
-                    <group>
-                      <field name="cargo_type" invisible="1"/>
-                      <field name="container_id" domain="[('shipment_id', '=', parent.id)]" required="1"/>
-                      <field name="name"/>
-                      <field name="quantity" readonly="cargo_type == 'vehicle'"/>
-                      <field name="chassis_no"/>
-                      <field name="make_model"/>
-                      <field name="year"/>
-                      <field name="color"/>
-                      <field name="volume_m3"/>
-                      <field name="customer_id"/>
-                    </group>
-                    <group>
-                      <field name="allocated_expense"/>
-                      <field name="commission_amount"/>
-                      <field name="damage_amount"/>
-                      <field name="profit"/>
-                      <field name="final_price"/>
-                      <field name="delivery_id"/>
-                    </group>
-                  </group>
-                </form>
               </field>
             </page>
 
             <page string="All Cargo">
               <field name="all_cargo_ids" context="{'default_cargo_type': 'cargo'}" readonly="state != 'draft'">
-                <list editable="bottom" string="All Cargo">
+                <list editable="bottom" string="All Cargo" delete="0">
                   <field name="cargo_type" column_invisible="1"/>
                   <field name="container_id" domain="[('shipment_id', '=', parent.id)]" required="1"/>
                   <field name="name"/>
+                  <field name="cargo_description"/>
                   <field name="cargo_category"/>
                   <field name="cargo_weight"/>
                   <field name="is_hazardous"/>
@@ -232,40 +169,13 @@
                   <field name="damage_amount"/>
                   <field name="profit"/>
                   <field name="final_price"/>
-                  <field name="delivery_id"/>
                 </list>
-                <form>
-                  <group>
-                    <group>
-                      <field name="cargo_type" invisible="1"/>
-                      <field name="container_id" domain="[('shipment_id', '=', parent.id)]" required="1"/>
-                      <field name="name"/>
-                      <field name="quantity"/>
-                      <field name="cargo_category"/>
-                      <field name="cargo_weight"/>
-                      <field name="is_hazardous"/>
-                      <field name="volume_m3"/>
-                      <field name="customer_id"/>
-                    </group>
-                    <group>
-                      <field name="allocated_expense"/>
-                      <field name="commission_amount"/>
-                      <field name="damage_amount"/>
-                      <field name="profit"/>
-                      <field name="final_price"/>
-                      <field name="delivery_id"/>
-                    </group>
-                  </group>
-                  <group>
-                    <field name="cargo_description" placeholder="Enter detailed cargo description..."/>
-                  </group>
-                </form>
               </field>
             </page>
 
             <page string="Damages">
               <field name="damage_ids">
-                <list>
+                <list editable="bottom" delete="0">
                   <field name="vehicle_id"/>
                   <field name="partner_id"/>
                   <field name="amount"/>
@@ -277,9 +187,9 @@
                 </list>
               </field>
             </page>            
-            <page string="Deliveries" invisible="state in ['draft']">
+            <page string="Deliveries" invisible="state in ['draft', 'validated']">
               <field name="delivery_ids" readonly="state == 'closed'">
-                <list>
+                <list create="0">
                   <field name="name"/>
                   <field name="customer_id"/>
                   <field name="state"/>

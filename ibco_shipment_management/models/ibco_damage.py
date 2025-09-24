@@ -12,9 +12,15 @@ class IbcoDamage(models.Model):
     shipment_id = fields.Many2one('ibco.shipment', string="Shipment", ondelete='cascade', check_company=True)
     vehicle_id = fields.Many2one('ibco.vehicle.line', string="Vehicle/Cargo", ondelete='cascade',domain="[('shipment_id', '=', shipment_id)]")
     partner_id = fields.Many2one('res.partner', string="Vendor/Partner", help="Partner responsible for the damage")
-    date = fields.Date(string='Date')
     expense_id = fields.Many2one('hr.expense', string="Related Expense", readonly=True)
     attachment_ids = fields.Many2many('ir.attachment', string="Attachments")
+
+    @api.onchange('vehicle_id')
+    def on_change_vehicle(self):
+        """Update vehicle_id based on shipment_id"""
+        for rec in self:
+            if rec.vehicle_id:
+                rec.partner_id = rec.vehicle_id.customer_id.id if rec.vehicle_id.customer_id else False
 
     def action_create_expense(self):
         """Create HR expense for this damage"""
@@ -37,6 +43,7 @@ class IbcoDamage(models.Model):
             'vehicle_id': self.vehicle_id.id,
             'total_amount_currency': self.amount,
             'vendor_id': self.partner_id.id if self.partner_id else False,
+            'is_damage_expense': True,
             'shipment_id': self.shipment_id.id,
             'payment_mode': 'company_account',
             'description': f"Damage expense for vehicle {self.vehicle_id.chassis_no if self.vehicle_id else 'N/A'} - {self.name}",

@@ -14,17 +14,17 @@ class IbcoVehicleLine(models.Model):
     ], string="Type", required=True, default='vehicle', help="Select whether this is a vehicle or cargo")
     
     # Common fields for both vehicle and cargo
-    name = fields.Char(string="Description", help="Vehicle or cargo description")
+    name = fields.Char(string="Name", help="Vehicle or cargo description")
     display_name = fields.Char(string="Display Name", compute='_compute_display_name', store=True)
     
     # Vehicle-specific fields
     chassis_no = fields.Char(string="Chassis No", help="Vehicle chassis number (for vehicles only)")
-    make_model = fields.Char(string="Make/Model", help="Vehicle make and model")
+    make_model = fields.Char(string="Model", help="Vehicle make and model")
     year = fields.Char(string="Year", help="Vehicle manufacturing year")
     color = fields.Char(string="Color", help="Vehicle color")
     
     # Cargo-specific fields
-    cargo_description = fields.Text(string="Cargo Description", help="Detailed description of cargo contents")
+    cargo_description = fields.Text(string="Description", help="Detailed description of cargo contents")
     cargo_weight = fields.Float(string="Weight (kg)", help="Cargo weight in kilograms")
     cargo_category = fields.Selection([
         ('electronics', 'Electronics'),
@@ -36,7 +36,7 @@ class IbcoVehicleLine(models.Model):
         ('industrial', 'Industrial Equipment'),
         ('personal_effects', 'Personal Effects'),
         ('other', 'Other')
-    ], string="Cargo Category", help="Category of cargo being shipped")
+    ], string="Category", help="Category of cargo being shipped")
     is_hazardous = fields.Boolean(string="Hazardous Material", help="Check if cargo contains hazardous materials")
     
     # Common fields continued
@@ -51,9 +51,9 @@ class IbcoVehicleLine(models.Model):
     damage_ids = fields.One2many('ibco.damage', 'vehicle_id', string="Damages")
     
     # Financial fields (converted from Monetary to Float)
-    damage_amount = fields.Float(string="Damage Amount", compute='_compute_damage_amount', store=True, digits=(16, 2))
-    allocated_expense = fields.Float(string="Allocated Expense", compute='_compute_allocated_expense', store=True, digits=(16, 2))
-    commission_amount = fields.Float(string="Commission Amount", digits=(16, 2))
+    damage_amount = fields.Float(string="Damage exp", compute='_compute_damage_amount', store=True, digits=(16, 2))
+    allocated_expense = fields.Float(string="Expense", compute='_compute_allocated_expense', store=True, digits=(16, 2))
+    commission_amount = fields.Float(string="Commission", digits=(16, 2))
     final_price = fields.Float(string="Final Price", compute='_compute_final_price', store=True, digits=(16, 2))
     profit = fields.Float(string="Profit", compute='_compute_profit', store=True, digits=(16, 2))
 
@@ -62,10 +62,10 @@ class IbcoVehicleLine(models.Model):
         """Compute display name based on cargo type"""
         for rec in self:
             if rec.cargo_type == 'vehicle':
-                if rec.chassis_no:
-                    rec.display_name = rec.chassis_no
-                elif rec.name:
+                if rec.name:
                     rec.display_name = rec.name
+                if rec.chassis_no:
+                    rec.display_name +=  '-' + rec.chassis_no
                 else:
                     rec.display_name = 'Vehicle'
             else:  # cargo

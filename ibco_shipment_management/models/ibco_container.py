@@ -7,7 +7,7 @@ class IbcoContainer(models.Model):
     _check_company_auto = True
 
     name = fields.Char(string="Container Number", required=True)
-    container_volume = fields.Float(string="Container Volume (m³)")
+    container_volume = fields.Float(string="Volume(m³)")
     seal_no = fields.Char(string="Seal No")
     company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company)
     shipment_id = fields.Many2one('ibco.shipment', string="Shipment", ondelete='cascade', check_company=True)
