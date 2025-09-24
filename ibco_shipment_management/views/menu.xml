@@ -6,4 +6,7 @@
   <menuitem id="menu_ibco_vehicles" name="Vehicles" parent="menu_ibco_root" action="action_ibco_vehicles" sequence="3"/>
   <menuitem id="menu_ibco_damages" name="Damages" parent="menu_ibco_root" action="action_ibco_damages" sequence="4"/>
   <menuitem id="menu_ibco_deliveries" name="Deliveries" parent="menu_ibco_root" action="action_ibco_deliveries" sequence="5"/>
+  
+  <!-- Shipment Arrival -->
+  <menuitem id="menu_ibco_arrival_shipments" name="Shipment Arrival" parent="menu_ibco_root" action="action_ibco_arrival_shipments" sequence="6"/>
 </odoo>

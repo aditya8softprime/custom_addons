@@ -6,3 +6,4 @@ from . import ibco_delivery
 from . import ibco_delivery_line
 from . import sale_order_ext
 from . import hr_expense
+from . import ibco_arrival

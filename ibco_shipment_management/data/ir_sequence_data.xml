@@ -13,4 +13,12 @@
     <field name="prefix">DEL/</field>
     <field name="padding">6</field>
   </record>
+
+  <record id="seq_ibco_arrival_shipment" model="ir.sequence">
+    <field name="name">IBCO Arrival Shipment</field>
+    <field name="code">ibco.arrival.shipment</field>
+    <field name="prefix">ARR/</field>
+    <field name="padding">6</field>
+    <field name="company_id" eval="False"/>
+  </record>
 </odoo>

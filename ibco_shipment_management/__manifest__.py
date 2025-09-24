@@ -18,6 +18,7 @@
         "views/ibco_delivery_line_views.xml",
         "views/ibco_damage_views.xml",
         "views/hr_expense_views.xml",
+        "views/ibco_arrival_views.xml",
         "reports/ibco_shipment_report.xml",
         "views/menu.xml",
 
