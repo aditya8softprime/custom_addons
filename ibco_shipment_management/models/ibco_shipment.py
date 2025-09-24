@@ -50,7 +50,7 @@ class IbcoShipment(models.Model):
     all_cargo_ids = fields.One2many('ibco.vehicle.line', 'shipment_id', string="All Cargo",
                                    domain=[('cargo_type', '=', 'cargo')])
 
-    @api.depends('expense_ids.state', 'expense_ids.total_amount', 'damage_ids.amount')
+    @api.depends('expense_ids.state','delivery_ids.state', 'expense_ids.total_amount', 'damage_ids.amount')
     def _compute_totals(self):
         for rec in self:
             # Calculate total from approved HR expenses
