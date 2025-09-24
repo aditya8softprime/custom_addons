@@ -33,6 +33,8 @@
           <button name="action_close" type="object" string="Close Shipment" 
                   invisible="state != 'in_progress'"
                   class="btn-primary"/>
+          <button name="report_shipment" type="object" string="Print Profitability Report" 
+                  class="btn-info" icon="fa-print"/>
           <button name="action_reset_to_draft" type="object" string="Reset to Draft" 
                   invisible="state == 'draft' "
                   confirm="This will reset the shipment to draft state and may affect related orders, invoices, and deliveries. Are you sure?"

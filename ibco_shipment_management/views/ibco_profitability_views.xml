@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Profitability Form View -->
+    <record id="view_ibco_shipment_profitability_form" model="ir.ui.view">
+        <field name="name">ibco.shipment.profitability.form</field>
+        <field name="model">ibco.shipment</field>
+        <field name="arch" type="xml">
+            <form string="Shipment Profitability Analysis" create="false" edit="false">
+                <header>
+                    <button name="report_shipment" type="object" string="Print PDF Report" 
+                            class="btn-primary" icon="fa-print"/>
+                </header>
+                <sheet>
+                    <!-- Main Profitability Table -->
+                    <div class="row">
+                        <div class="col-12">
+                            <table class="table table-bordered" style="border: 3px solid #000; margin-bottom: 20px;">
+                                <!-- Yellow Header -->
+                                <thead>
+                                    <tr style="background-color: #FFD700; text-align: center;">
+                                        <th colspan="4" style="border: 2px solid #000; padding: 12px; font-weight: bold; font-size: 18px;">
+                                            Shipment Report
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Vessel Name and Arrival Date -->
+                                    <tr>
+                                        <td style="border: 1px solid #000; padding: 10px; font-weight: bold; width: 25%; background-color: #f8f9fa;">
+                                            Vessel Name:
+                                        </td>
+                                        <td style="border: 1px solid #000; padding: 10px; width: 25%;">
+                                            <field name="vessel" readonly="1" nolabel="1"/>
+                                        </td>
+                                        <td style="border: 1px solid #000; padding: 10px; font-weight: bold; width: 25%; background-color: #f8f9fa;">
+                                            Arrival Date:
+                                        </td>
+                                        <td style="border: 1px solid #000; padding: 10px; width: 25%;">
+                                            <field name="arrival_date" readonly="1" nolabel="1"/>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Reference -->
+                                    <tr>
+                                        <td style="border: 1px solid #000; padding: 10px; font-weight: bold; background-color: #f8f9fa;">
+                                            Reference:
+                                        </td>
+                                        <td colspan="3" style="border: 1px solid #000; padding: 10px;">
+                                            <field name="name" readonly="1" nolabel="1" style="font-weight: bold;"/>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Profitability Section Header -->
+                                    <tr>
+                                        <th colspan="4" style="border: 2px solid #000; padding: 10px; text-align: center; font-weight: bold; background-color: #D2B48C; font-size: 16px;">
+                                            Profitability
+                                        </th>
+                                    </tr>
+                                    
+                                    <!-- Shipment Income -->
+                                    <tr>
+                                        <td style="border: 1px solid #000; padding: 10px; font-style: italic; font-weight: bold; background-color: #E8F4FD;">
+                                            Shipment Income
+                                        </td>
+                                        <td colspan="3" style="border: 1px solid #000; padding: 10px; text-align: right;">
+                                            <field name="total_revenue" readonly="1" nolabel="1" widget="monetary" style="font-weight: bold; color: #28a745;"/>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Expenses -->
+                                    <tr>
+                                        <td style="border: 1px solid #000; padding: 10px; font-style: italic; font-weight: bold; background-color: #FFF2CC;">
+                                            Expenses
+                                        </td>
+                                        <td colspan="3" style="border: 1px solid #000; padding: 10px; text-align: right;">
+                                            <field name="total_expense" readonly="1" nolabel="1" widget="monetary" style="font-weight: bold; color: #ffc107;"/>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Damage -->
+                                    <tr>
+                                        <td style="border: 1px solid #000; padding: 10px; font-style: italic; font-weight: bold; background-color: #FDEDEC;">
+                                            Damage
+                                        </td>
+                                        <td colspan="3" style="border: 1px solid #000; padding: 10px; text-align: right;">
+                                            <field name="total_damage" readonly="1" nolabel="1" widget="monetary" style="font-weight: bold; color: #dc3545;"/>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Net Profit -->
+                                    <tr>
+                                        <td style="border: 2px solid #000; padding: 12px; font-style: italic; font-weight: bold; font-size: 16px; background-color: #D5EDDA;" attrs="{'style': 'border: 2px solid #000; padding: 12px; font-style: italic; font-weight: bold; font-size: 16px; background-color: ' + ('D5EDDA' if profit >= 0 else 'F8D7DA') + ';'}">
+                                            Net Profit of the Shipment
+                                        </td>
+                                        <td colspan="3" style="border: 2px solid #000; padding: 12px; text-align: right;">
+                                            <field name="profit" readonly="1" nolabel="1" widget="monetary" 
+                                                   style="font-weight: bold; font-size: 18px;" 
+                                                   attrs="{'style': 'font-weight: bold; font-size: 18px; color: ' + ('#155724' if profit >= 0 else '#721c24') + ';'}"/>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Additional Stats -->
+                    <div class="row">
+                        <div class="col-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6>Revenue Sources</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>Invoices:</strong> <field name="invoice_count" readonly="1" nolabel="1"/> invoices</p>
+                                    <p><strong>Deliveries:</strong> <field name="delivery_count" readonly="1" nolabel="1"/> deliveries</p>
+                                    <p><strong>Orders:</strong> <field name="order_count" readonly="1" nolabel="1"/> orders</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6>Expense Categories</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>HR Expenses:</strong> <field name="expense_count" readonly="1" nolabel="1"/> entries</p>
+                                    <p><strong>Damage Costs:</strong> <field name="damage_expense_count" readonly="1" nolabel="1"/> entries</p>
+                                    <p><strong>Containers:</strong> <t t-esc="len(record.container_ids)"/> containers</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6>Ratios &amp; Metrics</h6>
+                                </div>
+                                <div class="card-body" t-if="record.total_revenue > 0">
+                                    <p><strong>Profit Margin:</strong> <t t-esc="'{:.1f}%'.format((record.profit / record.total_revenue * 100) if record.total_revenue else 0)"/></p>
+                                    <p><strong>Expense Ratio:</strong> <t t-esc="'{:.1f}%'.format((record.total_expense / record.total_revenue * 100) if record.total_revenue else 0)"/></p>
+                                    <p><strong>Damage Ratio:</strong> <t t-esc="'{:.1f}%'.format((record.total_damage / record.total_revenue * 100) if record.total_revenue else 0)"/></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>

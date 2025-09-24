@@ -63,9 +63,9 @@ class IbcoShipment(models.Model):
             for d in rec.delivery_ids:
                 if d.invoice_id:
                     invoices |= d.invoice_id
-            rec.total_revenue = sum(invoices.mapped('amount_total') or [])
+            rec.total_revenue = sum(invoices.mapped('amount_untaxed_signed') or [])
             rec.profit = rec.total_revenue - (rec.total_expense + rec.total_damage)
-
+    
     @api.depends('delivery_ids', 'expense_ids', 'damage_ids.expense_id')    
     def _compute_counts(self):
         for rec in self:
@@ -89,6 +89,25 @@ class IbcoShipment(models.Model):
                 if delivery.invoice_id:
                     invoices |= delivery.invoice_id
             rec.invoice_count = len(invoices)
+
+    def report_shipment(self):
+        """Show Shipment Profitability Report"""
+        self.ensure_one()
+        return self.env.ref('ibco_shipment_management.action_ibco_shipment_profitability_report').report_action(self)
+
+    def action_view_profitability(self):
+        """Show Profitability Analysis View"""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': f'Profitability Analysis - {self.name}',
+            'res_model': 'ibco.shipment',
+            'view_mode': 'form',
+            'view_id': self.env.ref('ibco_shipment_management.view_ibco_shipment_profitability_form').id,
+            'res_id': self.id,
+            'target': 'new',  # Opens in a dialog
+            'context': {'default_id': self.id}
+        }
 
     def action_validate(self):
         """Validate Shipment - Only perform validations, no sale order creation"""

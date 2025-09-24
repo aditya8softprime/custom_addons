@@ -1,4 +1,146 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Shipment Reports -->
+    <!-- Shipment Profitability Report Definition -->
+    <record id="action_ibco_shipment_profitability_report" model="ir.actions.report">
+        <field name="name">Shipment Profitability Report</field>
+        <field name="model">ibco.shipment</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">ibco_shipment_management.shipment_profitability_report_template</field>
+        <field name="report_file">ibco_shipment_management.shipment_profitability_report_template</field>
+        <field name="print_report_name">'Shipment Report - %s' % (object.name)</field>
+        <field name="binding_model_id" ref="model_ibco_shipment"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- QWeb Report Template -->
+    <template id="shipment_profitability_report_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <div class="page" style="font-family: Arial, sans-serif; margin: 0; padding: 20px;">
+                    <!-- Main Container with Border -->
+                    <div style="border: 3px solid #000; margin: 0; padding: 0; max-width: 100%;">
+                        
+                        <!-- Yellow Header -->
+                        <div style="background-color: #FFD700; border-bottom: 2px solid #000; padding: 15px; text-align: center;">
+                            <h2 style="margin: 0; font-weight: bold; font-size: 24px; color: #000;">
+                                Shipment Report
+                            </h2>
+                        </div>
+                        
+                        <!-- Vessel Name and Arrival Date Row -->
+                        <table style="width: 100%; border-collapse: collapse; margin: 0;">
+                            <tr>
+                                <td style="border: 1px solid #000; padding: 12px; font-weight: bold; width: 25%; background-color: #f8f9fa;">
+                                    Vessel Name:
+                                </td>
+                                <td style="border: 1px solid #000; padding: 12px; width: 25%;">
+                                    <span t-field="o.vessel"/>
+                                </td>
+                                <td style="border: 1px solid #000; padding: 12px; font-weight: bold; width: 25%; background-color: #f8f9fa;">
+                                    Arrival Date:
+                                </td>
+                                <td style="border: 1px solid #000; padding: 12px; width: 25%;">
+                                    <span t-field="o.arrival_date" t-options="{'widget': 'date'}"/>
+                                </td>
+                            </tr>
+                            
+                            <!-- Reference Row -->
+                            <tr>
+                                <td style="border: 1px solid #000; padding: 12px; font-weight: bold; background-color: #f8f9fa;">
+                                    Reference:
+                                </td>
+                                <td colspan="3" style="border: 1px solid #000; padding: 12px; font-weight: bold;">
+                                    <span t-field="o.name"/>
+                                </td>
+                            </tr>
+                        </table>
+                        
+                        <!-- Profitability Section Header -->
+                        <div style="background-color: #D2B48C; border-top: 2px solid #000; border-bottom: 2px solid #000; padding: 12px; text-align: center;">
+                            <h3 style="margin: 0; font-weight: bold; font-size: 18px; color: #000;">
+                                Profitability
+                            </h3>
+                        </div>
+                        
+                        <!-- Profitability Table -->
+                        <table style="width: 100%; border-collapse: collapse; margin: 0;">
+                            <!-- Shipment Income -->
+                            <tr>
+                                <td style="border: 1px solid #000; padding: 12px; font-style: italic; font-weight: bold; width: 50%;">
+                                    <em>Shipment Income</em>
+                                </td>
+                                <td style="border: 1px solid #000; padding: 12px; text-align: right; width: 50%;">
+                                    <span t-esc="'{:,.2f}'.format(o.total_revenue or 0)" style="font-weight: bold;"/>
+                                </td>
+                            </tr>
+                            
+                            <!-- Expenses -->
+                            <tr>
+                                <td style="border: 1px solid #000; padding: 12px; font-style: italic; font-weight: bold;">
+                                    <em>Expenses</em>
+                                </td>
+                                <td style="border: 1px solid #000; padding: 12px; text-align: right;">
+                                    <span t-esc="'{:,.2f}'.format(o.total_expense or 0)" style="font-weight: bold;"/>
+                                </td>
+                            </tr>
+                            
+                            <!-- Damage -->
+                            <tr>
+                                <td style="border: 1px solid #000; padding: 12px; font-style: italic; font-weight: bold;">
+                                    <em>Damage</em>
+                                </td>
+                                <td style="border: 1px solid #000; padding: 12px; text-align: right;">
+                                    <span t-esc="'{:,.2f}'.format(o.total_damage or 0)" style="font-weight: bold;"/>
+                                </td>
+                            </tr>
+                            
+                            <!-- Net Profit -->
+                            <tr>
+                                <td style="border: 2px solid #000; padding: 15px; font-style: italic; font-weight: bold; font-size: 16px;">
+                                    <em>Net Profit of the Shipment</em>
+                                </td>
+                                <td style="border: 2px solid #000; padding: 15px; text-align: right;">
+                                    <span t-esc="'{:,.2f}'.format(o.profit or 0)" 
+                                          style="font-weight: bold; font-size: 18px;"/>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <!-- Additional Details Section -->
+                    <div style="margin-top: 30px; page-break-inside: avoid;">
+                        <h4 style="border-bottom: 2px solid #333; padding-bottom: 5px; margin-bottom: 15px;">Shipment Summary</h4>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr>
+                                <td style="width: 33%; vertical-align: top; padding-right: 10px;">
+                                    <h5 style="color: #333; margin-bottom: 8px;">Revenue Sources</h5>
+                                    <p style="margin: 3px 0;"><strong>Invoices:</strong> <span t-esc="o.invoice_count or 0"/> invoices</p>
+                                    <p style="margin: 3px 0;"><strong>Deliveries:</strong> <span t-esc="o.delivery_count or 0"/> deliveries</p>
+                                    <p style="margin: 3px 0;"><strong>Orders:</strong> <span t-esc="o.order_count or 0"/> orders</p>
+                                </td>
+                                <td style="width: 33%; vertical-align: top; padding: 0 10px;">
+                                    <h5 style="color: #333; margin-bottom: 8px;">Expense Categories</h5>
+                                    <p style="margin: 3px 0;"><strong>HR Expenses:</strong> <span t-esc="o.expense_count or 0"/> entries</p>
+                                    <p style="margin: 3px 0;"><strong>Damage Costs:</strong> <span t-esc="o.damage_expense_count or 0"/> entries</p>
+                                    <p style="margin: 3px 0;"><strong>Containers:</strong> <span t-esc="len(o.container_ids or [])"/> containers</p>
+                                </td>
+                                <td style="width: 33%; vertical-align: top; padding-left: 10px;" t-if="o.total_revenue and o.total_revenue > 0">
+                                    <h5 style="color: #333; margin-bottom: 8px;">Ratios &amp; Metrics</h5>
+                                    <p style="margin: 3px 0;"><strong>Profit Margin:</strong> <span t-esc="'{:.1f}%'.format(((o.profit or 0) / o.total_revenue * 100) if o.total_revenue else 0)"/></p>
+                                    <p style="margin: 3px 0;"><strong>Expense Ratio:</strong> <span t-esc="'{:.1f}%'.format(((o.total_expense or 0) / o.total_revenue * 100) if o.total_revenue else 0)"/></p>
+                                    <p style="margin: 3px 0;"><strong>Damage Ratio:</strong> <span t-esc="'{:.1f}%'.format(((o.total_damage or 0) / o.total_revenue * 100) if o.total_revenue else 0)"/></p>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div style="margin-top: 50px; text-align: center; color: #666; font-size: 12px; page-break-inside: avoid;">
+                        <p>Generated on <span t-esc="datetime.datetime.now().strftime('%B %d, %Y at %I:%M %p')"/></p>
+                        <p>Company: <span t-field="o.company_id.name"/></p>
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
 </odoo>
