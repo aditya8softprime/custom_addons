@@ -8,17 +8,28 @@ class ClinicSlot(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _rec_name = 'display_name'  # use our computed label everywhere
 
-
-    doctor_id = fields.Many2one('clinic.doctor', string='Doctor', required=True, ondelete='cascade')
-    day_id = fields.Many2one('clinic.days', string='Day', required=True)
-    start_time = fields.Float(string='Start Time', required=True)
-    end_time = fields.Float(string='End Time', required=True)
-    duration = fields.Float(string='Duration (mins)', required=True)
-    slot_number = fields.Char(string='Slot Number', required=True)
+    # New structure fields
+    doctor_id = fields.Many2one('clinic.doctor', string="Doctor", required=True, ondelete="cascade")
+    shift_config_id = fields.Many2one('doctor.shift.config', string="Shift Config", ondelete="cascade")
+    day_of_week = fields.Selection([
+        ('0', 'Monday'), ('1', 'Tuesday'), ('2', 'Wednesday'),
+        ('3', 'Thursday'), ('4', 'Friday'), ('5', 'Saturday'), ('6', 'Sunday')
+    ], string="Day of Week")
+    shift_type = fields.Selection([('morning', 'Morning'), ('evening', 'Evening')], string="Shift Type")
+    slot_label = fields.Char("Slot Label")
+    start_time = fields.Char("Start Time")
+    end_time = fields.Char("End Time")
+    
+    # Backward compatibility fields (kept for existing data)
+    day_id = fields.Many2one('clinic.days', string='Day')  # Made optional for backward compatibility
+    start_time_float = fields.Float(string='Start Time Float')  # Renamed for clarity
+    end_time_float = fields.Float(string='End Time Float')      # Renamed for clarity
+    duration = fields.Float(string='Duration (mins)')
+    slot_number = fields.Char(string='Slot Number')
     shift = fields.Selection([
         ('morning', 'Morning'),
         ('evening', 'Evening')
-    ], string='Shift', required=True)
+    ], string='Shift')
     current_patients = fields.Integer(string='Current Patients', compute='_compute_current_patients')
     
     status = fields.Selection([
@@ -41,7 +52,8 @@ class ClinicSlot(models.Model):
     ]
     display_name = fields.Char(compute='_compute_display_name', store=False)
 
-    @api.depends('start_time', 'end_time', 'day_id.name', 'shift')
+    @api.depends('start_time', 'end_time', 'day_of_week', 'shift_type', 'slot_label', 
+                 'start_time_float', 'end_time_float', 'day_id.name', 'shift')
     def _compute_display_name(self):
         def fmt(t):
             h = int(t or 0)
@@ -49,19 +61,28 @@ class ClinicSlot(models.Model):
             return f"{h:02d}:{m:02d}"
 
         for rec in self:
-            # Take first 3 letters of day (MON, TUE...)
+            # New structure - use slot_label if available
+            if rec.slot_label and rec.day_of_week is not False:
+                day_names = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
+                day_code = day_names[int(rec.day_of_week)] if rec.day_of_week else ""
+                shift_txt = dict(self._fields['shift_type'].selection).get(rec.shift_type, "") if rec.shift_type else ""
+                
+                parts = [p for p in [day_code, shift_txt, rec.slot_label] if p]
+                rec.display_name = " ".join(parts) or "Slot"
+                continue
+                
+            # Backward compatibility - use old structure
             day_code = (rec.day_id.name[:3].upper()) if rec.day_id and rec.day_id.name else ""
+            shift_txt = dict(self._fields['shift'].selection).get(rec.shift, "") if rec.shift else ""
 
-            # Shift text
-            shift_txt = dict(self._fields['shift'].selection).get(rec.shift, "")
-
-            # Time text
-            if rec.start_time is not None and rec.end_time is not None:
-                time_txt = f"{fmt(rec.start_time)} - {fmt(rec.end_time)}"
+            # Use new string times or fall back to float times
+            if rec.start_time and rec.end_time:
+                time_txt = f"{rec.start_time} - {rec.end_time}"
+            elif rec.start_time_float is not None and rec.end_time_float is not None:
+                time_txt = f"{fmt(rec.start_time_float)} - {fmt(rec.end_time_float)}"
             else:
                 time_txt = ""
 
-            # Combine
             parts = [p for p in [day_code, shift_txt, time_txt] if p]
             rec.display_name = " ".join(parts) or "Slot"
 
@@ -89,10 +110,12 @@ class ClinicSlot(models.Model):
                 lambda a: a.state not in ['cancelled', 'no_show']
             ))
     
-    @api.constrains('start_time', 'end_time')
+    @api.constrains('start_time_float', 'end_time_float')
     def _check_times(self):
         for slot in self:
-            if slot.start_time >= slot.end_time:
+            # Check float times (backward compatibility)
+            if (slot.start_time_float is not None and slot.end_time_float is not None 
+                and slot.start_time_float >= slot.end_time_float):
                 raise ValidationError(_("End Time must be greater than Start Time"))
 
     def _float_time_convert(self, float_time):
@@ -100,6 +123,16 @@ class ClinicSlot(models.Model):
         hours = int(float_time)
         minutes = int((float_time - hours) * 60)
         return f"{hours:02d}:{minutes:02d}"
+    
+    def _string_to_float_time(self, time_str):
+        """Convert time string (HH:MM) to float"""
+        if not time_str or ':' not in time_str:
+            return 0.0
+        try:
+            hours, minutes = time_str.split(':')
+            return float(hours) + float(minutes) / 60
+        except (ValueError, AttributeError):
+            return 0.0
     
     def action_set_available(self):
         """Set slot status to Available"""
@@ -124,33 +157,47 @@ class ClinicSlot(models.Model):
         """Cron job to mark past slots as expired"""
         import datetime
         today = fields.Date.today()
-        weekday = today.weekday()  # 0 = Monday, 6 = Sunday
-        
-        # Map weekday to day name
-        day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-        day_name = day_names[weekday]
-        
-        # Find day record
-        day = self.env['clinic.days'].search([('name', '=', day_name)], limit=1)
-        
-        if not day:
-            return
+        weekday = str(today.weekday())  # 0 = Monday, 6 = Sunday
         
         # Current time as float
         now = datetime.datetime.now()
         current_time_float = now.hour + now.minute / 60
         
-        # Expire slots for today that are in the past
-        slots_to_expire = self.search([
-            ('day_id', '=', day.id),
-            ('end_time', '<', current_time_float),
+        # Find slots for today using new structure
+        new_structure_slots = self.search([
+            ('day_of_week', '=', weekday),
             ('status', 'in', ['available', 'booked'])
         ])
         
-        # Mark as expired
-        slots_to_expire.write({'status': 'expired'})
+        slots_to_expire = []
+        for slot in new_structure_slots:
+            # Convert string time to float for comparison
+            if slot.end_time:
+                end_time_float = slot._string_to_float_time(slot.end_time)
+                if end_time_float < current_time_float:
+                    slots_to_expire.append(slot.id)
+            elif slot.end_time_float and slot.end_time_float < current_time_float:
+                slots_to_expire.append(slot.id)
         
-        # Handle no-shows for booked appointments
-        for slot in slots_to_expire.filtered(lambda s: s.appointment_ids):
-            for appointment in slot.appointment_ids.filtered(lambda a: a.state in ['confirmed']):
-                appointment.write({'state': 'no_show'})
+        # Also check old structure for backward compatibility
+        day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        day_name = day_names[today.weekday()]
+        day = self.env['clinic.days'].search([('name', '=', day_name)], limit=1)
+        
+        if day:
+            old_structure_slots = self.search([
+                ('day_id', '=', day.id),
+                ('end_time_float', '<', current_time_float),
+                ('status', 'in', ['available', 'booked'])
+            ])
+            slots_to_expire.extend(old_structure_slots.ids)
+        
+        # Mark as expired
+        if slots_to_expire:
+            slots_to_expire_records = self.browse(slots_to_expire)
+            slots_to_expire_records.write({'status': 'expired'})
+            
+            # Handle no-shows for booked appointments
+            for slot in slots_to_expire_records.filtered(lambda s: s.appointment_ids):
+                for appointment in slot.appointment_ids.filtered(lambda a: a.state in ['confirmed']):
+                    appointment.write({'state': 'no_show'})

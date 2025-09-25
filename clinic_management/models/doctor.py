@@ -10,6 +10,110 @@ class ClinicDoctorSpecialTag(models.Model):
     color = fields.Integer(string='Color Index')
 
 
+class DoctorShiftConfig(models.Model):
+    _name = 'doctor.shift.config'
+    _description = 'Doctor Weekly Shift Configuration'
+    _order = 'doctor_id, day_id, shift_type'
+
+    doctor_id = fields.Many2one('clinic.doctor', string="Doctor", required=True, ondelete="cascade")
+    # Replaced selection with Many2one to clinic.days
+    day_id = fields.Many2one('clinic.days', string='Day', required=True)
+    shift_type = fields.Selection([('morning', 'Morning'), ('evening', 'Evening')], string="Shift Type", required=True)
+    start_time = fields.Float("Start Time (Hour, e.g., 8.0)", required=True)
+    end_time = fields.Float("End Time (Hour, e.g., 12.0)", required=True)
+    slot_duration = fields.Integer("Slot Duration (Minutes)", default=30)
+    active = fields.Boolean("Active", default=True)
+    
+    # Relations
+    slot_ids = fields.One2many('clinic.slot', 'shift_config_id', string="Generated Slots")
+    
+    # Computed fields
+    slot_count = fields.Integer("Total Slots", compute='_compute_slot_count')
+    
+    @api.depends('slot_ids')
+    def _compute_slot_count(self):
+        for config in self:
+            config.slot_count = len(config.slot_ids)
+    
+    _sql_constraints = [
+        # Updated unique constraint to use day_id instead of day_of_week
+        ('unique_doctor_day_shift', 'unique(doctor_id, day_id, shift_type)', 
+         'Only one shift configuration per day per shift type allowed for each doctor!')
+    ]
+
+    @api.constrains('start_time', 'end_time')
+    def _check_times(self):
+        for config in self:
+            if config.start_time >= config.end_time:
+                raise ValidationError(_("End Time must be greater than Start Time"))
+
+    @api.constrains('slot_duration')
+    def _check_slot_duration(self):
+        for config in self:
+            if config.slot_duration <= 0:
+                raise ValidationError(_("Slot Duration must be greater than 0"))
+
+    def _generate_slots(self):
+        """Generate slot records based on config"""
+        self.ensure_one()
+        if not self.active:
+            return
+            
+        Slot = self.env['clinic.slot']
+        slots_to_create = []
+        
+        current = self.start_time * 60  # convert hr -> minutes
+        end = self.end_time * 60
+        slot_number = 1
+        
+        while current < end:
+            start_min = current
+            end_min = min(current + self.slot_duration, end)
+
+            start_time_float = start_min / 60
+            end_time_float = end_min / 60
+            
+            start_label = f"{int(start_min//60):02d}:{int(start_min%60):02d}"
+            end_label = f"{int(end_min//60):02d}:{int(end_min%60):02d}"
+            slot_label = f"{start_label} - {end_label}"
+            
+            # Generate slot number based on clinic.days code and shift
+            day_code = (self.day_id.code or '').upper()
+            shift_code = 'M' if self.shift_type == 'morning' else 'E'
+            slot_number_str = f"{day_code}-{shift_code}-{slot_number:03d}"
+
+            # Map clinic.days to python weekday index (0=Mon .. 6=Sun)
+            day_of_week = False
+            if self.day_id and self.day_id.sequence:
+                # days_master_data.xml defines Monday..Sunday with sequence 1..7
+                day_of_week = str(int(self.day_id.sequence) - 1)
+
+            slots_to_create.append({
+                'doctor_id': self.doctor_id.id,
+                'shift_config_id': self.id,
+                # Keep backward compatibility fields on clinic.slot
+                'day_id': self.day_id.id,
+                'shift': self.shift_type,
+                # New weekly template fields
+                'day_of_week': day_of_week,
+                'shift_type': self.shift_type,
+                'start_time_float': start_time_float,  # Keep for compatibility
+                'end_time_float': end_time_float,      # Keep for compatibility
+                'start_time': start_label,
+                'end_time': end_label,
+                'slot_label': slot_label,
+                'slot_number': slot_number_str,
+                'duration': self.slot_duration,
+                'status': 'available',
+            })
+            
+            current = end_min
+            slot_number += 1
+            
+        # Create all slots at once for better performance
+        if slots_to_create:
+            Slot.create(slots_to_create)
+
 
 class ClinicDoctor(models.Model):
     _name = 'clinic.doctor'
@@ -60,8 +164,9 @@ class ClinicDoctor(models.Model):
     user_id = fields.Many2one('res.users', string='Related User', tracking=True)
     employee_id = fields.Many2one('hr.employee', string='Related Employee', tracking=True)
     
-    # Statistics and related records
-    slot_ids = fields.One2many('clinic.slot', 'doctor_id', string='Slots')
+    # Relations
+    shift_config_ids = fields.One2many('doctor.shift.config', 'doctor_id', string="Shift Configurations")
+    slot_ids = fields.One2many('clinic.slot', 'doctor_id', string="Generated Slots")
     appointment_ids = fields.One2many('clinic.appointment', 'doctor_id', string='Appointments')
     holiday_ids = fields.One2many('clinic.holiday', 'doctor_id', string='Leaves/Holidays')
     
@@ -144,9 +249,23 @@ class ClinicDoctor(models.Model):
             self._create_slots()
         return res
     
+    def generate_weekly_slots(self):
+        """Loop over shift_config_ids and generate slots in clinic.slot"""
+        for doctor in self:
+            # Clear old available slots only (preserve booked/historical slots)
+            doctor.slot_ids.filtered(lambda s: s.status == 'available').unlink()
+            for config in doctor.shift_config_ids:
+                config._generate_slots()
+
     def _create_slots(self):
-        """Generate slots based on doctor's availability"""
+        """Generate slots based on doctor's availability (Legacy method - now uses shift configs)"""
         self.ensure_one()
+        # If we have shift configurations, use the new system
+        if self.shift_config_ids:
+            self.generate_weekly_slots()
+            return
+            
+        # Legacy slot generation for backward compatibility
         Slot = self.env['clinic.slot']
         
         # Delete existing slots that are in 'available' status only
@@ -276,3 +395,4 @@ class ClinicDoctor(models.Model):
             'view_mode': 'form',
             'target': 'current',
         }
+

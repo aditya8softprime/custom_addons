@@ -43,8 +43,8 @@
         'views/service_views.xml',
         'views/slot_views.xml',
         'views/doctor_views.xml',
+        'views/doctor_shift_config_views.xml',
         'views/patient_views.xml',
-    # prescription views removed; functionality moved into appointment
         'views/appointment_views.xml',
         'views/appointment_lab_line_views.xml',
         'views/holiday_views.xml',
@@ -52,7 +52,7 @@
         'views/clinic_website_settings_views.xml',
         'views/res_company_views.xml',
         'views/appointment_dashboard.xml',
-    # prescription dashboard actions removed
+        
         
         # Wizards
         'wizard/reschedule_appointment_views.xml',

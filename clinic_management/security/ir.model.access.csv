@@ -35,6 +35,10 @@ access_clinic_doctor_special_tag_admin,clinic.doctor.special.tag admin,model_cli
 access_clinic_doctor_special_tag_receptionist,clinic.doctor.special.tag receptionist,model_clinic_doctor_special_tag,group_clinic_receptionist,1,0,0,0
 access_clinic_doctor_special_tag_doctor,clinic.doctor.special.tag doctor,model_clinic_doctor_special_tag,group_clinic_doctor,1,0,0,0
 
+access_doctor_shift_config_admin,doctor.shift.config admin,model_doctor_shift_config,group_clinic_admin,1,1,1,1
+access_doctor_shift_config_receptionist,doctor.shift.config receptionist,model_doctor_shift_config,group_clinic_receptionist,1,1,1,0
+access_doctor_shift_config_doctor,doctor.shift.config doctor,model_doctor_shift_config,group_clinic_doctor,1,1,1,0
+
 access_clinic_testimonial_admin,clinic.testimonial admin,model_clinic_testimonial,group_clinic_admin,1,1,1,1
 access_clinic_testimonial_receptionist,clinic.testimonial receptionist,model_clinic_testimonial,group_clinic_receptionist,1,1,1,0
 access_clinic_testimonial_doctor,clinic.testimonial doctor,model_clinic_testimonial,group_clinic_doctor,1,1,0,0

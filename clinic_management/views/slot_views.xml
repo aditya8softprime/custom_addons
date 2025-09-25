@@ -20,18 +20,29 @@
                         </h1>
                     </div>
                     <group>
-                        <group>
+                        <group string="New Structure">
                             <field name="doctor_id"/>
-                            <field name="day_id"/>
-                            <field name="shift"/>
-                            <field name="start_time" widget="float_time"/>
-                            <field name="end_time" widget="float_time"/>
+                            <field name="shift_config_id"/>
+                            <field name="day_of_week"/>
+                            <field name="shift_type"/>
+                            <field name="slot_label"/>
+                            <field name="start_time"/>
+                            <field name="end_time"/>
                         </group>
-                        <group>
-                            <field name="duration"/>
+                        <group string="Status and Statistics">
                             <field name="current_patients"/>
                             <field name="status"/>
                             <field name="color" invisible="1"/>
+                        </group>
+                    </group>
+                    <group string="Legacy Fields (Backward Compatibility)" invisible="not day_id">
+                        <group>
+                            <field name="day_id"/>
+                            <field name="shift"/>
+                            <field name="slot_number"/>
+                            <field name="start_time_float" widget="float_time"/>
+                            <field name="end_time_float" widget="float_time"/>
+                            <field name="duration"/>
                         </group>
                     </group>
                     <notebook>
@@ -57,18 +68,24 @@
         <field name="arch" type="xml">
             <list string="Slots">
                 <field name="doctor_id"/>
-                <field name="day_id"/>
-                <field name="shift"/>
-                <field name="slot_number"/>
-                <field name="start_time" widget="float_time"/>
-                <field name="end_time" widget="float_time"/>
-                <field name="duration"/>
+                <field name="day_of_week"/>
+                <field name="shift_type"/>
+                <field name="slot_label"/>
+                <field name="start_time"/>
+                <field name="end_time"/>
                 <field name="current_patients"/>
                 <field name="status" decoration-success="status == 'available'" 
                        decoration-danger="status == 'booked'" 
                        decoration-warning="status == 'blocked'" 
                        decoration-info="status == 'cancelled'" 
                        decoration-muted="status == 'expired'"/>
+                <!-- Legacy fields for backward compatibility -->
+                <field name="day_id" optional="hide"/>
+                <field name="shift" optional="hide"/>
+                <field name="slot_number" optional="hide"/>
+                <field name="start_time_float" widget="float_time" optional="hide"/>
+                <field name="end_time_float" widget="float_time" optional="hide"/>
+                <field name="duration" optional="hide"/>
             </list>
         </field>
     </record>

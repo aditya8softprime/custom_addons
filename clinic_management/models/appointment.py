@@ -42,9 +42,13 @@ class ClinicAppointment(models.Model):
 
     appointment_date = fields.Date(string='Appointment Date', required=True, tracking=True)
     
-    # Start and end time are computed from the slot
-    start_time = fields.Float(related='slot_id.start_time', string='Start Time', store=True)
-    end_time = fields.Float(related='slot_id.end_time', string='End Time', store=True)
+    # Start and end time are computed from the slot (backward compatibility)
+    start_time = fields.Float(related='slot_id.start_time_float', string='Start Time', store=True)
+    end_time = fields.Float(related='slot_id.end_time_float', string='End Time', store=True)
+    
+    # New string time fields from slot (new structure)
+    start_time_str = fields.Char(related='slot_id.start_time', string='Start Time (String)', store=True)
+    end_time_str = fields.Char(related='slot_id.end_time', string='End Time (String)', store=True)
     
     consulting_fee = fields.Monetary(string='Consulting Fee', currency_field='currency_id', tracking=True)
     currency_id = fields.Many2one('res.currency', string='Currency', 

@@ -189,20 +189,23 @@ class ClinicWebsite(http.Controller):
                 ('doctor_id', '=', int(doctor_id)),
                 ('day_id', '=', day_record.id),
                 ('status', '=', 'available')
-            ], order='start_time')
+            ], order='start_time_float')
             
             # Format slots for the dropdown
             slots_data = []
             for slot in available_slots:
-                # Convert float time to HH:MM format
-                start_hour = int(slot.start_time)
-                start_min = int((slot.start_time - start_hour) * 60)
-                end_hour = int(slot.end_time)
-                end_min = int((slot.end_time - end_hour) * 60)
-                
-                start_time_str = f"{start_hour:02d}:{start_min:02d}"
-                end_time_str = f"{end_hour:02d}:{end_min:02d}"
-                
+                # Prefer pre-formatted strings, fallback to float conversion
+                if slot.start_time and slot.end_time:
+                    start_time_str = slot.start_time
+                    end_time_str = slot.end_time
+                else:
+                    sh = int(slot.start_time_float or 0)
+                    sm = int(((slot.start_time_float or 0) - sh) * 60)
+                    eh = int(slot.end_time_float or 0)
+                    em = int(((slot.end_time_float or 0) - eh) * 60)
+                    start_time_str = f"{sh:02d}:{sm:02d}"
+                    end_time_str = f"{eh:02d}:{em:02d}"
+
                 slots_data.append({
                     'id': slot.id,
                     'start_time': start_time_str,

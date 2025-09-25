@@ -110,19 +110,57 @@
                                 </group>
                             </group>
                         </page>
-                        <page string="Slots" name="slots">
+
+                        <page string="Shift Configuration" name="shift_config">
+                            <div class="oe_button_box">
+                                <button name="generate_weekly_slots" type="object" string="Generate Weekly Slots" class="btn-primary"/>
+                            </div>
+                            <field name="shift_config_ids">
+                                <list editable="bottom" string="Shift Configurations">
+                                    <field name="day_id"/>
+                                    <field name="shift_type"/>
+                                    <field name="start_time" widget="float_time"/>
+                                    <field name="end_time" widget="float_time"/>
+                                    <field name="slot_duration"/>
+                                    <field name="active"/>
+                                    <field name="slot_count" readonly="1"/>
+                                </list>
+                                <form string="Shift Configuration">
+                                    <group>
+                                        <group>
+                                            <field name="day_id"/>
+                                            <field name="shift_type"/>
+                                            <field name="active"/>
+                                        </group>
+                                        <group string="Timing">
+                                            <field name="start_time" widget="float_time"/>
+                                            <field name="end_time" widget="float_time"/>
+                                            <field name="slot_duration"/>
+                                        </group>
+                                    </group>
+                                    <group string="Info">
+                                        <field name="slot_count" readonly="1"/>
+                                    </group>
+                                </form>
+                            </field>
+                        </page>
+
+                        <page string="Generated Slots" name="slots">
                             <field name="slot_ids">
                                 <list>
                                     <field name="day_id"/>
                                     <field name="shift"/>
-                                    <field name="slot_number"/>
-                                    <field name="start_time" widget="float_time"/>
-                                    <field name="end_time" widget="float_time"/>
-                                    <field name="duration"/>
+                                    <field name="slot_label"/>
+                                    <field name="start_time"/>
+                                    <field name="end_time"/>
                                     <field name="current_patients"/>
                                     <field name="status" decoration-success="status == 'available'" 
-                                           decoration-warning="status == 'partially_booked'" 
-                                           decoration-danger="status == 'fully_booked'"/>
+                                           decoration-warning="status == 'booked'" 
+                                           decoration-danger="status == 'blocked'"/>
+                                    <field name="slot_number" optional="hide"/>
+                                    <field name="start_time_float" widget="float_time" optional="hide"/>
+                                    <field name="end_time_float" widget="float_time" optional="hide"/>
+                                    <field name="duration" optional="hide"/>
                                 </list>
                             </field>
                         </page>
