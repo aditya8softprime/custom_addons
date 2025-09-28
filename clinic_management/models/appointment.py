@@ -142,7 +142,7 @@ class ClinicAppointment(models.Model):
                         available_slots = self.env['clinic.slot'].search([
                             ('doctor_id', '=', appointment.doctor_id.id),
                             ('day_id', '=', day.id),
-                            ('status', '=', 'available')
+                            ('is_blocked', '=', False)
                         ])
                         appointment.next_visit_slot_available = bool(available_slots)
     
@@ -358,7 +358,7 @@ class ClinicAppointment(models.Model):
             available_slots = self.env['clinic.slot'].search([
                 ('doctor_id', '=', self.doctor_id.id),
                 ('day_id', '=', day.id),
-                ('status', '=', 'available')
+                ('is_blocked', '=', False)
             ])
             
             if not available_slots:
@@ -472,7 +472,7 @@ class ClinicAppointment(models.Model):
         if availability_warning.get('warning'):
             return availability_warning
         
-        # For scheduled appointments, also handle slot availability
+    # For scheduled appointments, also handle slot availability
         if self.appointment_type == 'scheduled':
             # Determine day of week
             weekday = self.appointment_date.weekday()  # 0 = Monday
@@ -485,7 +485,7 @@ class ClinicAppointment(models.Model):
                 slots = self.env['clinic.slot'].search([
                     ('doctor_id', '=', self.doctor_id.id),
                     ('day_id', '=', day.id),
-                    ('status', '=', 'available')
+                    ('is_blocked', '=', False)
                 ])
                 self.slots = slots
                 return {'domain': {'slot_id': [('id', 'in', slots.ids)]}}
@@ -499,14 +499,22 @@ class ClinicAppointment(models.Model):
     def action_confirm(self):
         """Confirm the appointment"""
         for appointment in self:
-            # For scheduled appointments, check if slot is still available
+            # For scheduled appointments, validate slot availability
             if appointment.appointment_type == 'scheduled':
-                if appointment.slot_id and appointment.slot_id.status != 'available' and appointment.state == 'draft':
-                    raise ValidationError(_("The selected slot is no longer available"))
-                
-                # Update slot status
                 if appointment.slot_id:
-                    appointment.slot_id.sudo().status = 'booked'
+                    # slot template must not be blocked
+                    if appointment.slot_id.is_blocked and appointment.state == 'draft':
+                        raise ValidationError(_("The selected slot is no longer available"))
+                    # prevent double-booking: same doctor, date, and slot in active states
+                    conflict = self.search_count([
+                        ('doctor_id', '=', appointment.doctor_id.id),
+                        ('appointment_date', '=', appointment.appointment_date),
+                        ('slot_id', '=', appointment.slot_id.id),
+                        ('state', 'not in', ['cancelled', 'no_show', 'rescheduled']),
+                        ('id', '!=', appointment.id)
+                    ])
+                    if conflict:
+                        raise ValidationError(_("This slot is already booked for the selected date"))
             
             # For walk-in appointments, generate queue number if not present
             elif appointment.appointment_type == 'walkin':
@@ -702,18 +710,13 @@ class ClinicAppointment(models.Model):
                 'state': 'cancelled',
             })
             
-            # Free up the slot
-            if appointment.slot_id and appointment.slot_id.status == 'booked':
-                appointment.slot_id.status = 'available'
+            # No slot template status toggling; availability is based on appointments
     
     def action_mark_no_show(self):
         """Mark patient as no-show"""
         self.write({'state': 'no_show'})
         
-        # Free up the slot
-        for appointment in self:
-            if appointment.slot_id and appointment.slot_id.status == 'booked':
-                appointment.slot_id.status = 'available'
+        # No slot template status toggling; availability is based on appointments
     
     def action_reschedule(self):
         """Open the reschedule wizard"""

@@ -104,7 +104,7 @@ class DoctorShiftConfig(models.Model):
                 'slot_label': slot_label,
                 'slot_number': slot_number_str,
                 'duration': self.slot_duration,
-                'status': 'available',
+                # No explicit status; template is selectable unless blocked
             })
             
             current = end_min
@@ -252,8 +252,8 @@ class ClinicDoctor(models.Model):
     def generate_weekly_slots(self):
         """Loop over shift_config_ids and generate slots in clinic.slot"""
         for doctor in self:
-            # Clear old available slots only (preserve booked/historical slots)
-            doctor.slot_ids.filtered(lambda s: s.status == 'available').unlink()
+            # Clear old slots without any appointments (preserve historical/booked data)
+            doctor.slot_ids.filtered(lambda s: not s.appointment_ids).unlink()
             for config in doctor.shift_config_ids:
                 config._generate_slots()
 
@@ -268,13 +268,14 @@ class ClinicDoctor(models.Model):
         # Legacy slot generation for backward compatibility
         Slot = self.env['clinic.slot']
         
-        # Delete existing slots that are in 'available' status only
-        # This preserves historical data of booked slots
+        # Delete existing slots that are not linked to any appointments
+        # This preserves historical data
         existing_slots = Slot.search([
             ('doctor_id', '=', self.id),
-            ('status', '=', 'available')
         ])
-        existing_slots.unlink()
+        for s in existing_slots:
+            if not s.appointment_ids:
+                s.unlink()
         
         # Convert slot_duration from string to float
         slot_duration_minutes = float(self.slot_duration)
@@ -300,7 +301,7 @@ class ClinicDoctor(models.Model):
                         'duration': slot_duration_minutes,
                         'shift': 'morning',
                         'slot_number': f"{day.code}-M-{slot_number:03d}",
-                        'status': 'available',
+                        # template slots no longer carry status; availability is derived at booking time
                     }
                     Slot.create(slot_vals)
                     
@@ -327,7 +328,7 @@ class ClinicDoctor(models.Model):
                         'duration': slot_duration_minutes,
                         'shift': 'evening',
                         'slot_number': f"{day.code}-E-{slot_number:03d}",
-                        'status': 'available',
+                        # template slots no longer carry status; availability is derived at booking time
                     }
                     Slot.create(slot_vals)
                     

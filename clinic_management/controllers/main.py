@@ -185,11 +185,20 @@ class ClinicWebsite(http.Controller):
                 return []
             
             # Get available slots for this doctor and day
-            available_slots = request.env['clinic.slot'].sudo().search([
+            # Start from slot templates that are not blocked
+            slots = request.env['clinic.slot'].sudo().search([
                 ('doctor_id', '=', int(doctor_id)),
                 ('day_id', '=', day_record.id),
-                ('status', '=', 'available')
+                ('is_blocked', '=', False)
             ], order='start_time_float')
+            
+            # Filter out slots that have an appointment already on this date
+            available_slots = slots.filtered(lambda s: not request.env['clinic.appointment'].sudo().search_count([
+                ('doctor_id', '=', int(doctor_id)),
+                ('appointment_date', '=', booking_date),
+                ('slot_id', '=', s.id),
+                ('state', 'not in', ['cancelled', 'no_show'])
+            ]))
             
             # Format slots for the dropdown
             slots_data = []
@@ -322,11 +331,9 @@ class ClinicWebsite(http.Controller):
                     slot_id = int(slot_id)
                     slot = request.env['clinic.slot'].sudo().browse(slot_id)
                     
-                    if slot.exists() and slot.status == 'available':
+                    if slot.exists() and not slot.is_blocked:
                         appointment_vals.update({
                             'slot_id': slot.id,
-                            'start_time': slot.start_time,
-                            'end_time': slot.end_time,
                         })
                         
                         # Create appointment

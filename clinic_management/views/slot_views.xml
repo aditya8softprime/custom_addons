@@ -5,14 +5,10 @@
         <field name="model">clinic.slot</field>
         <field name="arch" type="xml">
             <form>
-                <header>
-                    <button name="action_set_available" type="object" string="Set Available" 
-                            invisible="status not in ('blocked','cancelled')" class="btn-primary"/>
-                    <button name="action_block" type="object" string="Block" 
-                            invisible="status != 'available'" class="btn-secondary"/>
-                    <button name="action_cancel" type="object" string="Cancel" 
-                            invisible="status not in ('available','booked','blocked')" class="btn-danger"/>
-                </header>
+        <header>
+            <button name="action_toggle_block" type="object" string="Toggle Block" class="btn-secondary"/>
+            <button name="action_cancel_appointments" type="object" string="Cancel All Appointments" class="btn-danger"/>
+        </header>
                 <sheet>
                     <div class="oe_title">
                         <h1>
@@ -29,9 +25,9 @@
                             <field name="start_time"/>
                             <field name="end_time"/>
                         </group>
-                        <group string="Status and Statistics">
-                            <field name="current_patients"/>
-                            <field name="status"/>
+                        <group string="Flags and Stats">
+                            <field name="is_blocked"/>
+                            <field name="patients_count"/>
                             <field name="color" invisible="1"/>
                         </group>
                     </group>
@@ -46,7 +42,7 @@
                         </group>
                     </group>
                     <notebook>
-                        <page string="Appointments" invisible="status == 'available'">
+                        <page string="Appointments">
                             <field name="appointment_ids">
                                 <list>
                                     <field name="name"/>
@@ -73,12 +69,8 @@
                 <field name="slot_label"/>
                 <field name="start_time"/>
                 <field name="end_time"/>
-                <field name="current_patients"/>
-                <field name="status" decoration-success="status == 'available'" 
-                       decoration-danger="status == 'booked'" 
-                       decoration-warning="status == 'blocked'" 
-                       decoration-info="status == 'cancelled'" 
-                       decoration-muted="status == 'expired'"/>
+          <field name="patients_count"/>
+          <field name="is_blocked"/>
                 <!-- Legacy fields for backward compatibility -->
                 <field name="day_id" optional="hide"/>
                 <field name="shift" optional="hide"/>
@@ -100,7 +92,7 @@
                 <field name="slot_number"/>
                 <field name="start_time"/>
                 <field name="end_time"/>
-                <field name="status"/>
+                <field name="is_blocked"/>
                 <field name="color"/>
                 <templates>
                     <t t-name="kanban-box">
@@ -114,19 +106,22 @@
                                 </div>
                                 <div>
                                     <strong>Time: </strong>
-                                    <field name="start_time" widget="float_time"/> - <field name="end_time" widget="float_time"/>
+                                    <t t-if="record.slot_label.raw_value">
+                                        <t t-esc="record.slot_label.value"/>
+                                    </t>
+                                    <t t-else="">
+                                        <field name="start_time_float" widget="float_time"/> - <field name="end_time_float" widget="float_time"/>
+                                    </t>
                                 </div>
                                 <div>
-                                    <field name="status" widget="badge" 
-                                           decoration-success="status == 'available'" 
-                                           decoration-danger="status == 'booked'" 
-                                           decoration-warning="status == 'blocked'" 
-                                           decoration-info="status == 'cancelled'" 
-                                           decoration-muted="status == 'expired'"/>
+                                    <div>
+                                        <span t-if="record.is_blocked.raw_value" class="badge text-bg-warning">Blocked</span>
+                                        <span t-else="" class="badge text-bg-success">Open</span>
+                                    </div>
                                 </div>
-                                <div t-if="status == 'booked'">
-                                    <strong>Patients: </strong>
-                                    <field name="current_patients"/>
+                                <div>
+                                    <strong>Appointments: </strong>
+                                    <field name="patients_count"/>
                                 </div>
                             </div>
                         </div>
@@ -140,10 +135,10 @@
         <field name="name">clinic.slot.calendar</field>
         <field name="model">clinic.slot</field>
         <field name="arch" type="xml">
-            <calendar string="Slots" date_start="start_time" date_stop="end_time" mode="day" color="doctor_id">
+            <calendar string="Slots" date_start="start_time_float" date_stop="end_time_float" mode="day" color="doctor_id">
                 <field name="slot_number"/>
                 <field name="doctor_id"/>
-                <field name="status"/>
+                <field name="is_blocked"/>
             </calendar>
         </field>
     </record>
@@ -157,15 +152,12 @@
                 <field name="doctor_id"/>
                 <field name="day_id"/>
                 <separator/>
-                <filter string="Available" name="available" domain="[('status', '=', 'available')]"/>
-                <filter string="Booked" name="booked" domain="[('status', '=', 'booked')]"/>
-                <filter string="Blocked" name="blocked" domain="[('status', '=', 'blocked')]"/>
-                <filter string="Cancelled" name="cancelled" domain="[('status', '=', 'cancelled')]"/>
-                <filter string="Expired" name="expired" domain="[('status', '=', 'expired')]"/>
+                <filter string="Open" name="open" domain="[('is_blocked', '=', False)]"/>
+                <filter string="Blocked" name="blocked" domain="[('is_blocked', '=', True)]"/>
                 <group expand="0" string="Group By">
                     <filter name="group_by_doctor" string="Doctor" context="{'group_by': 'doctor_id'}"/>
                     <filter name="group_by_day" string="Day" context="{'group_by': 'day_id'}"/>
-                    <filter name="group_by_status" string="Status" context="{'group_by': 'status'}"/>
+                    <filter name="group_by_blocked" string="Blocked" context="{'group_by': 'is_blocked'}"/>
                 </group>
             </search>
         </field>

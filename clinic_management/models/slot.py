@@ -30,15 +30,9 @@ class ClinicSlot(models.Model):
         ('morning', 'Morning'),
         ('evening', 'Evening')
     ], string='Shift')
-    current_patients = fields.Integer(string='Current Patients', compute='_compute_current_patients')
-    
-    status = fields.Selection([
-        ('available', 'Available'),
-        ('booked', 'Booked'),
-        ('blocked', 'Blocked'),
-        ('cancelled', 'Cancelled'),
-        ('expired', 'Expired')
-    ], string='Status', default='available', tracking=True)
+    # New simpler availability flags
+    is_blocked = fields.Boolean(string='Blocked', default=False, help="If enabled, this slot template is not selectable for any date.")
+    patients_count = fields.Integer(string='Appointments Count', compute='_compute_patients_count')
 
 
     
@@ -87,26 +81,17 @@ class ClinicSlot(models.Model):
             rec.display_name = " ".join(parts) or "Slot"
 
 
-    @api.depends('status')
+    @api.depends('is_blocked')
     def _compute_color(self):
-        """Set color based on status for kanban view"""
+        """Set color based on blocked flag"""
         for slot in self:
-            if slot.status == 'available':
-                slot.color = 10  # Green
-            elif slot.status == 'booked':
-                slot.color = 1   # Red
-            elif slot.status == 'blocked':
-                slot.color = 4   # Purple
-            elif slot.status == 'cancelled':
-                slot.color = 3   # Yellow
-            else:
-                slot.color = 0   # Grey
+            slot.color = 1 if slot.is_blocked else 10
     
     @api.depends('appointment_ids')
-    def _compute_current_patients(self):
-        """Compute the number of patients currently booked in this slot"""
+    def _compute_patients_count(self):
+        """Compute total number of non-cancelled appointments linked to this slot (all dates)."""
         for slot in self:
-            slot.current_patients = len(slot.appointment_ids.filtered(
+            slot.patients_count = len(slot.appointment_ids.filtered(
                 lambda a: a.state not in ['cancelled', 'no_show']
             ))
     
@@ -134,70 +119,40 @@ class ClinicSlot(models.Model):
         except (ValueError, AttributeError):
             return 0.0
     
-    def action_set_available(self):
-        """Set slot status to Available"""
-        self.write({'status': 'available'})
-    
-    def action_block(self):
-        """Block slot from booking"""
-        self.write({'status': 'blocked'})
-    
-    def action_cancel(self):
-        """Cancel all appointments in this slot and mark as cancelled"""
+    def action_toggle_block(self):
+        """Toggle blocked flag for this slot template"""
         for slot in self:
-            # Cancel related appointments
+            slot.is_blocked = not slot.is_blocked
+    
+    def action_cancel_appointments(self):
+        """Cancel all non-completed appointments linked to this slot (any date)"""
+        for slot in self:
             slot.appointment_ids.filtered(lambda a: a.state not in ['completed', 'cancelled']).write({
                 'state': 'cancelled',
-                'cancellation_reason': 'Slot cancelled by clinic'
+                'cancellation_reason': 'Slot template cancelled by clinic'
             })
-            slot.status = 'cancelled'
     
     @api.model
-    def _cron_expire_past_slots(self):
-        """Cron job to mark past slots as expired"""
+    def _cron_mark_no_shows(self):
+        """Cron job to mark today's past appointments as no_show based on their slot end time"""
         import datetime
         today = fields.Date.today()
-        weekday = str(today.weekday())  # 0 = Monday, 6 = Sunday
-        
-        # Current time as float
         now = datetime.datetime.now()
         current_time_float = now.hour + now.minute / 60
         
-        # Find slots for today using new structure
-        new_structure_slots = self.search([
-            ('day_of_week', '=', weekday),
-            ('status', 'in', ['available', 'booked'])
+        # Find today's appointments that are still in progress/confirmed
+        App = self.env['clinic.appointment']
+        appts = App.search([
+            ('appointment_date', '=', today),
+            ('state', 'in', ['confirmed', 'paid', 'waiting', 'patient_in', 'in_consultation'])
         ])
-        
-        slots_to_expire = []
-        for slot in new_structure_slots:
-            # Convert string time to float for comparison
-            if slot.end_time:
-                end_time_float = slot._string_to_float_time(slot.end_time)
-                if end_time_float < current_time_float:
-                    slots_to_expire.append(slot.id)
-            elif slot.end_time_float and slot.end_time_float < current_time_float:
-                slots_to_expire.append(slot.id)
-        
-        # Also check old structure for backward compatibility
-        day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-        day_name = day_names[today.weekday()]
-        day = self.env['clinic.days'].search([('name', '=', day_name)], limit=1)
-        
-        if day:
-            old_structure_slots = self.search([
-                ('day_id', '=', day.id),
-                ('end_time_float', '<', current_time_float),
-                ('status', 'in', ['available', 'booked'])
-            ])
-            slots_to_expire.extend(old_structure_slots.ids)
-        
-        # Mark as expired
-        if slots_to_expire:
-            slots_to_expire_records = self.browse(slots_to_expire)
-            slots_to_expire_records.write({'status': 'expired'})
-            
-            # Handle no-shows for booked appointments
-            for slot in slots_to_expire_records.filtered(lambda s: s.appointment_ids):
-                for appointment in slot.appointment_ids.filtered(lambda a: a.state in ['confirmed']):
-                    appointment.write({'state': 'no_show'})
+        for appt in appts:
+            end_time_float = 0.0
+            if appt.end_time_str:
+                end_time_float = self._string_to_float_time(appt.end_time_str)
+            elif appt.end_time is not None:
+                end_time_float = appt.end_time
+            elif appt.slot_id and appt.slot_id.end_time_float:
+                end_time_float = appt.slot_id.end_time_float
+            if end_time_float and end_time_float < current_time_float:
+                appt.write({'state': 'no_show'})

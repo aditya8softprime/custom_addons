@@ -59,13 +59,13 @@ class ClinicHoliday(models.Model):
                 day_name = current_date.strftime('%A')
                 day = self.env['clinic.days'].search([('name', '=', day_name)], limit=1)
                 if day:
-                    # Block available slots for this doctor on this day
+                    # Block unblocked templates for this doctor on this day
                     slots = self.env['clinic.slot'].search([
                         ('doctor_id', '=', holiday.doctor_id.id),
                         ('day_id', '=', day.id),
-                        ('status', '=', 'available')
+                        ('is_blocked', '=', False)
                     ])
-                    slots.write({'status': 'blocked'})
+                    slots.write({'is_blocked': True})
 
                     # Cancel affected appointments
                     appointments = self.env['clinic.appointment'].search([
@@ -90,9 +90,9 @@ class ClinicHoliday(models.Model):
                     slots = self.env['clinic.slot'].search([
                         ('doctor_id', '=', holiday.doctor_id.id),
                         ('day_id', '=', day.id),
-                        ('status', '=', 'blocked')
+                        ('is_blocked', '=', True)
                     ])
-                    slots.write({'status': 'available'})
+                    slots.write({'is_blocked': False})
                 current_date += timedelta(days=1)
 
     @api.model
@@ -105,6 +105,6 @@ class ClinicHoliday(models.Model):
         for leave in expired_leaves:
             slots = self.env['clinic.slot'].search([
                 ('doctor_id', '=', leave.doctor_id.id),
-                ('status', '=', 'blocked')
+                ('is_blocked', '=', True)
             ])
-            slots.write({'status': 'available'})
+            slots.write({'is_blocked': False})

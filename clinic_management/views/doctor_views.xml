@@ -153,10 +153,7 @@
                                     <field name="slot_label"/>
                                     <field name="start_time"/>
                                     <field name="end_time"/>
-                                    <field name="current_patients"/>
-                                    <field name="status" decoration-success="status == 'available'" 
-                                           decoration-warning="status == 'booked'" 
-                                           decoration-danger="status == 'blocked'"/>
+                                    
                                     <field name="slot_number" optional="hide"/>
                                     <field name="start_time_float" widget="float_time" optional="hide"/>
                                     <field name="end_time_float" widget="float_time" optional="hide"/>

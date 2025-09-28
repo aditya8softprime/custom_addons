@@ -11,7 +11,7 @@
             <field name="duration">30</field>
             <field name="slot_number">MON-09:00</field>
             <field name="shift">morning</field>
-            <field name="status">available</field>
+            <!-- status removed; availability handled by is_blocked flag and appointments -->
         </record>
         
         <record id="demo_slot_john_mon_0930" model="clinic.slot">
@@ -22,7 +22,7 @@
             <field name="duration">30</field>
             <field name="slot_number">MON-09:30</field>
             <field name="shift">morning</field>
-            <field name="status">available</field>
+            <!-- status removed; availability handled by is_blocked flag and appointments -->
         </record>
         
         <record id="demo_slot_john_mon_10" model="clinic.slot">
@@ -33,7 +33,7 @@
             <field name="duration">30</field>
             <field name="slot_number">MON-10:00</field>
             <field name="shift">morning</field>
-            <field name="status">available</field>
+            <!-- status removed; availability handled by is_blocked flag and appointments -->
         </record>
         
         <record id="demo_slot_john_mon_1030" model="clinic.slot">
@@ -44,7 +44,7 @@
             <field name="duration">30</field>
             <field name="slot_number">MON-10:30</field>
             <field name="shift">morning</field>
-            <field name="status">available</field>
+            <!-- status removed; availability handled by is_blocked flag and appointments -->
         </record>
         
         <record id="demo_slot_john_tue_14" model="clinic.slot">
@@ -55,7 +55,7 @@
             <field name="duration">30</field>
             <field name="slot_number">TUE-14:00</field>
             <field name="shift">morning</field>
-            <field name="status">available</field>
+            <!-- status removed; availability handled by is_blocked flag and appointments -->
         </record>
         
         <record id="demo_slot_john_tue_1430" model="clinic.slot">
@@ -66,7 +66,7 @@
             <field name="duration">30</field>
             <field name="slot_number">TUE-14:30</field>
             <field name="shift">morning</field>
-            <field name="status">available</field>
+            <!-- status removed; availability handled by is_blocked flag and appointments -->
         </record>
         
         <!-- Demo Slots for Dr. Sarah Brown (Dermatology) -->
@@ -78,7 +78,7 @@
             <field name="duration">30</field>
             <field name="slot_number">MON-10:00</field>
             <field name="shift">morning</field>
-            <field name="status">available</field>
+            <!-- status removed; availability handled by is_blocked flag and appointments -->
         </record>
         
         <record id="demo_slot_sarah_mon_1030" model="clinic.slot">
@@ -89,7 +89,7 @@
             <field name="duration">30</field>
             <field name="slot_number">MON-10:30</field>
             <field name="shift">morning</field>
-            <field name="status">available</field>
+            <!-- status removed; availability handled by is_blocked flag and appointments -->
         </record>
         
         <record id="demo_slot_sarah_wed_15" model="clinic.slot">
@@ -100,7 +100,7 @@
             <field name="duration">30</field>
             <field name="slot_number">WED-15:00</field>
             <field name="shift">morning</field>
-            <field name="status">available</field>
+            <!-- status removed; availability handled by is_blocked flag and appointments -->
         </record>
         
         <record id="demo_slot_sarah_fri_11" model="clinic.slot">
@@ -111,7 +111,7 @@
             <field name="duration">30</field>
             <field name="slot_number">FRI-11:00</field>
             <field name="shift">morning</field>
-            <field name="status">available</field>
+            <!-- status removed; availability handled by is_blocked flag and appointments -->
         </record>
         
         <!-- Demo Slots for Dr. Michael Johnson (Pediatrics) -->
@@ -123,7 +123,7 @@
             <field name="duration">20</field>
             <field name="slot_number">TUE-08:00</field>
             <field name="shift">morning</field>
-            <field name="status">available</field>
+            <!-- status removed; availability handled by is_blocked flag and appointments -->
         </record>
         
         <record id="demo_slot_michael_tue_0820" model="clinic.slot">
@@ -134,7 +134,7 @@
             <field name="duration">20</field>
             <field name="slot_number">TUE-08:20</field>
             <field name="shift">morning</field>
-            <field name="status">available</field>
+            <!-- status removed; availability handled by is_blocked flag and appointments -->
         </record>
         
         <record id="demo_slot_michael_thu_09" model="clinic.slot">
@@ -145,7 +145,7 @@
             <field name="duration">20</field>
             <field name="slot_number">THU-09:00</field>
             <field name="shift">morning</field>
-            <field name="status">available</field>
+            <!-- status removed; availability handled by is_blocked flag and appointments -->
         </record>
         
         <record id="demo_slot_michael_fri_10" model="clinic.slot">
@@ -156,7 +156,7 @@
             <field name="duration">20</field>
             <field name="slot_number">FRI-10:00</field>
             <field name="shift">morning</field>
-            <field name="status">available</field>
+            <!-- status removed; availability handled by is_blocked flag and appointments -->
         </record>
         
         <!-- Demo Slots for Dr. Emily Davis (Orthopedics) -->
@@ -168,7 +168,7 @@
             <field name="duration">45</field>
             <field name="slot_number">MON-09:00</field>
             <field name="shift">morning</field>
-            <field name="status">available</field>
+            <!-- status removed; availability handled by is_blocked flag and appointments -->
         </record>
         
         <record id="demo_slot_emily_mon_0945" model="clinic.slot">
@@ -179,7 +179,7 @@
             <field name="duration">45</field>
             <field name="slot_number">MON-09:45</field>
             <field name="shift">morning</field>
-            <field name="status">available</field>
+            <!-- status removed; availability handled by is_blocked flag and appointments -->
         </record>
         
         <record id="demo_slot_emily_wed_14" model="clinic.slot">
@@ -190,7 +190,7 @@
             <field name="duration">45</field>
             <field name="slot_number">WED-14:00</field>
             <field name="shift">morning</field>
-            <field name="status">available</field>
+            <!-- status removed; availability handled by is_blocked flag and appointments -->
         </record>
         
         <!-- Demo Slots for Dr. Robert Wilson (Neurology) -->
@@ -202,7 +202,7 @@
             <field name="duration">60</field>
             <field name="slot_number">MON-10:00</field>
             <field name="shift">morning</field>
-            <field name="status">available</field>
+            <!-- status removed; availability handled by is_blocked flag and appointments -->
         </record>
         
         <record id="demo_slot_robert_wed_11" model="clinic.slot">
@@ -213,7 +213,7 @@
             <field name="duration">60</field>
             <field name="slot_number">WED-11:00</field>
             <field name="shift">morning</field>
-            <field name="status">available</field>
+            <!-- status removed; availability handled by is_blocked flag and appointments -->
         </record>
         
         <record id="demo_slot_robert_fri_13" model="clinic.slot">
@@ -224,7 +224,7 @@
             <field name="duration">60</field>
             <field name="slot_number">FRI-13:00</field>
             <field name="shift">morning</field>
-            <field name="status">available</field>
+            <!-- status removed; availability handled by is_blocked flag and appointments -->
         </record>
         
         <!-- Demo Slots for Dr. Lisa Garcia (Ophthalmology) -->
@@ -236,7 +236,7 @@
             <field name="duration">30</field>
             <field name="slot_number">TUE-09:00</field>
             <field name="shift">morning</field>
-            <field name="status">available</field>
+            <!-- status removed; availability handled by is_blocked flag and appointments -->
         </record>
         
         <record id="demo_slot_lisa_thu_10" model="clinic.slot">
@@ -247,7 +247,7 @@
             <field name="duration">30</field>
             <field name="slot_number">THU-10:00</field>
             <field name="shift">morning</field>
-            <field name="status">available</field>
+            <!-- status removed; availability handled by is_blocked flag and appointments -->
         </record>
         
         <record id="demo_slot_lisa_sat_11" model="clinic.slot">

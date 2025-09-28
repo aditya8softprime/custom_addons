@@ -16,8 +16,8 @@
                         </group>
                         <group>
                             <field name="new_date"/>
-                            <field name="new_slot_id" 
-                                   domain="[('doctor_id', '=', doctor_id), ('status', '=', 'available')]"/>
+                <field name="new_slot_id" 
+                    domain="[('doctor_id', '=', doctor_id), ('is_blocked', '=', False)]"/>
                             <field name="reason" placeholder="Reason for rescheduling"/>
                         </group>
                     </group>

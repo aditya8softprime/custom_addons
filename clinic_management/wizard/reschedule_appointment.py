@@ -18,7 +18,7 @@ class AppointmentRescheduleWizard(models.TransientModel):
     # New appointment details
     new_date = fields.Date(string='New Date', required=True)
     new_slot_id = fields.Many2one('clinic.slot', string='New Slot', required=True,
-                                 domain="[('doctor_id', '=', doctor_id), ('status', '=', 'available')]")
+                                 domain="[('doctor_id', '=', doctor_id), ('is_blocked', '=', False)]")
     reason = fields.Text(string='Reason for Reschedule')
     
     @api.model
@@ -94,8 +94,18 @@ class AppointmentRescheduleWizard(models.TransientModel):
         self.ensure_one()
       
         # Check if new slot is available
-        if self.new_slot_id.status != 'available':
+        # Validate new slot availability for the date
+        if not self.new_slot_id or self.new_slot_id.is_blocked:
             raise ValidationError(_("The selected slot is no longer available"))
+        # Prevent double booking on same date
+        conflict = self.env['clinic.appointment'].search_count([
+            ('doctor_id', '=', self.doctor_id.id),
+            ('appointment_date', '=', self.new_date),
+            ('slot_id', '=', self.new_slot_id.id),
+            ('state', 'not in', ['cancelled', 'no_show'])
+        ])
+        if conflict:
+            raise ValidationError(_("This slot is already booked for the selected date"))
         
         # Create new appointment
         new_appointment = self.env['clinic.appointment'].create({
@@ -117,12 +127,7 @@ class AppointmentRescheduleWizard(models.TransientModel):
             'cancellation_reason': self.reason or 'Rescheduled by user'
         })
         
-        # Update slot statuses
-        self.new_slot_id.status = 'booked'
-        
-        # If original slot is booked, make it available again
-        if self.original_slot_id.status == 'booked':
-            self.original_slot_id.status = 'available'
+        # No status toggles on slot templates; bookings are tracked in appointments
         
         return {
             'type': 'ir.actions.act_window',
