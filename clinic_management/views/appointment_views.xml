@@ -115,7 +115,7 @@
                             <group>
                                 <field name="medicine_image" widget="draw_canvas" readonly="state != 'in_consultation'" nolabel="1" groups="clinic_management.group_clinic_doctor,clinic_management.group_clinic_admin"/>
                                 <field name="medicine_image" widget="draw_canvas" groups="clinic_management.group_clinic_receptionist" nolabel="1" readonly="1"/>
-                                <field name="medicine_pdf" filename="medicine_pdf_filename" invisible="not medicine_pdf"/>
+                                <field name="medicine_pdf" filename="medicine_pdf_filename" invisible="not medicine_pdf" widget="binary" options="{'accepted_file_extensions': '.pdf'}"/>
                                 <field name="medicine_image_filename" invisible="1"/>
                                 <field name="medicine_pdf_filename" invisible="1"/>
                                 <!-- Company fields removed - now fetched directly via RPC in JavaScript -->

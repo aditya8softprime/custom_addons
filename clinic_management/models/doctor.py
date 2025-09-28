@@ -163,6 +163,13 @@ class ClinicDoctor(models.Model):
     active = fields.Boolean(string='Active', default=True, tracking=True)
     user_id = fields.Many2one('res.users', string='Related User', tracking=True)
     employee_id = fields.Many2one('hr.employee', string='Related Employee', tracking=True)
+    # Doctor-specific prescription template image for canvas background
+    prescription_template_image = fields.Binary(
+        string='Prescription Template Image',
+        attachment=True,
+        help='Upload a background image for prescriptions. This will auto-load on appointments when this doctor is selected.'
+    )
+    prescription_template_filename = fields.Char(string='Template Filename')
     
     # Relations
     shift_config_ids = fields.One2many('doctor.shift.config', 'doctor_id', string="Shift Configurations")

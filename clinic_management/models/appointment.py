@@ -300,6 +300,12 @@ class ClinicAppointment(models.Model):
                 doctor = self.env['clinic.doctor'].browse(vals['doctor_id'])
                 if doctor.consultation_fee:
                     vals['consulting_fee'] = doctor.consultation_fee
+            # Preload doctor's prescription template into appointment image if not provided
+            if vals.get('doctor_id') and not vals.get('medicine_image'):
+                doctor = self.env['clinic.doctor'].browse(vals['doctor_id'])
+                if doctor and doctor.prescription_template_image:
+                    vals['medicine_image'] = doctor.prescription_template_image
+                    vals['medicine_image_filename'] = doctor.prescription_template_filename or f"Prescription_Template_{doctor.name}.png"
         
         appointments = super(ClinicAppointment, self).create(vals_list)
         
@@ -394,6 +400,16 @@ class ClinicAppointment(models.Model):
             # Set consulting fee if not already set
             if not self.consulting_fee:
                 self.consulting_fee = self.doctor_id.consultation_fee
+
+            # Auto-load doctor's prescription template as base image for canvas
+            if (self.state in (False, 'draft')) and not self.medicine_image and self.doctor_id.prescription_template_image:
+                # Only set if not already drawn or always refresh template on doctor change in draft
+                # Here we choose to refresh to ensure correct template per doctor
+                self.medicine_image = self.doctor_id.prescription_template_image
+                self.medicine_image_filename = (
+                    self.doctor_id.prescription_template_filename
+                    or f"Prescription_Template_{self.doctor_id.name}.png"
+                )
             
             # If appointment date is already selected, validate availability
             if self.appointment_date:

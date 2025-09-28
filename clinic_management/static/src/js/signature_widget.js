@@ -12,8 +12,8 @@ class DrawCanvasWidget extends Component {
         this.canvasRef = useRef("canvas");
         this.saveTimeout = null;
         this.isDrawing = false;
-        this.companyImages = { header: null, footer: null };
-        
+        this.doctorTemplate = null; // base64 image for doctor's prescription template
+
         onMounted(this.onMounted.bind(this));
         onWillDestroy(() => {
             this.saveDrawing();
@@ -24,35 +24,8 @@ class DrawCanvasWidget extends Component {
     }
 
     async onMounted() {
-        await this.loadCompanyImages();
+        await this.loadDoctorTemplate();
         this.renderCanvas();
-    }
-
-    async loadCompanyImages() {
-        try {
-            const companyData = await this.fetchCompanyData();
-            
-            // Update header preview
-            const headerDiv = document.querySelector('.o_draw_canvas_widget .company-header');
-            if (headerDiv && companyData.company_header_image) {
-                headerDiv.innerHTML = `<img src="data:image/png;base64,${companyData.company_header_image}" 
-                                             style="width:100%; height:100%; object-fit:cover; object-position:center;" />`;
-            }
-            
-            // Update footer preview  
-            const footerDiv = document.querySelector('.o_draw_canvas_widget .company-footer');
-            if (footerDiv && companyData.company_footer_image) {
-                footerDiv.innerHTML = `<img src="data:image/png;base64,${companyData.company_footer_image}" 
-                                             style="width:100%; height:100%; object-fit:cover; object-position:center;" />`;
-            }
-            
-            // Store for later use
-            this.companyImages.header = companyData.company_header_image;
-            this.companyImages.footer = companyData.company_footer_image;
-            
-        } catch (e) {
-            console.warn('Could not load company images:', e.message);
-        }
     }
 
     renderCanvas() {
@@ -64,8 +37,19 @@ class DrawCanvasWidget extends Component {
         ctx.lineJoin = "round";
         ctx.lineCap = "round";
 
-        // Load existing prescription if available
-        this.loadExistingPrescription(canvas, ctx);
+        // Always load existing prescription if available
+        const rd = (this.props.record && this.props.record.data) ? this.props.record.data : {};
+        const existingImage = rd[this.props.name];
+        if (existingImage) {
+            this.loadExistingPrescription(canvas, ctx);
+        } else if (this.doctorTemplate) {
+            // No existing prescription but template available - initialize with template
+            this.initializeWithTemplate(canvas, ctx);
+        } else {
+            // No template, just clear canvas
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
 
         let lastX = 0;
         let lastY = 0;
@@ -140,15 +124,8 @@ class DrawCanvasWidget extends Component {
     async saveDrawing() {
         const canvas = this.canvasRef.el;
         if (!canvas) return;
-        
-        try {
-            // Try to get company images
-            const companyData = await this.fetchCompanyData();
-            this.createCompositeImage(canvas, companyData);
-        } catch (e) {
-            // Fallback: just save the raw canvas drawing
-            this.saveSimpleCanvas(canvas);
-        }
+        // Save composite image with template + drawing
+        this.saveCompositeImage(canvas);
         
         if (this.saveTimeout) {
             clearTimeout(this.saveTimeout);
@@ -156,153 +133,114 @@ class DrawCanvasWidget extends Component {
         }
     }
 
-    async fetchCompanyData() {
-        const rd = (this.props.record && this.props.record.data) ? this.props.record.data : {};
-        const companyId = rd.company_id ? (Array.isArray(rd.company_id) ? rd.company_id[0] : rd.company_id) : null;
-        
-        if (!companyId) {
-            throw new Error('No company_id found');
-        }
-
-        // Fetch company data
-        const result = await rpc('/web/dataset/call_kw', {
-            model: 'res.company',
-            method: 'read',
-            args: [[companyId], ['header_image', 'footer_image']],
-            kwargs: {}
-        });
-
-        if (result && result.length > 0) {
-            return {
-                company_header_image: result[0].header_image,
-                company_footer_image: result[0].footer_image
-            };
-        }
-        
-        throw new Error('Company not found');
+    saveSimpleCanvas(canvas) {
+        // Create composite image with template + drawing
+        this.saveCompositeImage(canvas);
     }
 
-    saveSimpleCanvas(canvas) {
-        const dataURL = canvas.toDataURL("image/png");
+    saveCompositeImage(canvas) {
+        // Create composite canvas with template background + drawing
+        const compositeCanvas = document.createElement('canvas');
+        compositeCanvas.width = canvas.width;
+        compositeCanvas.height = canvas.height;
+        const ctx = compositeCanvas.getContext('2d');
+
+        // White background first
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
+
+        // Draw template if available
+        if (this.doctorTemplate) {
+            const templateImg = new Image();
+            templateImg.onload = () => {
+                try {
+                    // Draw template background
+                    ctx.drawImage(templateImg, 0, 0, compositeCanvas.width, compositeCanvas.height);
+                    
+                    // Draw canvas content (drawing) on top
+                    ctx.drawImage(canvas, 0, 0, compositeCanvas.width, compositeCanvas.height);
+                    
+                    // Save composite
+                    const dataURL = compositeCanvas.toDataURL("image/png", 1.0); // Max quality
+                    const base64 = dataURL.split(",")[1];
+                    
+                    console.log('Saving composite image with template + drawing');
+                    
+                    if (this.props.record && this.props.name) {
+                        this.props.record.update({ [this.props.name]: base64 });
+                    } else if (this.props.onChange) {
+                        this.props.onChange(base64);
+                    }
+                } catch (error) {
+                    console.error('Error creating composite image:', error);
+                    // Fallback to canvas only
+                    this.saveFallbackCanvas(canvas);
+                }
+            };
+            templateImg.onerror = () => {
+                console.warn('Template image failed to load, saving canvas only');
+                this.saveFallbackCanvas(canvas);
+            };
+            templateImg.src = 'data:image/png;base64,' + this.doctorTemplate;
+        } else {
+            // No template, save canvas only
+            this.saveFallbackCanvas(canvas);
+        }
+    }
+
+    saveFallbackCanvas(canvas) {
+        const dataURL = canvas.toDataURL("image/png", 1.0);
         const base64 = dataURL.split(",")[1];
         
         try {
             if (this.props.record && this.props.name) {
                 this.props.record.update({ [this.props.name]: base64 });
-                return;
+            } else if (this.props.onChange) {
+                this.props.onChange(base64);
             }
         } catch (e) {
-            // ignore
-        }
-        if (this.props.onChange) {
-            this.props.onChange(base64);
+            console.error('Error saving canvas:', e);
         }
     }
 
-    createCompositeImage(canvas, companyData) {
-        const width = canvas.width;
-        const height = canvas.height;
 
-        // Create an offscreen composite canvas
-        const composite = document.createElement('canvas');
-        composite.width = width;
-        composite.height = height;
-        const ctx = composite.getContext('2d');
-
-        // White background
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, width, height);
-
-        // Calculate proportional heights
-        const headerH = Math.round(height * 0.12);
-        const footerH = Math.round(height * 0.06);
-        const drawingH = height - headerH - footerH;
-        const drawingY = headerH;
-
-        let operationsCompleted = 0;
-        const totalOperations = 2; // header + footer
-
-        const checkComplete = () => {
-            operationsCompleted++;
-            if (operationsCompleted >= totalOperations) {
-                // Draw the canvas content
-                ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, drawingY, width, drawingH);
-                
-                // Save the composite
-                this.saveComposite(composite);
-            }
-        };
-
-        // Render header image or fallback
-        if (companyData.company_header_image) {
-            const headerImg = new Image();
-            headerImg.onload = () => {
-                ctx.drawImage(headerImg, 0, 0, width, headerH);
-                checkComplete();
-            };
-            headerImg.onerror = () => {
-                // Fallback gradient
-                const headerGrad = ctx.createLinearGradient(0, 0, width, 0);
-                headerGrad.addColorStop(0, '#4e73df');
-                headerGrad.addColorStop(1, '#1cc88a');
-                ctx.fillStyle = headerGrad;
-                ctx.fillRect(0, 0, width, headerH);
-                checkComplete();
-            };
-            headerImg.src = 'data:image/png;base64,' + companyData.company_header_image;
-        } else {
-            // Fallback gradient
-            const headerGrad = ctx.createLinearGradient(0, 0, width, 0);
-            headerGrad.addColorStop(0, '#4e73df');
-            headerGrad.addColorStop(1, '#1cc88a');
-            ctx.fillStyle = headerGrad;
-            ctx.fillRect(0, 0, width, headerH);
-            checkComplete();
-        }
-
-        // Render footer image or fallback
-        if (companyData.company_footer_image) {
-            const footerImg = new Image();
-            footerImg.onload = () => {
-                ctx.drawImage(footerImg, 0, height - footerH, width, footerH);
-                checkComplete();
-            };
-            footerImg.onerror = () => {
-                // Fallback gradient
-                const footerGrad = ctx.createLinearGradient(0, height - footerH, width, height - footerH);
-                footerGrad.addColorStop(0, '#1cc88a');
-                footerGrad.addColorStop(1, '#4e73df');
-                ctx.fillStyle = footerGrad;
-                ctx.fillRect(0, height - footerH, width, footerH);
-                checkComplete();
-            };
-            footerImg.src = 'data:image/png;base64,' + companyData.company_footer_image;
-        } else {
-            // Fallback gradient
-            const footerGrad = ctx.createLinearGradient(0, height - footerH, width, height - footerH);
-            footerGrad.addColorStop(0, '#1cc88a');
-            footerGrad.addColorStop(1, '#4e73df');
-            ctx.fillStyle = footerGrad;
-            ctx.fillRect(0, height - footerH, width, footerH);
-            checkComplete();
-        }
-    }
-
-    saveComposite(composite) {
-        const dataURL = composite.toDataURL('image/png');
-        const base64 = dataURL.split(',')[1];
-
+    async loadDoctorTemplate() {
         try {
-            if (this.props.record && this.props.name) {
-                this.props.record.update({ [this.props.name]: base64 });
-                return;
+            const rd = (this.props.record && this.props.record.data) ? this.props.record.data : {};
+            const doctorId = rd.doctor_id ? (Array.isArray(rd.doctor_id) ? rd.doctor_id[0] : rd.doctor_id) : null;
+            if (!doctorId) return;
+
+            const result = await rpc('/web/dataset/call_kw', {
+                model: 'clinic.doctor',
+                method: 'read',
+                args: [[doctorId], ['prescription_template_image']],
+                kwargs: {}
+            });
+            if (result && result.length > 0) {
+                this.doctorTemplate = result[0].prescription_template_image || null;
             }
         } catch (e) {
-            // ignore
+            console.warn('Could not load doctor template:', e.message);
         }
-        
-        if (this.props.onChange) {
-            this.props.onChange(base64);
+    }
+
+    initializeWithTemplate(canvas, ctx) {
+        // Initialize canvas with template for first time
+        if (this.doctorTemplate) {
+            // Save template as initial medicine_image
+            setTimeout(() => {
+                this.saveCompositeImage(canvas);
+            }, 100);
+        }
+    }
+
+    drawDoctorTemplate(canvas, ctx) {
+        // Keep canvas transparent - template is shown via CSS background
+        // Template will be composite with drawing during save
+        const rd = (this.props.record && this.props.record.data) ? this.props.record.data : {};
+        if (!rd[this.props.name] && this.doctorTemplate) {
+            // If no existing drawing, save the template as initial medicine_image
+            this.saveCompositeImage(canvas);
         }
     }
 }

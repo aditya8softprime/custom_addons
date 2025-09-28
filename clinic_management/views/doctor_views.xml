@@ -81,6 +81,10 @@
                                     <field name="languages" widget="many2many_tags"/>
                                     <field name="registration_date"/>
                                     <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}"/>
+                                    <separator string="Prescription Template"/>
+                                    <field name="prescription_template_image" widget="image" class="oe_avatar"/>
+                                    <field name="prescription_template_filename" invisible="1"/>
+                                    <label for="prescription_template_image" string="Upload a background image (e.g., PNG) for prescriptions. It will auto-appear on appointment canvas."/>
                                 </group>
                             </group>
                         </page>
