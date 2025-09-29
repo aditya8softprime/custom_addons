@@ -80,16 +80,10 @@ class DrawCanvasWidget extends Component {
         let hasDrawn = false; // Track if actual drawing happened
 
         const isInDrawingArea = (x, y) => {
-            if (!this.drawingArea) return true; // If no area defined, allow everywhere
-            
-            const areaX = this.drawingArea.x * canvas.width;
-            const areaY = this.drawingArea.y * canvas.height;
-            const areaWidth = this.drawingArea.width * canvas.width;
-            const areaHeight = this.drawingArea.height * canvas.height;
-            
-            return x >= areaX && x <= areaX + areaWidth && 
-                   y >= areaY && y <= areaY + areaHeight;
+            // Always allow drawing anywhere
+            return true;
         };
+
 
         const draw = (e) => {
             if (!this.isDrawing) return;

@@ -79,7 +79,9 @@
                             <field name="doctor_id" readonly="state != 'draft'" />
                             <field name="appointment_date" readonly="appointment_type == 'walkin' or state != 'draft'"/>
                             <field name="slot_id" readonly="state != 'draft'"
-                                   domain="[('id', 'in', slots)]" invisible="appointment_type == 'walkin'"/>
+                                   domain="[('id', 'in', slots)]" invisible="appointment_type == 'walkin' or not show_slot_selector"/>
+                            <field name="slot_char" readonly="1" invisible="appointment_type == 'walkin' or show_slot_selector"/>
+                            <field name="show_slot_selector" invisible="1"/>
                             <field name="queue_number" readonly="1" invisible="appointment_type != 'walkin'"/>
                             <field name="queue_position" readonly="1" invisible="appointment_type != 'walkin' or state != 'waiting'"/>
                             <field name="start_time" widget="float_time" readonly="appointment_type == 'walkin'"/>
@@ -162,6 +164,7 @@
                 <field name="doctor_id"/>
                 <field name="appointment_type"/>
                 <field name="appointment_date"/>
+                <field name="slot_char" optional="show" invisible="appointment_type == 'walkin'" string="Slot"/>
                 <field name="start_time" widget="float_time" optional="hide" invisible="appointment_type == 'walkin'"/>
                 <field name="end_time" widget="float_time" optional="hide" invisible="appointment_type == 'walkin'"/>
                 <field name="queue_number" optional="show" invisible="appointment_type != 'walkin'"/>
@@ -187,6 +190,7 @@
                 <field name="doctor_id"/>
                 <field name="appointment_date"/>
                 <field name="appointment_type"/>
+                <field name="slot_char"/>
                 <field name="start_time"/>
                 <field name="end_time"/>
                 <field name="queue_number"/>
@@ -217,8 +221,14 @@
                                     <field name="appointment_date"/>
                                 </div>
                                 <div t-if="record.appointment_type.raw_value == 'scheduled'">
-                                    <strong>Time: </strong>
-                                    <field name="start_time" widget="float_time"/> - <field name="end_time" widget="float_time"/>
+                                    <div t-if="record.slot_char.value">
+                                        <strong>Slot: </strong>
+                                        <field name="slot_char"/>
+                                    </div>
+                                    <div t-else="">
+                                        <strong>Time: </strong>
+                                        <field name="start_time" widget="float_time"/> - <field name="end_time" widget="float_time"/>
+                                    </div>
                                 </div>
                                 <div t-if="record.appointment_type.raw_value == 'walkin' and record.queue_number.value">
                                     <strong>Queue: </strong>

@@ -34,6 +34,8 @@ class ClinicAppointment(models.Model):
     
     # Slot for scheduled appointments only
     slot_id = fields.Many2one('clinic.slot', string='Slot', tracking=True)
+    slot_char = fields.Char(string='Selected Slot', readonly=True)
+    show_slot_selector = fields.Boolean(string='Show Slot Selector', compute='_compute_show_slot_selector')
     slots = fields.Many2many('clinic.slot', string='Slots')
     
     # Queue system for walk-in appointments
@@ -180,6 +182,13 @@ class ClinicAppointment(models.Model):
                 count = len(chain_appointments) - 1
             appointment.previous_appointments_count = count
     
+    @api.depends('slot_char', 'state')
+    def _compute_show_slot_selector(self):
+        """Show slot selector only in draft state; hide after confirmation"""
+        for appointment in self:
+            # Show slot selector only in draft state, hide after confirmation
+            appointment.show_slot_selector = appointment.state == 'draft'
+    
     @api.depends('state')
     def _compute_color(self):
         """Set color based on state for kanban view"""
@@ -315,11 +324,28 @@ class ClinicAppointment(models.Model):
                 # Generate queue number for walk-in appointments
                 appointment._generate_queue_number()
                 
+        # Handle slot_char functionality after creation
+        for appointment in appointments:
+            if appointment.slot_id and not appointment.slot_char:
+                appointment.slot_char = appointment.slot_id.slot_label
+            # Clear slot_id after saving if slot_char is filled
+            if appointment.slot_char and appointment.slot_id:
+                appointment.slot_id = False
+                
         return appointments
     
     def write(self, vals):
+        # Handle slot_char functionality before writing
+        if vals.get('slot_id'):
+            slot = self.env['clinic.slot'].browse(vals['slot_id'])
+            if slot.exists():
+                vals['slot_char'] = slot.slot_label
+        
         # If state changes to completed, update patient's symptom
         result = super(ClinicAppointment, self).write(vals)
+        
+        # Clear slot_id after saving if slot_char is filled
+      
         if vals.get('state') == 'completed':
             for rec in self:
                 if rec.patient_id and rec.symptom:
@@ -510,7 +536,13 @@ class ClinicAppointment(models.Model):
         return {}
         return True
 
-
+    @api.onchange('slot_id')
+    def _onchange_slot_id(self):
+        """Auto-fill slot_char when slot_id is selected"""
+        if self.slot_id:
+            self.slot_char = self.slot_id.slot_label
+        else:
+            self.slot_char = False
 
     def action_confirm(self):
         """Confirm the appointment"""
