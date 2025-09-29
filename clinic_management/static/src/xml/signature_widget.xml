@@ -2,6 +2,18 @@
 <templates xml:space="preserve">
     <t t-name="clinic_management.DrawCanvasWidget">
         <div class="o_draw_canvas_widget">
+            <!-- Toolbar for page navigation and actions -->
+            <div class="o_draw_canvas_toolbar">
+                <button type="button" class="btn btn-outline-secondary btn-sm" t-on-click="onToolPen">Pen</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" t-on-click="onToolEraser">Eraser</button>
+                <label class="ml-2 mr-1">Size</label>
+                <input type="range" min="2" max="30" step="1" t-on-change="onBrushSizeChange" style="width:120px"/>
+                <button type="button" class="btn btn-secondary btn-sm" t-on-click="onPrevPage">Prev</button>
+                <span class="mx-2">Page <t t-esc="state.currentPage"/> / <t t-esc="state.totalPages"/></span>
+                <button type="button" class="btn btn-secondary btn-sm" t-on-click="onNextPage">Next</button>
+                <button type="button" class="btn btn-primary btn-sm ml-3" t-on-click="onAddPage">Add Page</button>
+                <button type="button" class="btn btn-danger btn-sm ml-1" t-on-click="onRemovePage">Remove Page</button>
+            </div>
             
             <!-- Doctor's Prescription Template as Background -->
             <div t-if="props.record.data.doctor_id" 

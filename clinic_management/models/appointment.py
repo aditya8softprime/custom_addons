@@ -75,6 +75,8 @@ class ClinicAppointment(models.Model):
     medicine_image_filename = fields.Char(string='Medicine Image Filename')
     medicine_pdf = fields.Binary(string='Medicine / Prescription PDF', attachment=True)
     medicine_pdf_filename = fields.Char(string='Medicine PDF Filename')
+    # Multi-page support: total pages in this prescription (page 1 stored in medicine_image; extra pages as attachments)
+    prescription_page_count = fields.Integer(string='Prescription Pages', default=1)
     
     # Lab test lines (simplified approach)y
     lab_test_line_ids = fields.One2many('appointment.lab.line', 'appointment_id', string='Lab Test Lines')
@@ -640,48 +642,57 @@ class ClinicAppointment(models.Model):
             # Prepare attachments list
             attachment_ids = []
 
-            # If a handwritten medicine image exists, try to convert it to PDF
-            if appointment.medicine_image:
+            # If there is at least one prescription page, build a single multi-page PDF
+            if appointment.prescription_page_count and appointment.prescription_page_count > 0 and (appointment.medicine_image or appointment._get_prescription_page_b64(1)):
                 try:
-                    image_b = base64.b64decode(appointment.medicine_image)
+                    # Collect all page images in order
+                    page_images = []
+                    for idx in range(1, int(appointment.prescription_page_count or 1) + 1):
+                        img_b64 = appointment._get_prescription_page_b64(idx)
+                        if not img_b64 and appointment.doctor_id and appointment.doctor_id.prescription_template_image:
+                            # Use doctor's template as background for empty page
+                            img_b64 = appointment.doctor_id.prescription_template_image
+                        if img_b64:
+                            try:
+                                page_images.append(base64.b64decode(img_b64))
+                            except Exception:
+                                logging.getLogger(__name__).warning('Failed to decode image for page %s appointment %s', idx, appointment.id)
+
                     pdf_bytes = None
 
-                    # Try img2pdf first (fast, preserves size)
-                    try:
-                        import img2pdf
-                        pdf_bytes = img2pdf.convert(image_b)
-                        logging.getLogger(__name__).info('PDF created using img2pdf for appointment %s', appointment.id)
-                    except Exception as e:
-                        logging.getLogger(__name__).warning('img2pdf failed for appointment %s: %s', appointment.id, str(e))
-                        # Fall back to Pillow
+                    if page_images:
+                        # Try img2pdf first (fast, preserves size) for multi-page
                         try:
-                            from PIL import Image
-                            img_buf = io.BytesIO(image_b)
-                            img = Image.open(img_buf)
-                            
-                            # Validate image
-                            if img.size[0] < 100 or img.size[1] < 100:
-                                logging.getLogger(__name__).warning('Image too small for appointment %s: %s', appointment.id, img.size)
-                                pdf_bytes = None
-                            else:
-                                # Ensure RGB for PDF
-                                if img.mode in ('RGBA', 'LA'):
-                                    background = Image.new('RGB', img.size, (255, 255, 255))
-                                    background.paste(img, mask=img.split()[-1])
-                                    img = background
-                                elif img.mode == 'P':
-                                    img = img.convert('RGB')
-                                elif img.mode != 'RGB':
-                                    img = img.convert('RGB')
-                                
-                                # Create PDF with proper settings
-                                out_buf = io.BytesIO()
-                                img.save(out_buf, format='PDF', quality=95, optimize=True)
-                                pdf_bytes = out_buf.getvalue()
-                                logging.getLogger(__name__).info('PDF created using Pillow for appointment %s', appointment.id)
+                            import img2pdf
+                            pdf_bytes = img2pdf.convert(page_images)
+                            logging.getLogger(__name__).info('Multi-page PDF created using img2pdf for appointment %s (%s pages)', appointment.id, len(page_images))
                         except Exception as e:
-                            logging.getLogger(__name__).error('Pillow PDF conversion failed for appointment %s: %s', appointment.id, str(e))
-                            pdf_bytes = None
+                            logging.getLogger(__name__).warning('img2pdf multi-page failed for appointment %s: %s', appointment.id, str(e))
+                            # Fall back to Pillow multi-page
+                            try:
+                                from PIL import Image
+                                pil_images = []
+                                for img_bytes in page_images:
+                                    img = Image.open(io.BytesIO(img_bytes))
+                                    # Ensure RGB
+                                    if img.mode in ('RGBA', 'LA'):
+                                        background = Image.new('RGB', img.size, (255, 255, 255))
+                                        background.paste(img, mask=img.split()[-1])
+                                        img = background
+                                    elif img.mode == 'P':
+                                        img = img.convert('RGB')
+                                    elif img.mode != 'RGB':
+                                        img = img.convert('RGB')
+                                    pil_images.append(img)
+
+                                if pil_images:
+                                    out_buf = io.BytesIO()
+                                    first, rest = pil_images[0], pil_images[1:]
+                                    first.save(out_buf, format='PDF', save_all=True, append_images=rest)
+                                    pdf_bytes = out_buf.getvalue()
+                                    logging.getLogger(__name__).info('Multi-page PDF created using Pillow for appointment %s', appointment.id)
+                            except Exception as e:
+                                logging.getLogger(__name__).error('Pillow multi-page conversion failed for appointment %s: %s', appointment.id, str(e))
 
                     if pdf_bytes and len(pdf_bytes) > 100:  # Ensure PDF is not empty
                         # Save PDF on the appointment record and create an attachment linked to it
@@ -711,20 +722,22 @@ class ClinicAppointment(models.Model):
                         })
                         attachment_ids.append(attachment.id)
                     else:
-                        # Fallback: attach original image (and keep existing medicine_image on record)
-                        img_name = appointment.medicine_image_filename or f"Prescription_{appointment.name or ''}.png"
-                        try:
-                            attachment = self.env['ir.attachment'].create({
-                                'name': img_name,
-                                'type': 'binary',
-                                'datas': appointment.medicine_image,
-                                'res_model': 'clinic.appointment',
-                                'res_id': appointment.id,
-                                'mimetype': 'image/png',
-                            })
-                            attachment_ids.append(attachment.id)
-                        except Exception:
-                            logging.getLogger(__name__).exception('Failed to attach original image for appointment %s', appointment.id)
+                        # Fallback: attach first available image page
+                        fallback_img_b64 = appointment._get_prescription_page_b64(1) or appointment.medicine_image
+                        if fallback_img_b64:
+                            img_name = appointment.medicine_image_filename or f"Prescription_{appointment.name or ''}.png"
+                            try:
+                                attachment = self.env['ir.attachment'].create({
+                                    'name': img_name,
+                                    'type': 'binary',
+                                    'datas': fallback_img_b64,
+                                    'res_model': 'clinic.appointment',
+                                    'res_id': appointment.id,
+                                    'mimetype': 'image/png',
+                                })
+                                attachment_ids.append(attachment.id)
+                            except Exception:
+                                logging.getLogger(__name__).exception('Failed to attach original image for appointment %s', appointment.id)
 
                 except Exception:
                     logging.getLogger(__name__).exception('Failed to convert/attach medicine_image for appointment %s', appointment.id)
@@ -1257,3 +1270,106 @@ class ClinicAppointment(models.Model):
             'current_patient': current_patient.patient_id.name if current_patient else None,
             'current_queue_number': current_patient.queue_number if current_patient else None
         }
+
+    # ==================================
+    # Multi-page Prescription RPC APIs
+    # ==================================
+
+    def _page_attachment_name(self, index):
+        self.ensure_one()
+        return f"{self._name}_{self.id}_prescription_page_{index}.png"
+
+    def _get_prescription_page_b64(self, index):
+        """Get base64 of the given page index. Page 1 is medicine_image. Returns base64 str or False."""
+        self.ensure_one()
+        try:
+            index = int(index)
+        except Exception:
+            index = 1
+        if index <= 1:
+            return self.medicine_image
+        attach = self.env['ir.attachment'].search([
+            ('res_model', '=', self._name),
+            ('res_id', '=', self.id),
+            ('name', '=', self._page_attachment_name(index)),
+        ], limit=1)
+        return attach.datas if attach else False
+
+    def _set_prescription_page_b64(self, index, image_b64, filename=None):
+        """Set page by index. Page 1 stores on medicine_image; others in ir.attachment."""
+        self.ensure_one()
+        try:
+            index = int(index)
+        except Exception:
+            index = 1
+        if index <= 1:
+            self.medicine_image = image_b64
+            if filename:
+                self.medicine_image_filename = filename
+            return True
+        # upsert attachment for this page index
+        name = self._page_attachment_name(index)
+        Attachment = self.env['ir.attachment']
+        attach = Attachment.search([
+            ('res_model', '=', self._name),
+            ('res_id', '=', self.id),
+            ('name', '=', name),
+        ], limit=1)
+        vals = {
+            'name': name,
+            'type': 'binary',
+            'datas': image_b64,
+            'res_model': self._name,
+            'res_id': self.id,
+            'mimetype': 'image/png',
+        }
+        if attach:
+            attach.write(vals)
+        else:
+            Attachment.create(vals)
+        return True
+
+    def get_prescription_pages_count(self):
+        self.ensure_one()
+        return int(self.prescription_page_count or 1)
+
+    def get_prescription_page(self, index):
+        self.ensure_one()
+        return self._get_prescription_page_b64(index)
+
+    def set_prescription_page(self, index, image_b64, filename=None):
+        self.ensure_one()
+        ok = self._set_prescription_page_b64(index, image_b64, filename)
+        # Ensure page_count covers this index
+        if ok and int(index) > int(self.prescription_page_count or 1):
+            self.prescription_page_count = int(index)
+        return ok
+
+    def add_prescription_page(self):
+        """Add a new empty page at the end and return the new page count (index of added page)."""
+        self.ensure_one()
+        new_count = int(self.prescription_page_count or 1) + 1
+        self.prescription_page_count = new_count
+        return new_count
+
+    def remove_prescription_page(self, index):
+        """Remove a page only if it's the last page (>1). Returns new page count."""
+        self.ensure_one()
+        try:
+            index = int(index)
+        except Exception:
+            index = int(self.prescription_page_count or 1)
+        count = int(self.prescription_page_count or 1)
+        if index == count and count > 1:
+            # delete attachment for this page (if index > 1)
+            if index > 1:
+                attach = self.env['ir.attachment'].search([
+                    ('res_model', '=', self._name),
+                    ('res_id', '=', self.id),
+                    ('name', '=', self._page_attachment_name(index)),
+                ], limit=1)
+                if attach:
+                    attach.unlink()
+            self.prescription_page_count = count - 1
+            return count - 1
+        return count

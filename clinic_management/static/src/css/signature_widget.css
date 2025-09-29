@@ -82,6 +82,17 @@
     cursor: crosshair;
     touch-action: none; /* Prevent scrolling on touch */
 }
+    .o_draw_canvas_widget .o_draw_canvas_toolbar {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        right: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 6px;
+        z-index: 3;
+    }
 
 .o_draw_canvas_widget canvas {
     position: relative;
