@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
     <t t-name="clinic_management.DrawCanvasWidget">
-        <div class="o_draw_canvas_widget"
-             style="position: relative; width:100%; max-width:100%; aspect-ratio:210/297; border:1px solid #ccc; border-radius:6px; overflow: hidden;">
+        <div class="o_draw_canvas_widget">
             
             <!-- Doctor's Prescription Template as Background -->
             <div t-if="props.record.data.doctor_id" 

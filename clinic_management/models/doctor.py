@@ -21,6 +21,21 @@ except ImportError:
     TESSERACT_AVAILABLE = False
     logging.getLogger(__name__).warning("Tesseract OCR not available. Advanced text detection will be disabled.")
 
+# Optional PDF rendering libraries for converting uploaded templates (PDF -> Image)
+try:
+    import fitz  # PyMuPDF
+    PYMUPDF_AVAILABLE = True
+except Exception:
+    PYMUPDF_AVAILABLE = False
+    logging.getLogger(__name__).warning("PyMuPDF (fitz) not available. PDF-to-image conversion via PyMuPDF disabled.")
+
+try:
+    from pdf2image import convert_from_bytes as _pdf2image_convert_from_bytes
+    PDF2IMAGE_AVAILABLE = True
+except Exception:
+    PDF2IMAGE_AVAILABLE = False
+    logging.getLogger(__name__).warning("pdf2image not available. PDF-to-image conversion via pdf2image disabled.")
+
 _logger = logging.getLogger(__name__)
 
 
@@ -185,6 +200,13 @@ class ClinicDoctor(models.Model):
     active = fields.Boolean(string='Active', default=True, tracking=True)
     user_id = fields.Many2one('res.users', string='Related User', tracking=True)
     employee_id = fields.Many2one('hr.employee', string='Related Employee', tracking=True)
+    # Doctor-specific prescription template (PDF/Image)
+    prescription_template_pdf = fields.Binary(
+        string='Prescription Template PDF',
+        attachment=True,
+        help='Upload a prescription template in PDF. It will be converted to an image automatically.'
+    )
+    prescription_template_pdf_filename = fields.Char(string='Template PDF Filename')
     # Doctor-specific prescription template image for canvas background
     prescription_template_image = fields.Binary(
         string='Prescription Template Image',
@@ -280,13 +302,19 @@ class ClinicDoctor(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         doctors = super(ClinicDoctor, self).create(vals_list)
-        # Create slots for each doctor
+        # Convert template PDF to image after creation if present
         for doctor in doctors:
+            if doctor.prescription_template_pdf and not doctor.prescription_template_image:
+                doctor._set_template_image_from_pdf()
+            # Create slots for each doctor
             doctor._create_slots()
         return doctors
     
     def write(self, vals):
         res = super(ClinicDoctor, self).write(vals)
+        # If PDF updated, refresh converted image
+        if 'prescription_template_pdf' in vals:
+            self._set_template_image_from_pdf()
         # If availability related fields changed, update slots
         slot_related_fields = ['available_days', 'morning_start_time', 'morning_end_time', 
                               'evening_start_time', 'evening_end_time', 'morning_shift', 
@@ -299,6 +327,114 @@ class ClinicDoctor(models.Model):
             self._analyze_prescription_template()
             
         return res
+
+    # -------------------------------
+    # PDF -> Image conversion helpers
+    # -------------------------------
+    def _convert_pdf_bytes_to_png_bytes(self, pdf_bytes):
+        """Convert first page of PDF bytes to PNG bytes. Return None on failure."""
+        # Prefer PyMuPDF for performance and quality
+        try:
+            if PYMUPDF_AVAILABLE:
+                doc = fitz.open(stream=pdf_bytes, filetype='pdf')
+                if doc.page_count:
+                    page = doc.load_page(0)
+                    matrix = fitz.Matrix(2, 2)
+                    pix = page.get_pixmap(matrix=matrix, alpha=False)
+                    return pix.tobytes('png')
+        except Exception as e:
+            _logger.warning("PDF->Image via PyMuPDF failed: %s", e)
+        # Fallback to pdf2image
+        try:
+            if PDF2IMAGE_AVAILABLE:
+                imgs = _pdf2image_convert_from_bytes(pdf_bytes, first_page=1, last_page=1, fmt='png')
+                if imgs:
+                    buf = io.BytesIO()
+                    imgs[0].save(buf, format='PNG')
+                    return buf.getvalue()
+        except Exception as e:
+            _logger.warning("PDF->Image via pdf2image failed: %s", e)
+        # Last resort using PIL
+        try:
+            from PIL import Image as _PIL_Image
+            img = _PIL_Image.open(io.BytesIO(pdf_bytes))
+            buf = io.BytesIO()
+            img.save(buf, format='PNG')
+            return buf.getvalue()
+        except Exception as e:
+            _logger.warning("PDF->Image via PIL failed: %s", e)
+        return None
+
+    def _resize_png_if_needed(self, png_bytes, max_width=2000):
+        """Resize PNG if too large to a reasonable width to avoid heavy uploads (best-effort)."""
+        try:
+            from PIL import Image as _PIL_Image
+            im = _PIL_Image.open(io.BytesIO(png_bytes))
+            w, h = im.size
+            if w > max_width:
+                scale = max_width / float(w)
+                new_size = (int(w * scale), int(h * scale))
+                im = im.convert('RGB')  # unify mode
+                im = im.resize(new_size)
+                buf = io.BytesIO()
+                im.save(buf, format='PNG')
+                return buf.getvalue()
+        except Exception as e:
+            _logger.debug("PNG resize skipped: %s", e)
+        return png_bytes
+
+    def _set_template_image_from_pdf(self):
+        """If a template PDF is uploaded, convert it and set the image fields."""
+        for rec in self:
+            if not rec.prescription_template_pdf:
+                continue
+            try:
+                pdf_bytes = base64.b64decode(rec.prescription_template_pdf)
+            except Exception as e:
+                _logger.warning("Failed decoding template PDF for doctor %s: %s", rec.id, e)
+                continue
+            _logger.info("Starting PDF->Image conversion for doctor %s (pdf size: %s bytes)", rec.id, len(rec.prescription_template_pdf))
+            png_bytes = rec._convert_pdf_bytes_to_png_bytes(pdf_bytes)
+            if png_bytes:
+                png_bytes = rec._resize_png_if_needed(png_bytes)
+                rec.prescription_template_image = base64.b64encode(png_bytes)
+                if rec.prescription_template_pdf_filename:
+                    base_name = rec.prescription_template_pdf_filename.rsplit('.', 1)[0]
+                    rec.prescription_template_filename = f"{base_name}.png"
+                elif not rec.prescription_template_filename:
+                    rec.prescription_template_filename = f"Prescription_Template_{rec.name or 'Doctor'}.png"
+                _logger.info("PDF->Image conversion succeeded for doctor %s (png size: %s bytes)", rec.id, len(rec.prescription_template_image or b''))
+            else:
+                _logger.warning("Could not convert uploaded PDF to image for doctor %s", rec.id)
+
+    @api.onchange('prescription_template_pdf')
+    def _onchange_prescription_template_pdf(self):
+        # Try conversion immediately so user sees the image preview update
+        self._set_template_image_from_pdf()
+        # Provide user feedback if conversion could not run
+        if self.prescription_template_pdf and not self.prescription_template_image:
+            missing = []
+            if not globals().get('PYMUPDF_AVAILABLE'):
+                missing.append('PyMuPDF (fitz)')
+            if not globals().get('PDF2IMAGE_AVAILABLE'):
+                missing.append('pdf2image')
+            if missing:
+                return {
+                    'warning': {
+                        'title': _('PDF Conversion Unavailable'),
+                        'message': _('Cannot convert PDF to image. Missing libraries: %s. Please install one of them for automatic conversion.') % ', '.join(missing)
+                    }
+                }
+            else:
+                return {
+                    'warning': {
+                        'title': _('PDF Conversion Failed'),
+                        'message': _('Tried converting the uploaded PDF but failed. Ensure the PDF is valid or contact administrator.')
+                    }
+                }
+        # If conversion succeeded, clear previous analysis so it can re-run
+        if self.prescription_template_image:
+            self.template_analysis_done = False
     
     def generate_weekly_slots(self):
         """Loop over shift_config_ids and generate slots in clinic.slot"""

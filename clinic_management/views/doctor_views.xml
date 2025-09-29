@@ -95,11 +95,13 @@
                                         help="Test template analysis and show detailed results"/>
                             </div>
                             <group>
-                                <group string="Template Image">
+                                <group string="Template Image/PDF">
+                                    <field name="prescription_template_pdf" filename="prescription_template_pdf_filename"/>
+                                    <field name="prescription_template_pdf_filename" invisible="1"/>
                                     <field name="prescription_template_image" widget="image" class="oe_avatar"/>
                                     <field name="prescription_template_filename" invisible="1"/>
                                     <label for="prescription_template_image" 
-                                           string="Upload a background image (e.g., PNG) for prescriptions. It will auto-appear on appointment canvas and be analyzed for safe writing areas."/>
+                                           string="Upload a PDF or a background image (e.g., PNG) for prescriptions. If PDF is uploaded, it will be converted to an image automatically."/>
                                 </group>
                                 <group string="Analysis Results" invisible="not template_analysis_done">
                                     <field name="template_analysis_done" invisible="1"/>

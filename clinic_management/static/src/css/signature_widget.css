@@ -73,7 +73,8 @@
 .o_draw_canvas_widget {
     position: relative;
     width: 100%;
-    max-width: 100%;
+    max-width: 900px; /* cap width on large screens */
+    margin: 0 auto; /* center inside the tab */
     aspect-ratio: 210/297;
     border: 1px solid #ccc;
     border-radius: 6px;
@@ -136,5 +137,6 @@
 @media (max-width: 768px) {
     .o_draw_canvas_widget {
         aspect-ratio: 1/1.4;
+        max-width: 100%; /* full width on small screens */
     }
 }
