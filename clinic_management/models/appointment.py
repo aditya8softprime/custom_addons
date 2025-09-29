@@ -928,7 +928,7 @@ class ClinicAppointment(models.Model):
         return account
 
     @api.model
-    def get_appointment_dashboard_data(self, doctor_id=None, time_filter=None):
+    def get_appointment_dashboard_data(self, doctor_id=None, time_filter=None, selected_date=None):
         """Return data for the appointment dashboard tiles"""
         company_id = self.env.company.id
         
@@ -948,6 +948,18 @@ class ClinicAppointment(models.Model):
             if time_filter == 'today':
                 start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
                 end_date = now.replace(hour=23, minute=59, second=59)
+            elif time_filter == 'tomorrow':
+                tomorrow = now + timedelta(days=1)
+                start_date = tomorrow.replace(hour=0, minute=0, second=0, microsecond=0)
+                end_date = tomorrow.replace(hour=23, minute=59, second=59)
+            elif time_filter == 'custom_date' and selected_date:
+                # Parse the selected date string (YYYY-MM-DD)
+                from datetime import datetime as dt
+                selected_dt = dt.strptime(selected_date, '%Y-%m-%d')
+                # Convert to user timezone
+                selected_dt = tz.localize(selected_dt)
+                start_date = selected_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+                end_date = selected_dt.replace(hour=23, minute=59, second=59)
             elif time_filter == 'week':
                 start_date = now - timedelta(days=now.weekday())
                 start_date = start_date.replace(hour=0, minute=0, second=0)
@@ -1006,7 +1018,7 @@ class ClinicAppointment(models.Model):
         return result
     
     @api.model
-    def get_appointment_list_data(self, doctor_id=None, time_filter=None, state=None, offset=0, limit=15):
+    def get_appointment_list_data(self, doctor_id=None, time_filter=None, state=None, offset=0, limit=15, selected_date=None):
         """Fetch appointment data for the dashboard table"""
         company_id = self.env.company.id
         
@@ -1026,6 +1038,16 @@ class ClinicAppointment(models.Model):
             if time_filter == 'today':
                 start_date = now.replace(hour=0, minute=0, second=0)
                 end_date = now.replace(hour=23, minute=59, second=59)
+            elif time_filter == 'tomorrow':
+                tomorrow = now + timedelta(days=1)
+                start_date = tomorrow.replace(hour=0, minute=0, second=0)
+                end_date = tomorrow.replace(hour=23, minute=59, second=59)
+            elif time_filter == 'custom_date' and selected_date:
+                from datetime import datetime as dt
+                selected_dt = dt.strptime(selected_date, '%Y-%m-%d')
+                selected_dt = tz.localize(selected_dt)
+                start_date = selected_dt.replace(hour=0, minute=0, second=0)
+                end_date = selected_dt.replace(hour=23, minute=59, second=59)
             elif time_filter == 'week':
                 start_date = now - timedelta(days=now.weekday())
                 start_date = start_date.replace(hour=0, minute=0, second=0)

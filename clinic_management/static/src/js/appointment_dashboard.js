@@ -35,6 +35,7 @@ class AppointmentDashboard extends Component {
             records_per_page: 15,
             total_records: 0,
             selected_state: null,
+            selected_date: null,
         };
 
         this.state = useState(initialState);
@@ -69,7 +70,7 @@ class AppointmentDashboard extends Component {
         try {
             // Fetch dashboard tile data
             const result = await this.orm.call("clinic.appointment", "get_appointment_dashboard_data", [
-                this.state.doctor_id, this.state.time_filter
+                this.state.doctor_id, this.state.time_filter, this.state.selected_date
             ]);
             
             console.log('Dashboard data received:', result);
@@ -125,7 +126,8 @@ class AppointmentDashboard extends Component {
                 this.state.time_filter,
                 this.state.selected_state,
                 offset,
-                this.state.records_per_page
+                this.state.records_per_page,
+                this.state.selected_date
             ]);
             
             this.state.total_records = result.total_records;
@@ -338,6 +340,20 @@ class AppointmentDashboard extends Component {
 
     on_doctor_change(event) {
         this.state.doctor_id = event.target.value ? parseInt(event.target.value, 10) : null;
+        this.state.current_page = 1;
+        this._fetch_data();
+    }
+
+    on_date_change(event) {
+        this.state.selected_date = event.target.value;
+        this.state.time_filter = 'custom_date';  // Set special filter for custom date
+        this.state.current_page = 1;
+        this._fetch_data();
+    }
+
+    clear_date_filter() {
+        this.state.selected_date = null;
+        this.state.time_filter = null;
         this.state.current_page = 1;
         this._fetch_data();
     }

@@ -27,12 +27,21 @@
                     </div>
                     
                     <!-- Time Filter Buttons -->
-                    <div class="btn-group" role="group">
+                    <div class="btn-group me-3" role="group">
                         <button type="button" t-att-class="state.time_filter === 'today' ? 'btn btn-primary' : 'btn btn-outline-primary'" t-on-click="(event) => this.on_time_filter_change('today')">Today</button>
+                        <button type="button" t-att-class="state.time_filter === 'tomorrow' ? 'btn btn-primary' : 'btn btn-outline-primary'" t-on-click="(event) => this.on_time_filter_change('tomorrow')">Tomorrow</button>
                         <button type="button" t-att-class="state.time_filter === 'week' ? 'btn btn-primary' : 'btn btn-outline-primary'" t-on-click="(event) => this.on_time_filter_change('week')">Week</button>
                         <button type="button" t-att-class="state.time_filter === 'month' ? 'btn btn-primary' : 'btn btn-outline-primary'" t-on-click="(event) => this.on_time_filter_change('month')">Month</button>
                         <button type="button" t-att-class="state.time_filter === 'year' ? 'btn btn-primary' : 'btn btn-outline-primary'" t-on-click="(event) => this.on_time_filter_change('year')">Year</button>
                         <button type="button" t-att-class="state.time_filter === 'till_now' || state.time_filter === null ? 'btn btn-primary' : 'btn btn-outline-primary'" t-on-click="(event) => this.on_time_filter_change('till_now')">All Time</button>
+                    </div>
+                    
+                    <!-- Date Picker -->
+                    <div class="input-group" style="max-width: 200px;">
+                        <input type="date" class="form-control" t-att-value="state.selected_date" t-on-change="(event) => this.on_date_change(event)" placeholder="Select Date"/>
+                        <button class="btn btn-outline-secondary" type="button" t-on-click="(event) => this.clear_date_filter()" title="Clear Date Filter">
+                            <i class="fa fa-times"></i>
+                        </button>
                     </div>
                 </div>
             </div>
