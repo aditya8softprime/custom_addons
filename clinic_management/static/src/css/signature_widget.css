@@ -69,10 +69,72 @@
     }
 }
 
+/* Draw Canvas Widget Styles for Prescription */
+.o_draw_canvas_widget {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    aspect-ratio: 210/297;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: crosshair;
+    touch-action: none; /* Prevent scrolling on touch */
+}
+
+.o_draw_canvas_widget canvas {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: block;
+    z-index: 2;
+    background: transparent;
+    cursor: crosshair;
+    touch-action: none;
+}
+
+.o_draw_canvas_widget canvas:hover {
+    cursor: crosshair;
+}
+
+/* Readonly mode */
+.o_draw_canvas_widget.o_readonly {
+    cursor: default;
+}
+
+.o_draw_canvas_widget.o_readonly canvas {
+    cursor: default;
+    pointer-events: none;
+}
+
+/* Template background */
+.prescription-template-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 1;
+}
+
 /* Touch device optimizations */
 @media (pointer: coarse) {
-    .signature-canvas {
+    .o_draw_canvas_widget canvas {
         touch-action: none;
         cursor: default;
+    }
+    
+    .o_draw_canvas_widget:not(.o_readonly) canvas {
+        cursor: crosshair;
+    }
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .o_draw_canvas_widget {
+        aspect-ratio: 1/1.4;
     }
 }

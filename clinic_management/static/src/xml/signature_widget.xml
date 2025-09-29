@@ -13,7 +13,7 @@
             <canvas t-ref="canvas" 
                     width="2480" 
                     height="3508" 
-                    style="position: relative; width:100%; height:100%; display:block; z-index: 2; background: transparent;"></canvas>
+                    style="position: relative; width:100%; height:100%; display:block; z-index: 2; background: transparent; cursor: crosshair; touch-action: none;"></canvas>
         </div>
     </t>
 </templates>

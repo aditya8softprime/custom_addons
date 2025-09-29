@@ -81,12 +81,50 @@
                                     <field name="languages" widget="many2many_tags"/>
                                     <field name="registration_date"/>
                                     <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}"/>
-                                    <separator string="Prescription Template"/>
-                                    <field name="prescription_template_image" widget="image" class="oe_avatar"/>
-                                    <field name="prescription_template_filename" invisible="1"/>
-                                    <label for="prescription_template_image" string="Upload a background image (e.g., PNG) for prescriptions. It will auto-appear on appointment canvas."/>
                                 </group>
                             </group>
+                        </page>
+                        
+                        <page string="Prescription Template" name="prescription_template">
+                            <div class="oe_button_box">
+                                <button name="action_reanalyze_template" type="object" string="Re-analyze Template" 
+                                        class="btn-primary" invisible="not prescription_template_image"
+                                        help="Trigger analysis of the prescription template to detect writing areas"/>
+                            </div>
+                            <group>
+                                <group string="Template Image">
+                                    <field name="prescription_template_image" widget="image" class="oe_avatar"/>
+                                    <field name="prescription_template_filename" invisible="1"/>
+                                    <label for="prescription_template_image" 
+                                           string="Upload a background image (e.g., PNG) for prescriptions. It will auto-appear on appointment canvas and be analyzed for safe writing areas."/>
+                                </group>
+                                <group string="Analysis Results" invisible="not template_analysis_done">
+                                    <field name="template_analysis_done" invisible="1"/>
+                                    <field name="template_layout_type" readonly="1"/>
+                                    <field name="analysis_confidence" readonly="1" widget="percentage"/>
+                                    <label for="analysis_confidence" string="Analysis Confidence"/>
+                                    
+                                    <field name="drawing_area_coords" readonly="1" 
+                                           help="JSON coordinates of safe drawing area" invisible="1"/>
+                                    <field name="header_footer_coords" readonly="1"
+                                           help="JSON coordinates of header and footer areas" invisible="1"/>
+                                    <field name="detected_text_regions" readonly="1"
+                                           help="JSON data of detected text regions" invisible="1"/>
+                                </group>
+                            </group>
+                            <div class="alert alert-info" role="alert" invisible="template_analysis_done">
+                                <strong>Template Analysis Pending</strong><br/>
+                                Upload a prescription template image to automatically analyze safe writing areas.
+                                The system will detect headers, footers, and existing text to prevent overlapping when doctors write prescriptions with stylus.
+                            </div>
+                            <div class="alert alert-success" role="alert" invisible="not template_analysis_done">
+                                <strong>Template Analysis Complete</strong><br/>
+                                <span>Layout detected as: </span><field name="template_layout_type" readonly="1" nolabel="1"/>
+                                <br/>
+                                <span>Analysis confidence: </span><field name="analysis_confidence" readonly="1" nolabel="1" widget="percentage"/>
+                                <br/>
+                                <strong>Safe writing area has been calculated to avoid headers, footers, and existing text.</strong>
+                            </div>
                         </page>
                         <page string="Availability" name="availability">
                             <group>

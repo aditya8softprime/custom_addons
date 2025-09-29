@@ -1,5 +1,27 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
+import base64
+import json
+import io
+import logging
+
+try:
+    import cv2
+    import numpy as np
+    OPENCV_AVAILABLE = True
+except ImportError:
+    OPENCV_AVAILABLE = False
+    logging.getLogger(__name__).warning("OpenCV not available. Template analysis will be disabled.")
+
+try:
+    import pytesseract
+    from PIL import Image
+    TESSERACT_AVAILABLE = True
+except ImportError:
+    TESSERACT_AVAILABLE = False
+    logging.getLogger(__name__).warning("Tesseract OCR not available. Advanced text detection will be disabled.")
+
+_logger = logging.getLogger(__name__)
 
 
 class ClinicDoctorSpecialTag(models.Model):
@@ -171,6 +193,23 @@ class ClinicDoctor(models.Model):
     )
     prescription_template_filename = fields.Char(string='Template Filename')
     
+    # Template analysis fields (computed from OpenCV + Tesseract)
+    drawing_area_coords = fields.Text(string='Drawing Area Coordinates', 
+                                      help='JSON coordinates of allowed drawing area detected by OpenCV + OCR')
+    template_analysis_done = fields.Boolean(string='Template Analysis Done', default=False)
+    detected_text_regions = fields.Text(string='Detected Text Regions', 
+                                        help='JSON data of text regions found by OCR for header/footer detection')
+    header_footer_coords = fields.Text(string='Header Footer Coordinates',
+                                       help='JSON coordinates of detected header and footer areas')
+    analysis_confidence = fields.Float(string='Analysis Confidence', help='Confidence score of template analysis (0-100)')
+    template_layout_type = fields.Selection([
+        ('letterhead_top', 'Letterhead at Top'),
+        ('letterhead_full', 'Full Letterhead (Top + Bottom)'),
+        ('simple', 'Simple Template'),
+        ('complex', 'Complex Layout'),
+        ('unknown', 'Unknown Layout')
+    ], string='Template Layout Type', help='Detected layout type of prescription template')
+    
     # Relations
     shift_config_ids = fields.One2many('doctor.shift.config', 'doctor_id', string="Shift Configurations")
     slot_ids = fields.One2many('clinic.slot', 'doctor_id', string="Generated Slots")
@@ -254,6 +293,11 @@ class ClinicDoctor(models.Model):
                               'evening_shift', 'slot_duration']
         if any(field in vals for field in slot_related_fields):
             self._create_slots()
+            
+        # If prescription template changed, analyze it
+        if 'prescription_template_image' in vals and vals['prescription_template_image']:
+            self._analyze_prescription_template()
+            
         return res
     
     def generate_weekly_slots(self):
@@ -403,4 +447,396 @@ class ClinicDoctor(models.Model):
             'view_mode': 'form',
             'target': 'current',
         }
+    
+    def _analyze_prescription_template(self):
+        """Analyze prescription template to detect writing areas using OpenCV + Tesseract OCR"""
+        self.ensure_one()
+        
+        if not OPENCV_AVAILABLE:
+            _logger.warning("OpenCV not available. Using default template analysis.")
+            self._set_default_drawing_area()
+            return
+            
+        if not self.prescription_template_image:
+            return
+            
+        try:
+            # Decode and prepare image
+            image_data = base64.b64decode(self.prescription_template_image)
+            nparr = np.frombuffer(image_data, np.uint8)
+            img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            
+            if img is None:
+                raise ValueError("Could not decode image")
+                
+            height, width = img.shape[:2]
+            _logger.info(f"Analyzing template for {self.name}: {width}x{height} pixels")
+            
+            # Perform comprehensive analysis
+            analysis_results = self._perform_comprehensive_analysis(img)
+            
+            # Extract results
+            drawing_coords = analysis_results['drawing_area']
+            header_footer = analysis_results['header_footer']
+            text_regions = analysis_results['text_regions']
+            confidence = analysis_results['confidence']
+            layout_type = analysis_results['layout_type']
+            
+            # Store results
+            self.drawing_area_coords = json.dumps(drawing_coords)
+            self.header_footer_coords = json.dumps(header_footer)
+            self.detected_text_regions = json.dumps(text_regions)
+            self.analysis_confidence = confidence
+            self.template_layout_type = layout_type
+            self.template_analysis_done = True
+            
+            _logger.info(f"Template analysis completed for {self.name}. "
+                        f"Layout: {layout_type}, Confidence: {confidence:.1f}%, "
+                        f"Drawing area: {drawing_coords}")
+            
+        except Exception as e:
+            _logger.error(f"Template analysis failed for {self.name}: {str(e)}")
+            self._set_default_drawing_area()
+    
+    def _set_default_drawing_area(self):
+        """Set default drawing area when analysis fails"""
+        default_coords = {'x': 0.1, 'y': 0.2, 'width': 0.8, 'height': 0.6}
+        default_header_footer = {'header': {'y': 0, 'height': 0.15}, 'footer': {'y': 0.85, 'height': 0.15}}
+        
+        self.drawing_area_coords = json.dumps(default_coords)
+        self.header_footer_coords = json.dumps(default_header_footer)
+        self.detected_text_regions = json.dumps([])
+        self.analysis_confidence = 50.0
+        self.template_layout_type = 'simple'
+        self.template_analysis_done = True
+    
+    def _perform_comprehensive_analysis(self, img):
+        """Perform comprehensive template analysis using OpenCV + OCR"""
+        height, width = img.shape[:2]
+        
+        # Step 1: OCR-based text detection
+        text_regions = self._detect_text_regions_ocr(img) if TESSERACT_AVAILABLE else []
+        
+        # Step 2: Computer vision-based analysis
+        cv_analysis = self._analyze_with_opencv(img)
+        
+        # Step 3: Combine OCR and CV results
+        combined_analysis = self._combine_analysis_results(text_regions, cv_analysis, width, height)
+        
+        return combined_analysis
+    
+    def _detect_text_regions_ocr(self, img):
+        """Use Tesseract OCR to detect text regions"""
+        try:
+            # Convert OpenCV image to PIL
+            rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            pil_img = Image.fromarray(rgb_img)
+            
+            # Get detailed OCR data
+            ocr_data = pytesseract.image_to_data(pil_img, output_type=pytesseract.Output.DICT, lang='eng+hin')
+            
+            text_regions = []
+            height, width = img.shape[:2]
+            
+            # Process OCR results
+            for i in range(len(ocr_data['text'])):
+                confidence = int(ocr_data['conf'][i])
+                text = ocr_data['text'][i].strip()
+                
+                # Filter out low confidence and empty text
+                if confidence > 30 and text:
+                    x = ocr_data['left'][i]
+                    y = ocr_data['top'][i]
+                    w = ocr_data['width'][i]
+                    h = ocr_data['height'][i]
+                    
+                    # Convert to relative coordinates
+                    region = {
+                        'text': text,
+                        'confidence': confidence,
+                        'x': x / width,
+                        'y': y / height,
+                        'width': w / width,
+                        'height': h / height,
+                        'is_header': y < height * 0.25,  # Top 25% likely header
+                        'is_footer': y > height * 0.75,  # Bottom 25% likely footer
+                    }
+                    text_regions.append(region)
+            
+            _logger.info(f"OCR detected {len(text_regions)} text regions")
+            return text_regions
+            
+        except Exception as e:
+            _logger.warning(f"OCR text detection failed: {str(e)}")
+            return []
+    
+    def _analyze_with_opencv(self, img):
+        """Analyze image using OpenCV computer vision techniques"""
+        height, width = img.shape[:2]
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        
+        # 1. Edge detection for structural analysis
+        edges = cv2.Canny(gray, 50, 150, apertureSize=3)
+        
+        # 2. Morphological operations to find text blocks
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (20, 5))
+        dilated = cv2.dilate(edges, kernel, iterations=2)
+        
+        # 3. Find contours representing potential text blocks
+        contours, _ = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        # 4. Analyze contours
+        text_blocks = []
+        for contour in contours:
+            x, y, w, h = cv2.boundingRect(contour)
+            
+            # Filter by size (avoid very small or very large regions)
+            if w > width * 0.1 and h > height * 0.01 and w < width * 0.9 and h < height * 0.3:
+                text_blocks.append({
+                    'x': x / width,
+                    'y': y / height,
+                    'width': w / width,
+                    'height': h / height,
+                    'area': (w * h) / (width * height)
+                })
+        
+        # 5. Detect horizontal lines (often in headers/footers)
+        horizontal_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (40, 1))
+        horizontal_lines = cv2.morphologyEx(edges, cv2.MORPH_OPEN, horizontal_kernel)
+        
+        return {
+            'text_blocks': text_blocks,
+            'horizontal_lines': horizontal_lines,
+            'edges': edges
+        }
+    
+    def _combine_analysis_results(self, text_regions, cv_analysis, width, height):
+        """Combine OCR and computer vision results to determine layout"""
+        
+        # Categorize text regions
+        header_regions = [r for r in text_regions if r['is_header']]
+        footer_regions = [r for r in text_regions if r['is_footer']]
+        body_regions = [r for r in text_regions if not r['is_header'] and not r['is_footer']]
+        
+        # Calculate header and footer boundaries
+        header_bottom = 0.15  # Default
+        footer_top = 0.85     # Default
+        
+        if header_regions:
+            header_bottom = max(r['y'] + r['height'] for r in header_regions)
+            header_bottom = min(header_bottom + 0.05, 0.3)  # Add padding, max 30%
+            
+        if footer_regions:
+            footer_top = min(r['y'] for r in footer_regions)
+            footer_top = max(footer_top - 0.05, 0.7)  # Add padding, min 70%
+        
+        # Determine layout type
+        layout_type = self._determine_layout_type(header_regions, footer_regions, cv_analysis)
+        
+        # Calculate confidence based on OCR quality and structure detection
+        confidence = self._calculate_analysis_confidence(text_regions, cv_analysis)
+        
+        # Define safe drawing area
+        margin_x = 0.08  # 8% horizontal margin
+        margin_y = 0.03  # 3% vertical margin
+        
+        drawing_x = margin_x
+        drawing_y = header_bottom + margin_y
+        drawing_width = 1.0 - (2 * margin_x)
+        drawing_height = footer_top - drawing_y - margin_y
+        
+        # Ensure minimum drawing area
+        if drawing_height < 0.4:  # Minimum 40% height
+            drawing_y = 0.2
+            drawing_height = 0.6
+        
+        drawing_coords = {
+            'x': drawing_x,
+            'y': drawing_y,
+            'width': drawing_width,
+            'height': drawing_height
+        }
+        
+        header_footer_coords = {
+            'header': {'y': 0, 'height': header_bottom},
+            'footer': {'y': footer_top, 'height': 1.0 - footer_top}
+        }
+        
+        return {
+            'drawing_area': drawing_coords,
+            'header_footer': header_footer_coords,
+            'text_regions': text_regions,
+            'confidence': confidence,
+            'layout_type': layout_type
+        }
+    
+    def _determine_layout_type(self, header_regions, footer_regions, cv_analysis):
+        """Determine the type of prescription template layout"""
+        
+        has_substantial_header = len(header_regions) > 2 or any(r['height'] > 0.08 for r in header_regions)
+        has_substantial_footer = len(footer_regions) > 1 or any(r['height'] > 0.05 for r in footer_regions)
+        
+        text_block_count = len(cv_analysis['text_blocks'])
+        
+        if has_substantial_header and has_substantial_footer:
+            return 'letterhead_full'
+        elif has_substantial_header:
+            return 'letterhead_top'
+        elif text_block_count > 10:
+            return 'complex'
+        elif text_block_count < 3:
+            return 'simple'
+        else:
+            return 'unknown'
+    
+    def _calculate_analysis_confidence(self, text_regions, cv_analysis):
+        """Calculate confidence score for the analysis"""
+        confidence = 50.0  # Base confidence
+        
+        # OCR contribution (30% weight)
+        if text_regions:
+            avg_ocr_confidence = sum(r['confidence'] for r in text_regions) / len(text_regions)
+            ocr_score = min(avg_ocr_confidence, 90) * 0.3
+            confidence += ocr_score * 0.5
+        
+        # Structural analysis contribution (20% weight)
+        text_block_count = len(cv_analysis['text_blocks'])
+        if text_block_count > 0:
+            structure_score = min(text_block_count * 5, 80) * 0.2
+            confidence += structure_score * 0.5
+        
+        # Boundary detection confidence (20% weight)
+        if text_regions:
+            header_regions = [r for r in text_regions if r['is_header']]
+            footer_regions = [r for r in text_regions if r['is_footer']]
+            
+            if header_regions or footer_regions:
+                boundary_score = 80 * 0.2
+                confidence += boundary_score * 0.5
+        
+        return min(confidence, 95.0)  # Cap at 95%
+    
+    def action_reanalyze_template(self):
+        """Action to manually trigger template re-analysis"""
+        self.ensure_one()
+        if not self.prescription_template_image:
+            raise ValidationError(_('No prescription template image found to analyze'))
+        
+        self.template_analysis_done = False
+        self._analyze_prescription_template()
+        
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Template Analysis'),
+                'message': _('Template analysis completed successfully. Confidence: %.1f%%') % self.analysis_confidence,
+                'type': 'success',
+                'sticky': False,
+            }
+        }
+    
+    def get_analysis_summary(self):
+        """Get human-readable analysis summary"""
+        self.ensure_one()
+        
+        if not self.template_analysis_done:
+            return _('Template not analyzed yet')
+        
+        layout_names = {
+            'letterhead_top': _('Letterhead at Top'),
+            'letterhead_full': _('Full Letterhead (Top + Bottom)'),
+            'simple': _('Simple Template'),
+            'complex': _('Complex Layout'),
+            'unknown': _('Unknown Layout')
+        }
+        
+        layout_name = layout_names.get(self.template_layout_type, _('Unknown'))
+        
+        summary = _('Layout: %(layout)s, Confidence: %(confidence).1f%%') % {
+            'layout': layout_name,
+            'confidence': self.analysis_confidence or 0
+        }
+        
+        if self.detected_text_regions:
+            try:
+                regions = json.loads(self.detected_text_regions)
+                summary += _(', Text Regions: %(count)d') % {'count': len(regions)}
+            except:
+                pass
+                
+        return summary
+    
+    def validate_drawing_coordinates(self, x, y, width, height):
+        """Validate if drawing coordinates are within allowed area"""
+        self.ensure_one()
+        
+        if not self.drawing_area_coords:
+            return True  # Allow if no restrictions
+        
+        try:
+            allowed_area = json.loads(self.drawing_area_coords)
+            
+            # Check if the drawing coordinates overlap with allowed area
+            allowed_x1 = allowed_area['x']
+            allowed_y1 = allowed_area['y']
+            allowed_x2 = allowed_area['x'] + allowed_area['width']
+            allowed_y2 = allowed_area['y'] + allowed_area['height']
+            
+            drawing_x1 = x
+            drawing_y1 = y
+            drawing_x2 = x + width
+            drawing_y2 = y + height
+            
+            # Check if drawing is completely within allowed area
+            return (drawing_x1 >= allowed_x1 and drawing_y1 >= allowed_y1 and
+                    drawing_x2 <= allowed_x2 and drawing_y2 <= allowed_y2)
+        except:
+            return True  # Allow if validation fails
+    
+    def get_drawing_area_coords(self):
+        """Get comprehensive drawing area data for frontend"""
+        self.ensure_one()
+        if not self.template_analysis_done:
+            self._analyze_prescription_template()
+        
+        result = {
+            'drawing_area': {'x': 0.1, 'y': 0.2, 'width': 0.8, 'height': 0.6},
+            'restricted_areas': [],
+            'confidence': 50.0,
+            'layout_type': 'simple'
+        }
+        
+        try:
+            if self.drawing_area_coords:
+                result['drawing_area'] = json.loads(self.drawing_area_coords)
+            
+            if self.header_footer_coords:
+                header_footer = json.loads(self.header_footer_coords)
+                result['restricted_areas'] = [
+                    {'type': 'header', **header_footer.get('header', {})},
+                    {'type': 'footer', **header_footer.get('footer', {})}
+                ]
+            
+            result['confidence'] = self.analysis_confidence or 50.0
+            result['layout_type'] = self.template_layout_type or 'simple'
+            
+            # Add text regions for advanced restriction
+            if self.detected_text_regions:
+                text_regions = json.loads(self.detected_text_regions)
+                # Add high-confidence text regions as restricted areas
+                for region in text_regions:
+                    if region.get('confidence', 0) > 70:
+                        result['restricted_areas'].append({
+                            'type': 'text',
+                            'x': region['x'],
+                            'y': region['y'], 
+                            'width': region['width'],
+                            'height': region['height'],
+                            'text': region.get('text', '')
+                        })
+        except Exception as e:
+            _logger.warning(f"Error loading drawing area data for {self.name}: {str(e)}")
+        
+        return result
 

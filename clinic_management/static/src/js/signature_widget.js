@@ -13,6 +13,7 @@ class DrawCanvasWidget extends Component {
         this.saveTimeout = null;
         this.isDrawing = false;
         this.doctorTemplate = null; // base64 image for doctor's prescription template
+        this.drawingArea = null; // allowed drawing area coordinates
 
         onMounted(this.onMounted.bind(this));
         onWillDestroy(() => {
@@ -24,18 +25,27 @@ class DrawCanvasWidget extends Component {
     }
 
     async onMounted() {
+        console.log('DrawCanvasWidget mounted');
         await this.loadDoctorTemplate();
+        await this.loadDrawingArea();
         this.renderCanvas();
+        console.log('Canvas setup completed');
     }
 
     renderCanvas() {
         const canvas = this.canvasRef.el;
         if (!canvas) return;
 
+        // Ensure canvas is interactive
+        canvas.style.cursor = 'crosshair';
+        canvas.style.touchAction = 'none';
+        canvas.style.pointerEvents = 'auto';
+
         const ctx = canvas.getContext("2d");
         ctx.lineWidth = 2;
         ctx.lineJoin = "round";
         ctx.lineCap = "round";
+        ctx.strokeStyle = "#000000"; // Set default drawing color
 
         // Always load existing prescription if available
         const rd = (this.props.record && this.props.record.data) ? this.props.record.data : {};
@@ -50,6 +60,9 @@ class DrawCanvasWidget extends Component {
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
+        
+        // Always show drawing area outline for guidance
+        setTimeout(() => this.showDrawingAreaOutline(canvas, ctx), 500);
 
         let lastX = 0;
         let lastY = 0;
@@ -66,35 +79,97 @@ class DrawCanvasWidget extends Component {
             };
         };
 
+        let hasDrawn = false; // Track if actual drawing happened
+
+        const isInDrawingArea = (x, y) => {
+            if (!this.drawingArea) return true; // If no area defined, allow everywhere
+            
+            const areaX = this.drawingArea.x * canvas.width;
+            const areaY = this.drawingArea.y * canvas.height;
+            const areaWidth = this.drawingArea.width * canvas.width;
+            const areaHeight = this.drawingArea.height * canvas.height;
+            
+            return x >= areaX && x <= areaX + areaWidth && 
+                   y >= areaY && y <= areaY + areaHeight;
+        };
+
         const draw = (e) => {
             if (!this.isDrawing) return;
             const pos = pointerPos(e);
-            ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
-            ctx.lineTo(pos.x, pos.y);
-            ctx.stroke();
+            
+            // Check if position is within allowed drawing area
+            if (!isInDrawingArea(pos.x, pos.y)) {
+                // If outside drawing area, stop drawing
+                this.isDrawing = false;
+                return;
+            }
+            
+            // Check if there's actual movement for drawing
+            const distance = Math.sqrt(Math.pow(pos.x - lastX, 2) + Math.pow(pos.y - lastY, 2));
+            if (distance > 2) { // Only draw if movement is significant (more than 2 pixels)
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
+                hasDrawn = true; // Mark that actual drawing occurred
+            }
+            
             lastX = pos.x;
             lastY = pos.y;
         };
 
-        canvas.addEventListener("pointerdown", (e) => {
-            this.isDrawing = true;
+        const startDrawing = (e) => {
+            e.preventDefault();
             const pos = pointerPos(e);
-            lastX = pos.x;
-            lastY = pos.y;
+            
+            // Only start drawing if within allowed area
+            if (isInDrawingArea(pos.x, pos.y)) {
+                this.isDrawing = true;
+                hasDrawn = false; // Reset drawing flag
+                lastX = pos.x;
+                lastY = pos.y;
+                canvas.style.cursor = 'crosshair';
+            } else {
+                // Show visual feedback for restricted area
+                this.showRestrictedAreaWarning();
+            }
+        };
+        
+        const stopDrawing = () => {
+            if (this.isDrawing && hasDrawn) {
+                // Only save if actual drawing happened
+                this.debouncedSave();
+            }
+            this.isDrawing = false;
+            hasDrawn = false;
+            canvas.style.cursor = 'crosshair';
+        };
+
+        // Mouse events
+        canvas.addEventListener("mousedown", startDrawing);
+        canvas.addEventListener("mousemove", draw);
+        canvas.addEventListener("mouseup", stopDrawing);
+        canvas.addEventListener("mouseout", stopDrawing);
+        
+        // Touch events
+        canvas.addEventListener("touchstart", (e) => {
+            e.preventDefault(); // Prevent scrolling
+            startDrawing(e);
+        });
+        canvas.addEventListener("touchmove", (e) => {
+            e.preventDefault(); // Prevent scrolling
+            draw(e);
+        });
+        canvas.addEventListener("touchend", (e) => {
+            e.preventDefault();
+            stopDrawing();
         });
         
+        // Pointer events (fallback for modern browsers)
+        canvas.addEventListener("pointerdown", startDrawing);
         canvas.addEventListener("pointermove", draw);
-        
-        canvas.addEventListener("pointerup", () => {
-            this.isDrawing = false;
-            this.debouncedSave();
-        });
-        
-        canvas.addEventListener("pointerout", () => {
-            this.isDrawing = false;
-            this.debouncedSave();
-        });
+        canvas.addEventListener("pointerup", stopDrawing);
+        canvas.addEventListener("pointerout", stopDrawing);
     }
 
     loadExistingPrescription(canvas, ctx) {
@@ -139,6 +214,8 @@ class DrawCanvasWidget extends Component {
     }
 
     saveCompositeImage(canvas) {
+        console.log('Starting composite image save...');
+        
         // Create composite canvas with template background + drawing
         const compositeCanvas = document.createElement('canvas');
         compositeCanvas.width = canvas.width;
@@ -164,7 +241,7 @@ class DrawCanvasWidget extends Component {
                     const dataURL = compositeCanvas.toDataURL("image/png", 1.0); // Max quality
                     const base64 = dataURL.split(",")[1];
                     
-                    console.log('Saving composite image with template + drawing');
+                    console.log('Saving composite image with template + drawing, size:', base64.length);
                     
                     if (this.props.record && this.props.name) {
                         this.props.record.update({ [this.props.name]: base64 });
@@ -183,6 +260,7 @@ class DrawCanvasWidget extends Component {
             };
             templateImg.src = 'data:image/png;base64,' + this.doctorTemplate;
         } else {
+            console.log('No template available, saving canvas only');
             // No template, save canvas only
             this.saveFallbackCanvas(canvas);
         }
@@ -224,14 +302,80 @@ class DrawCanvasWidget extends Component {
         }
     }
 
+    async loadDrawingArea() {
+        try {
+            const rd = (this.props.record && this.props.record.data) ? this.props.record.data : {};
+            const doctorId = rd.doctor_id ? (Array.isArray(rd.doctor_id) ? rd.doctor_id[0] : rd.doctor_id) : null;
+            if (!doctorId) return;
+
+            const result = await rpc('/web/dataset/call_kw', {
+                model: 'clinic.doctor',
+                method: 'get_drawing_area_coords',
+                args: [doctorId],
+                kwargs: {}
+            });
+            
+            if (result) {
+                this.drawingArea = result;
+                console.log('Drawing area loaded:', this.drawingArea);
+            } else {
+                // Default drawing area
+                this.drawingArea = {x: 0.1, y: 0.15, width: 0.8, height: 0.7};
+            }
+        } catch (e) {
+            console.warn('Could not load drawing area:', e.message);
+            // Default drawing area
+            this.drawingArea = {x: 0.1, y: 0.15, width: 0.8, height: 0.7};
+        }
+    }
+
     initializeWithTemplate(canvas, ctx) {
         // Initialize canvas with template for first time
-        if (this.doctorTemplate) {
-            // Save template as initial medicine_image
+        // Template is shown via CSS background, no need to save immediately
+        // Save will only happen when user actually draws something
+        console.log('Template loaded as background, waiting for user drawing...');
+        
+        // Optionally show drawing area outline
+        this.showDrawingAreaOutline(canvas, ctx);
+    }
+
+    showDrawingAreaOutline(canvas, ctx) {
+        if (!this.drawingArea) return;
+        
+        // Draw a subtle outline of the allowed drawing area
+        const areaX = this.drawingArea.x * canvas.width;
+        const areaY = this.drawingArea.y * canvas.height;
+        const areaWidth = this.drawingArea.width * canvas.width;
+        const areaHeight = this.drawingArea.height * canvas.height;
+        
+        ctx.save();
+        ctx.strokeStyle = 'rgba(0, 123, 255, 0.3)'; // Light blue outline
+        ctx.lineWidth = 2;
+        ctx.setLineDash([10, 5]); // Dashed line
+        ctx.strokeRect(areaX, areaY, areaWidth, areaHeight);
+        ctx.restore();
+        
+        // Auto-hide outline after 3 seconds
+        setTimeout(() => {
+            ctx.clearRect(areaX - 2, areaY - 2, areaWidth + 4, areaHeight + 4);
+        }, 3000);
+    }
+
+    showRestrictedAreaWarning() {
+        // Show temporary visual feedback
+        console.warn('Drawing not allowed in this area. Please draw only in the designated area.');
+        
+        // Add visual feedback with red cursor
+        const canvas = this.canvasRef.el;
+        if (canvas) {
+            canvas.style.cursor = 'not-allowed';
             setTimeout(() => {
-                this.saveCompositeImage(canvas);
-            }, 100);
+                canvas.style.cursor = 'crosshair';
+            }, 1000);
         }
+        
+        // TODO: Add toast notification for better UX
+        // this.env.services.notification.add('Please draw only in the designated area', {type: 'warning'});
     }
 
     drawDoctorTemplate(canvas, ctx) {

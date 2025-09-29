@@ -10,6 +10,12 @@
         - Prescription Management: Create and manage prescriptions with medications
         - Website Integration: Allow patients to book appointments online
         - Role-based Access Control: Different permissions for doctors, nurses, and staff
+        
+        Optional Dependencies:
+        - OpenCV (cv2): For prescription template analysis and smart drawing area detection
+        - NumPy: Required by OpenCV for image processing
+        
+        Install with: pip install opencv-python numpy
     """,
     'category': 'Healthcare',
     'author': 'Your Company',
@@ -91,7 +97,9 @@
             'clinic_management/static/src/js/appointment_dashboard.js',
             'clinic_management/static/src/css/appointment_dashboard.css',
             'clinic_management/static/src/xml/appointment_dashboard_template.xml',
+            # Canvas widget files
             'clinic_management/static/src/js/signature_widget.js',
+            'clinic_management/static/src/css/signature_widget.css',
             'clinic_management/static/src/xml/signature_widget.xml',
         ],
 

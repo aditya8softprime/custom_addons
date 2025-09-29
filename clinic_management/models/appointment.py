@@ -74,7 +74,7 @@ class ClinicAppointment(models.Model):
     medicine_pdf = fields.Binary(string='Medicine / Prescription PDF', attachment=True)
     medicine_pdf_filename = fields.Char(string='Medicine PDF Filename')
     
-    # Lab test lines (simplified approach)
+    # Lab test lines (simplified approach)y
     lab_test_line_ids = fields.One2many('appointment.lab.line', 'appointment_id', string='Lab Test Lines')
     invoice_id = fields.Many2one('account.move', string='Invoice')
     
