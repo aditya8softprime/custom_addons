@@ -4,10 +4,15 @@
         <div class="o_draw_canvas_widget">
             <!-- Toolbar for page navigation and actions -->
             <div class="o_draw_canvas_toolbar">
-                <button type="button" class="btn btn-outline-secondary btn-sm" t-on-click="onToolPen">Pen</button>
-                <button type="button" class="btn btn-outline-secondary btn-sm" t-on-click="onToolEraser">Eraser</button>
+                <button type="button"
+                        t-att-class="'btn btn-sm ' + (state.tool === 'pen' ? 'btn-primary' : 'btn-outline-secondary')"
+                        t-on-click="onToolPen">Pen</button>
+                <button type="button"
+                        t-att-class="'btn btn-sm ml-1 ' + (state.tool === 'eraser' ? 'btn-primary' : 'btn-outline-secondary')"
+                        t-on-click="onToolEraser">Eraser</button>
                 <label class="ml-2 mr-1">Size</label>
-                <input type="range" min="2" max="30" step="1" t-on-change="onBrushSizeChange" style="width:120px"/>
+                <input type="range" min="2" max="80" step="1" t-on-change="onBrushSizeChange" style="width:140px"/>
+                <span class="ml-1" t-esc="state.brushSize"/> px
                 <button type="button" class="btn btn-secondary btn-sm" t-on-click="onPrevPage">Prev</button>
                 <span class="mx-2">Page <t t-esc="state.currentPage"/> / <t t-esc="state.totalPages"/></span>
                 <button type="button" class="btn btn-secondary btn-sm" t-on-click="onNextPage">Next</button>

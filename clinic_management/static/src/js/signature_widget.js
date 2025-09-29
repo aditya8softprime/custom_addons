@@ -62,7 +62,7 @@ class DrawCanvasWidget extends Component {
         if (!canvas) return;
 
         // Ensure canvas is interactive
-        canvas.style.cursor = 'crosshair';
+    canvas.style.cursor = this.state.tool === 'eraser' ? 'cell' : 'crosshair';
         canvas.style.touchAction = 'none';
         canvas.style.pointerEvents = 'auto';
 
@@ -160,7 +160,7 @@ class DrawCanvasWidget extends Component {
                 hasDrawn = false; // Reset drawing flag
                 lastX = pos.x;
                 lastY = pos.y;
-                canvas.style.cursor = 'crosshair';
+                canvas.style.cursor = this.state.tool === 'eraser' ? 'cell' : 'crosshair';
             } else {
                 // Show visual feedback for restricted area
                 this.showRestrictedAreaWarning();
@@ -174,7 +174,7 @@ class DrawCanvasWidget extends Component {
             }
             this.isDrawing = false;
             hasDrawn = false;
-            canvas.style.cursor = 'crosshair';
+            canvas.style.cursor = this.state.tool === 'eraser' ? 'cell' : 'crosshair';
         };
 
         // Mouse events
@@ -238,17 +238,7 @@ class DrawCanvasWidget extends Component {
                 });
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             } else {
-                // No existing image: draw the doctor's template onto canvas so it's visible
-                if (this.doctorTemplate) {
-                    const templateImg = new Image();
-                    await new Promise((resolve, reject) => {
-                        templateImg.onload = resolve;
-                        templateImg.onerror = reject;
-                        templateImg.src = 'data:image/png;base64,' + this.doctorTemplate;
-                    });
-                    ctx.drawImage(templateImg, 0, 0, canvas.width, canvas.height);
-                }
-                // Also draw outline for the drawing area
+                // No existing image: keep canvas transparent so CSS background template is visible
                 this.initializeWithTemplate(canvas, ctx);
             }
             // show drawing area outline again
@@ -586,9 +576,13 @@ class DrawCanvasWidget extends Component {
     // Toolbar handlers
     onToolPen() {
         this.state.tool = 'pen';
+        const canvas = this.canvasRef.el;
+        if (canvas) canvas.style.cursor = 'crosshair';
     }
     onToolEraser() {
         this.state.tool = 'eraser';
+        const canvas = this.canvasRef.el;
+        if (canvas) canvas.style.cursor = 'cell';
     }
     onBrushSizeChange(ev) {
         const v = parseInt(ev.target.value, 10);
