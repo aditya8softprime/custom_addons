@@ -28,6 +28,7 @@ class AppointmentDashboard extends Component {
             total_lab_tests: 0,
             doctor_id: null,
             doctors: [],
+            doctors_data: [],
             time_filter: null,
             active_tab: 'overview',
             records: [],
@@ -44,6 +45,7 @@ class AppointmentDashboard extends Component {
         onWillStart(async () => {
             await this._fetch_doctors();
             await this._fetch_data();
+            await this._fetch_doctors_data();
         });
 
         // Initialize chart after component is mounted
@@ -63,6 +65,30 @@ class AppointmentDashboard extends Component {
         } catch (error) {
             console.error('Error fetching doctors:', error);
             this.state.doctors = [];
+        }
+    }
+
+    async _fetch_doctors_data() {
+        try {
+            console.log('Fetching doctors data with filters:', {
+                doctor_id: this.state.doctor_id,
+                time_filter: this.state.time_filter,
+                selected_date: this.state.selected_date
+            });
+            
+            const result = await this.orm.call("clinic.appointment", "get_doctors_slots_data", [
+                this.state.doctor_id,
+                this.state.time_filter,
+                this.state.selected_date
+            ]);
+            
+            console.log('Doctors data received:', result);
+            console.log('Number of doctors:', result.doctors_data?.length || 0);
+            
+            this.state.doctors_data = result.doctors_data || [];
+        } catch (error) {
+            console.error('Error fetching doctors data:', error);
+            this.state.doctors_data = [];
         }
     }
 
@@ -336,12 +362,22 @@ class AppointmentDashboard extends Component {
         }
         this.state.current_page = 1;
         this._fetch_data();
+        
+        // Refresh doctors data if doctors tab is active
+        if (this.state.active_tab === 'doctors') {
+            this._fetch_doctors_data();
+        }
     }
 
     on_doctor_change(event) {
         this.state.doctor_id = event.target.value ? parseInt(event.target.value, 10) : null;
         this.state.current_page = 1;
         this._fetch_data();
+        
+        // Refresh doctors data if doctors tab is active
+        if (this.state.active_tab === 'doctors') {
+            this._fetch_doctors_data();
+        }
     }
 
     on_date_change(event) {
@@ -349,6 +385,11 @@ class AppointmentDashboard extends Component {
         this.state.time_filter = 'custom_date';  // Set special filter for custom date
         this.state.current_page = 1;
         this._fetch_data();
+        
+        // Refresh doctors data if doctors tab is active
+        if (this.state.active_tab === 'doctors') {
+            this._fetch_doctors_data();
+        }
     }
 
     clear_date_filter() {
@@ -356,6 +397,11 @@ class AppointmentDashboard extends Component {
         this.state.time_filter = null;
         this.state.current_page = 1;
         this._fetch_data();
+        
+        // Refresh doctors data if doctors tab is active
+        if (this.state.active_tab === 'doctors') {
+            this._fetch_doctors_data();
+        }
     }
 
     async _open_list_view(state) {
@@ -368,7 +414,14 @@ class AppointmentDashboard extends Component {
         this.state.active_tab = tab;
         this.state.selected_state = null;
         this.state.current_page = 1;
-        this._fetch_list_data();
+        
+        if (tab === 'doctors') {
+            // Only fetch doctors data for doctors tab
+            this._fetch_doctors_data();
+        } else if (tab === 'list') {
+            // Only fetch list data for appointments tab
+            this._fetch_list_data();
+        }
         
         if (tab === 'overview') {
             this._loadChartJsAndRender();
@@ -401,6 +454,34 @@ class AppointmentDashboard extends Component {
             res_id: record.id,
             views: [[false, 'form']],
             target: 'new',
+        });
+    }
+
+    async book_slot(doctor_id, slot_id, doctor_name, service_id) {
+        // Get the selected date
+        let appointment_date = this.state.selected_date;
+        if (this.state.time_filter === 'today') {
+            appointment_date = new Date().toISOString().split('T')[0];
+        } else if (this.state.time_filter === 'tomorrow') {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            appointment_date = tomorrow.toISOString().split('T')[0];
+        }
+        
+        // Open appointment form with pre-filled data
+        this.actionManager.doAction({
+            name: 'New Appointment',
+            type: 'ir.actions.act_window',
+            res_model: 'clinic.appointment',
+            view_mode: 'form',
+            views: [[false, 'form']],
+            target: 'new',
+            context: {
+                'default_doctor_id': doctor_id,
+                'default_slot_id': slot_id,
+                'default_appointment_date': appointment_date,
+                'default_service_id': service_id || false,
+            }
         });
     }
 }

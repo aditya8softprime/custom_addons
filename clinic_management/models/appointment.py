@@ -442,13 +442,6 @@ class ClinicAppointment(models.Model):
             raise ValidationError(f"No day configuration found for {day_name}.")
 
 
-        # Check doctor availability
-        if day not in self.doctor_id.available_days:
-            raise ValidationError(
-                f"Doctor {self.doctor_id.name} is not available on {day_name}. "
-                f"Please select a different date or doctor."
-            )
-
         # Check if doctor is on leave
         holidays = self.env['clinic.holiday'].search([
             ('doctor_id', '=', self.doctor_id.id),
@@ -574,7 +567,6 @@ class ClinicAppointment(models.Model):
             # Fill slot_char from slot_id before clearing it (for scheduled appointments)
             if appointment.appointment_type == 'scheduled' and appointment.slot_id:
                 appointment.slot_char = appointment.slot_id.slot_label
-                appointment.slot_id = False  # Clear slot_id after confirmation
             
             appointment.state = 'confirmed'
     
@@ -1017,6 +1009,95 @@ class ClinicAppointment(models.Model):
         
         return result
     
+    @api.model
+    def get_doctors_slots_data(self, doctor_id=None, time_filter=None, selected_date=None):
+        """Get doctors and their slots data for dashboard doctors tab"""
+        _logger.info(f"Getting doctors slots data - doctor_id: {doctor_id}, time_filter: {time_filter}, selected_date: {selected_date}")
+        
+        company_id = self.env.company.id
+        
+        # Determine the target date based on filter
+        target_date = None
+        if time_filter:
+            user_tz = self.env.user.tz or 'UTC'
+            tz = pytz.timezone(user_tz)
+            now = datetime.now(tz)
+            
+            if time_filter == 'today':
+                target_date = now.date()
+            elif time_filter == 'tomorrow':
+                target_date = (now + timedelta(days=1)).date()
+            elif time_filter == 'custom_date' and selected_date:
+                from datetime import datetime as dt
+                target_date = dt.strptime(selected_date, '%Y-%m-%d').date()
+        
+        # Build doctors domain: show all active doctors (avoid over-restrictive company filtering)
+        doctors_domain = [('active', '=', True)]
+        if doctor_id:
+            doctors_domain.append(('id', '=', int(doctor_id)))
+        
+        # Get doctors
+        doctors = self.env['clinic.doctor'].search(doctors_domain)
+        _logger.info(f"Found {len(doctors)} doctors with domain: {doctors_domain}")
+        
+        doctors_data = []
+        for doctor in doctors:
+            # Use specialization_ids (correct field) instead of non-existent service_ids
+            service_name = doctor.specialization_ids[0].name if doctor.specialization_ids else 'General'
+            service_id = doctor.specialization_ids[0].id if doctor.specialization_ids else None
+            doctor_data = {
+                'id': doctor.id,
+                'name': doctor.name,
+                'service_category': service_name,
+                'service_id': service_id,
+                'slots': []
+            }
+            
+            # Only fetch slots if a date filter is applied
+            if target_date:
+                # Get day name for the target date
+                day_name = target_date.strftime('%A')  # Monday, Tuesday, etc.
+                day = self.env['clinic.days'].search([('name', '=', day_name)], limit=1)
+                _logger.info(f"Target date {target_date} resolves to day {day_name}, day record: {day and day.id}")
+                
+                if day:
+                    # Get doctor's slots for this day
+                    slots = self.env['clinic.slot'].search([
+                        ('doctor_id', '=', doctor.id),
+                        ('day_id', '=', day.id),
+                        ('is_blocked', '=', False)
+                    ])
+                    _logger.info(f"Doctor {doctor.name} ({doctor.id}) has {len(slots)} template slots for day {day_name}")
+                    
+                    # Get booked slots for this date
+                    booked_appointments = self.env['clinic.appointment'].search([
+                        ('doctor_id', '=', doctor.id),
+                        ('appointment_date', '=', target_date),
+                        ('slot_id', '!=', False),
+                        ('state', 'not in', ['cancelled', 'no_show', 'rescheduled'])
+                    ])
+                    booked_slot_ids = booked_appointments.mapped('slot_id.id')
+                    
+                    # Prepare slots data
+                    slots_data = []
+                    for slot in slots:
+                        slots_data.append({
+                            'id': slot.id,
+                            'start_time': slot.start_time,
+                            'end_time': slot.end_time,
+                            'slot_label': slot.slot_label,
+                            'is_booked': slot.id in booked_slot_ids
+                        })
+                    
+                    # Sort slots by start time
+                    slots_data = sorted(slots_data, key=lambda x: x['start_time'])
+                    doctor_data['slots'] = slots_data
+            
+            doctors_data.append(doctor_data)
+        
+        _logger.info(f"Returning {len(doctors_data)} doctors data")
+        return {'doctors_data': doctors_data}
+
     @api.model
     def get_appointment_list_data(self, doctor_id=None, time_filter=None, state=None, offset=0, limit=15, selected_date=None):
         """Fetch appointment data for the dashboard table"""

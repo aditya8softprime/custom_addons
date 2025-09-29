@@ -1,13 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates>
     <t t-name="clinic_management.AppointmentDashboard">
-        <div class="container-fluid p-4">
+        <div class="o_appointment_dashboard container-fluid p-4">
+            <t t-set="_style_block">
+                <style>
+                    .o_appointment_dashboard .filter-toolbar .btn,
+                    .o_appointment_dashboard .filter-toolbar .input-group .form-control,
+                    .o_appointment_dashboard .filter-toolbar .input-group .input-group-text {
+                        height: 38px;
+                    }
+                    .o_appointment_dashboard .filter-toolbar .btn-group + .btn-group,
+                    .o_appointment_dashboard .filter-toolbar .btn-group + .date-group,
+                    .o_appointment_dashboard .filter-toolbar .date-group + .btn-group {
+                        margin-left: .5rem;
+                    }
+                    .o_appointment_dashboard .filter-toolbar .date-group {
+                        max-width: 260px;
+                    }
+                    @media (max-width: 768px) {
+                        .o_appointment_dashboard .filter-toolbar {
+                            flex-wrap: wrap;
+                        }
+                        .o_appointment_dashboard .filter-toolbar > * {
+                            margin-top: .5rem;
+                        }
+                    }
+                </style>
+            </t>
             <!-- Header -->
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2 class="mb-0">Appointment Dashboard</h2>
-                <div class="d-flex align-items-center">
+                <div class="filter-toolbar btn-toolbar gap-2 align-items-center" role="toolbar">
                     <!-- Doctor Filter -->
-                    <div class="btn-group me-3" role="group">
+                    <div class="btn-group" role="group">
                         <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
                             <t t-if="state.doctor_id">
                                 <t t-foreach="state.doctors" t-as="doctor" t-key="doctor.id">
@@ -27,7 +52,7 @@
                     </div>
                     
                     <!-- Time Filter Buttons -->
-                    <div class="btn-group me-3" role="group">
+                    <div class="btn-group" role="group">
                         <button type="button" t-att-class="state.time_filter === 'today' ? 'btn btn-primary' : 'btn btn-outline-primary'" t-on-click="(event) => this.on_time_filter_change('today')">Today</button>
                         <button type="button" t-att-class="state.time_filter === 'tomorrow' ? 'btn btn-primary' : 'btn btn-outline-primary'" t-on-click="(event) => this.on_time_filter_change('tomorrow')">Tomorrow</button>
                         <button type="button" t-att-class="state.time_filter === 'week' ? 'btn btn-primary' : 'btn btn-outline-primary'" t-on-click="(event) => this.on_time_filter_change('week')">Week</button>
@@ -37,7 +62,8 @@
                     </div>
                     
                     <!-- Date Picker -->
-                    <div class="input-group" style="max-width: 200px;">
+                    <div class="input-group date-group">
+                        <span class="input-group-text"><i class="fa fa-calendar"></i></span>
                         <input type="date" class="form-control" t-att-value="state.selected_date" t-on-change="(event) => this.on_date_change(event)" placeholder="Select Date"/>
                         <button class="btn btn-outline-secondary" type="button" t-on-click="(event) => this.clear_date_filter()" title="Clear Date Filter">
                             <i class="fa fa-times"></i>
@@ -54,10 +80,13 @@
                 <li class="nav-item">
                     <a class="nav-link" t-att-class="state.active_tab === 'list' ? 'active' : ''" href="#" t-on-click="(event) => this.set_active_tab('list')">Appointments</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" t-att-class="state.active_tab === 'doctors' ? 'active' : ''" href="#" t-on-click="(event) => this.set_active_tab('doctors')">Doctors &amp; Slots</a>
+                </li>
             </ul>
 
             <!-- Dashboard Cards -->
-            <div class="row g-4 mb-4">
+            <div t-if="state.active_tab === 'overview'" class="row g-4 mb-4">
                 <!-- Total Appointments -->
                 <div class="col-md-3 col-sm-6">
                     <div class="card h-100 shadow-sm clickable-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;" t-on-click="(event) => this._open_list_view(null)">
@@ -164,7 +193,7 @@
             </div>
 
             <!-- List View -->
-            <div class="mt-5 table-card">
+            <div t-if="state.active_tab === 'list'" class="mt-5 table-card">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h3><t t-if="state.selected_state"><t t-esc="state.selected_state.toUpperCase().replace('_', ' ')"/> Appointments</t><t t-else="">All Appointments</t></h3>
                 </div>
@@ -231,6 +260,123 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Doctors & Slots Section -->
+            <div t-if="state.active_tab === 'doctors'" class="mt-4">
+                <div class="row">
+                    <t t-foreach="state.doctors_data" t-as="doctor_data" t-key="doctor_data.id">
+                        <div class="col-xl-4 col-lg-6 col-md-12 mb-4">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fa fa-user-md me-2"></i>
+                                        <t t-esc="doctor_data.name"/>
+                                    </h5>
+                                    <small>
+                                        <i class="fa fa-stethoscope me-1"></i>
+                                        <t t-esc="doctor_data.service_category"/>
+                                    </small>
+                                </div>
+                                <div class="card-body p-3">
+                                    <!-- If no date filter is selected, show only doctor card without slots -->
+                                    <t t-if="!state.time_filter">
+                                        <div class="text-muted small">Select Today/Tomorrow/Date to view slots.</div>
+                                    </t>
+                                    <t t-elif="doctor_data.slots.length > 0">
+                                        <div class="row g-2">
+                                            <t t-foreach="doctor_data.slots" t-as="slot" t-key="slot.id">
+                                                <div class="col-6 col-sm-4">
+                                                    <div t-att-class="slot.is_booked ? 'slot-box booked-slot' : 'slot-box available-slot'" 
+                                                         t-att-title="slot.is_booked ? 'Booked' : 'Available - Click to book'"
+                                                         t-on-click="slot.is_booked ? null : (event) => this.book_slot(doctor_data.id, slot.id, doctor_data.name, doctor_data.service_id)">
+                                                        <div class="slot-time">
+                                                            <t t-esc="slot.start_time"/> - <t t-esc="slot.end_time"/>
+                                                        </div>
+                                                        <div class="slot-status">
+                                                            <t t-if="slot.is_booked">
+                                                                <i class="fa fa-times-circle"></i> Booked
+                                                            </t>
+                                                            <t t-else="">
+                                                                <i class="fa fa-check-circle"></i> Available
+                                                            </t>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                        </div>
+                                    </t>
+                                    <t t-else="">
+                                        <div class="text-center text-muted p-3">
+                                            <i class="fa fa-calendar-times fa-2x mb-2"></i>
+                                            <p class="mb-0">No slots available for selected date</p>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+                <!-- Empty state when no doctors -->
+                <t t-if="state.doctors_data.length === 0">
+                    <div class="text-center text-muted p-5">
+                        <i class="fa fa-user-md fa-3x mb-3"></i>
+                        <h4>No doctors found</h4>
+                        <p>No doctors available for the selected date and filters.</p>
+                    </div>
+                </t>
+            </div>
         </div>
+        
+        <style>
+            .slot-box {
+                padding: 8px;
+                border-radius: 8px;
+                text-align: center;
+                font-size: 12px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                border: 2px solid transparent;
+                min-height: 60px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+            
+            .available-slot {
+                background: #28a745;
+                color: white;
+                border-color: #28a745;
+            }
+            
+            .available-slot:hover {
+                background: #218838;
+                border-color: #1e7e34;
+                transform: translateY(-1px);
+                box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+            }
+            
+            .booked-slot {
+                background: #dc3545;
+                color: white;
+                border-color: #dc3545;
+                cursor: not-allowed;
+                opacity: 0.8;
+            }
+            
+            .slot-time {
+                font-weight: bold;
+                margin-bottom: 2px;
+            }
+            
+            .slot-status {
+                font-size: 10px;
+                opacity: 0.9;
+            }
+            
+            .slot-status i {
+                margin-right: 3px;
+            }
+        </style>
     </t>
 </templates>
