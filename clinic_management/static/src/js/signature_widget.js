@@ -25,11 +25,9 @@ class DrawCanvasWidget extends Component {
     }
 
     async onMounted() {
-        console.log('DrawCanvasWidget mounted');
         await this.loadDoctorTemplate();
         await this.loadDrawingArea();
         this.renderCanvas();
-        console.log('Canvas setup completed');
     }
 
     renderCanvas() {

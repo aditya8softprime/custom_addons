@@ -90,6 +90,9 @@
                                 <button name="action_reanalyze_template" type="object" string="Re-analyze Template" 
                                         class="btn-primary" invisible="not prescription_template_image"
                                         help="Trigger analysis of the prescription template to detect writing areas"/>
+                                <button name="action_test_template_analysis" type="object" string="Test Analysis" 
+                                        class="btn-info" invisible="not prescription_template_image"
+                                        help="Test template analysis and show detailed results"/>
                             </div>
                             <group>
                                 <group string="Template Image">
