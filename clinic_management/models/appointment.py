@@ -324,27 +324,11 @@ class ClinicAppointment(models.Model):
                 # Generate queue number for walk-in appointments
                 appointment._generate_queue_number()
                 
-        # Handle slot_char functionality after creation
-        for appointment in appointments:
-            if appointment.slot_id and not appointment.slot_char:
-                appointment.slot_char = appointment.slot_id.slot_label
-            # Clear slot_id after saving if slot_char is filled
-            if appointment.slot_char and appointment.slot_id:
-                appointment.slot_id = False
-                
         return appointments
     
     def write(self, vals):
-        # Handle slot_char functionality before writing
-        if vals.get('slot_id'):
-            slot = self.env['clinic.slot'].browse(vals['slot_id'])
-            if slot.exists():
-                vals['slot_char'] = slot.slot_label
-        
         # If state changes to completed, update patient's symptom
         result = super(ClinicAppointment, self).write(vals)
-        
-        # Clear slot_id after saving if slot_char is filled
       
         if vals.get('state') == 'completed':
             for rec in self:
@@ -524,13 +508,27 @@ class ClinicAppointment(models.Model):
             # Find day record
             day = self.env['clinic.days'].search([('name', '=', day_name)], limit=1)
             if day:
-                slots = self.env['clinic.slot'].search([
+                # Get all slots for this doctor and day
+                all_slots = self.env['clinic.slot'].search([
                     ('doctor_id', '=', self.doctor_id.id),
                     ('day_id', '=', day.id),
                     ('is_blocked', '=', False)
                 ])
-                self.slots = slots
-                return {'domain': {'slot_id': [('id', 'in', slots.ids)]}}
+                
+                # Filter out slots already booked for this specific date
+                booked_slot_ids = self.env['clinic.appointment'].search([
+                    ('doctor_id', '=', self.doctor_id.id),
+                    ('appointment_date', '=', self.appointment_date),
+                    ('slot_id', '!=', False),
+                    ('state', 'not in', ['cancelled', 'no_show', 'rescheduled']),
+                    ('id', '!=', self.id if self.id else False)  # Exclude current record if editing
+                ]).mapped('slot_id.id')
+                
+                # Available slots = All slots - Booked slots for this date
+                available_slots = all_slots.filtered(lambda slot: slot.id not in booked_slot_ids)
+                
+                self.slots = available_slots
+                return {'domain': {'slot_id': [('id', 'in', available_slots.ids)]}}
         
         # For walk-in appointments, no slot validation needed but availability is confirmed
         return {}
@@ -572,6 +570,11 @@ class ClinicAppointment(models.Model):
             # Set consulting fee if not set
             if not appointment.consulting_fee and appointment.doctor_id:
                 appointment.consulting_fee = appointment.doctor_id.consultation_fee
+            
+            # Fill slot_char from slot_id before clearing it (for scheduled appointments)
+            if appointment.appointment_type == 'scheduled' and appointment.slot_id:
+                appointment.slot_char = appointment.slot_id.slot_label
+                appointment.slot_id = False  # Clear slot_id after confirmation
             
             appointment.state = 'confirmed'
     
