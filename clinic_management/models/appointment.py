@@ -389,19 +389,24 @@ class ClinicAppointment(models.Model):
 
     @api.onchange('service_id')
     def _onchange_service_id(self):
-        """Filter doctors based on selected service"""
-        self.doctor_id = False  # reset doctor selection
-        self.slot_id = False  # reset slot selection
-        
+        """Filter doctors based on selected service; preserve doctor if compatible."""
+        # Slot depends on doctor/service/date, so clear it on service change
+        self.slot_id = False
+
         if not self.service_id:
+            # If service cleared, keep current doctor value (user may change), but domain is empty
             return {'domain': {'doctor_id': []}}
-        
+
         # Find doctors who have this service in their specializations
         doctors = self.env['clinic.doctor'].search([
             ('specialization_ids', 'in', self.service_id.id),
             ('active', '=', True)
         ])
-        
+
+        # If a doctor is already selected and is not compatible with the chosen service, clear it
+        if self.doctor_id and self.doctor_id.id not in doctors.ids:
+            self.doctor_id = False
+
         domain = [('id', 'in', doctors.ids)]
         return {'domain': {'doctor_id': domain}}
 
@@ -483,8 +488,7 @@ class ClinicAppointment(models.Model):
 
     @api.onchange('doctor_id', 'appointment_date')
     def _onchange_doctor_appointment_date(self):
-        self.slot_id = False  # reset previous selection
-
+        # Do nothing if mandatory fields missing
         if not self.doctor_id or not self.appointment_date:
             return {}
         
@@ -522,12 +526,15 @@ class ClinicAppointment(models.Model):
                 # Available slots = All slots - Booked slots for this date
                 available_slots = all_slots.filtered(lambda slot: slot.id not in booked_slot_ids)
                 
+                # Preserve prefilled slot if still available; otherwise clear it
+                if self.slot_id and self.slot_id.id not in available_slots.ids:
+                    self.slot_id = False
+                # Set domain and helper many2many for selection widget
                 self.slots = available_slots
                 return {'domain': {'slot_id': [('id', 'in', available_slots.ids)]}}
         
         # For walk-in appointments, no slot validation needed but availability is confirmed
         return {}
-        return True
 
     @api.onchange('slot_id')
     def _onchange_slot_id(self):
