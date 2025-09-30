@@ -90,10 +90,18 @@
                 <field name="doctor_id"/>
                 <field name="day_id"/>
                 <field name="slot_number"/>
+                <field name="slot_label"/>
                 <field name="start_time"/>
                 <field name="end_time"/>
+                <field name="start_time_float"/>
+                <field name="end_time_float"/>
                 <field name="is_blocked"/>
+                <field name="patients_count"/>
+                <field name="day_of_week"/>
                 <field name="color"/>
+                <searchpanel>
+                    <field name="day_of_week" string="Day of Week" select="multi" icon="fa-calendar"/>
+                </searchpanel>
                 <templates>
                     <t t-name="kanban-box">
                         <div t-attf-class="oe_kanban_card oe_kanban_global_click o_kanban_record_has_image_fill #{color ? 'oe_kanban_color_' + color : ''}">
@@ -151,9 +159,24 @@
                 <field name="slot_number"/>
                 <field name="doctor_id"/>
                 <field name="day_id"/>
+                <field name="day_of_week"/>
                 <separator/>
+                <!-- Quick Day Filters -->
                 <filter string="Open" name="open" domain="[('is_blocked', '=', False)]"/>
                 <filter string="Blocked" name="blocked" domain="[('is_blocked', '=', True)]"/>
+                <separator/>
+                <!-- Day of Week Filters -->
+                <filter string="Monday" name="monday" domain="[('day_of_week', '=', '0')]"/>
+                <filter string="Tuesday" name="tuesday" domain="[('day_of_week', '=', '1')]"/>
+                <filter string="Wednesday" name="wednesday" domain="[('day_of_week', '=', '2')]"/>
+                <filter string="Thursday" name="thursday" domain="[('day_of_week', '=', '3')]"/>
+                <filter string="Friday" name="friday" domain="[('day_of_week', '=', '4')]"/>
+                <filter string="Saturday" name="saturday" domain="[('day_of_week', '=', '5')]"/>
+                <filter string="Sunday" name="sunday" domain="[('day_of_week', '=', '6')]"/>
+                <separator/>
+                <!-- Quick Date Filters -->
+                <filter string="Today's Slots" name="today" domain="[]" context="{'filter_today': True}"/>
+                <filter string="Tomorrow's Slots" name="tomorrow" domain="[]" context="{'filter_tomorrow': True}"/>
                 <group expand="0" string="Group By">
                     <filter name="group_by_doctor" string="Doctor" context="{'group_by': 'doctor_id'}"/>
                     <filter name="group_by_day" string="Day" context="{'group_by': 'day_id'}"/>

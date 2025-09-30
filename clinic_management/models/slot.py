@@ -161,3 +161,26 @@ class ClinicSlot(models.Model):
                 end_time_float = appt.slot_id.end_time_float
             if end_time_float and end_time_float < current_time_float:
                 appt.write({'state': 'no_show'})
+
+    @api.model
+    def search_read(self, domain=None, fields=None, offset=0, limit=None, order=None):
+        """Override search_read to handle date filters in context"""
+        context = self.env.context or {}
+        
+        if context.get('filter_today'):
+            # Get today's day of week (0=Monday, 6=Sunday)
+            import datetime
+            today = datetime.date.today()
+            day_of_week = today.weekday()  # 0=Monday, 6=Sunday
+            domain = domain or []
+            domain.append(('day_of_week', '=', str(day_of_week)))
+            
+        elif context.get('filter_tomorrow'):
+            # Get tomorrow's day of week
+            import datetime
+            tomorrow = datetime.date.today() + datetime.timedelta(days=1)
+            day_of_week = tomorrow.weekday()  # 0=Monday, 6=Sunday
+            domain = domain or []
+            domain.append(('day_of_week', '=', str(day_of_week)))
+            
+        return super().search_read(domain=domain, fields=fields, offset=offset, limit=limit, order=order)
