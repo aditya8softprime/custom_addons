@@ -389,9 +389,7 @@ class ClinicAppointment(models.Model):
 
     @api.onchange('service_id')
     def _onchange_service_id(self):
-        """Filter doctors based on selected service; preserve doctor if compatible."""
-        # Slot depends on doctor/service/date, so clear it on service change
-        self.slot_id = False
+        """Filter doctors based on selected service; preserve doctor/slot if compatible."""
 
         if not self.service_id:
             # If service cleared, keep current doctor value (user may change), but domain is empty
@@ -406,6 +404,8 @@ class ClinicAppointment(models.Model):
         # If a doctor is already selected and is not compatible with the chosen service, clear it
         if self.doctor_id and self.doctor_id.id not in doctors.ids:
             self.doctor_id = False
+            # When doctor is cleared due to incompatibility, clear slot as well
+            self.slot_id = False
 
         domain = [('id', 'in', doctors.ids)]
         return {'domain': {'doctor_id': domain}}

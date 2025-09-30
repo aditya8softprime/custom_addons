@@ -55,7 +55,11 @@ class DoctorShiftConfig(models.Model):
     doctor_id = fields.Many2one('clinic.doctor', string="Doctor", required=True, ondelete="cascade")
     # Replaced selection with Many2one to clinic.days
     day_id = fields.Many2one('clinic.days', string='Day', required=True)
-    shift_type = fields.Selection([('morning', 'Morning'), ('evening', 'Evening')], string="Shift Type", required=True)
+    shift_type = fields.Selection([
+        ('morning', 'Morning'),
+        ('evening', 'Evening'),
+        ('night', 'Night'),
+    ], string="Shift Type", required=True)
     start_time = fields.Float("Start Time (Hour, e.g., 8.0)", required=True)
     end_time = fields.Float("End Time (Hour, e.g., 12.0)", required=True)
     slot_duration = fields.Integer("Slot Duration (Minutes)", default=30)
@@ -101,7 +105,28 @@ class DoctorShiftConfig(models.Model):
         
         current = self.start_time * 60  # convert hr -> minutes
         end = self.end_time * 60
-        slot_number = 1
+        # Compute numbering prefix and next sequence to maintain uniqueness
+        day_code = (self.day_id.code or '').upper()
+        shift_code = 'M' if self.shift_type == 'morning' else ('E' if self.shift_type == 'evening' else 'N')
+        prefix = f"{day_code}-{shift_code}-"
+
+        # Determine the next available sequence number based on existing slots for this doctor/day/shift
+        existing_slots = Slot.search([
+            ('doctor_id', '=', self.doctor_id.id),
+            ('day_id', '=', self.day_id.id),
+            '|', ('shift', '=', self.shift_type), ('shift_type', '=', self.shift_type),
+        ])
+        max_seq = 0
+        for s in existing_slots:
+            sn = (s.slot_number or '').strip()
+            if sn.startswith(prefix):
+                try:
+                    n = int(sn.split('-')[-1])
+                    if n > max_seq:
+                        max_seq = n
+                except Exception:
+                    continue
+        slot_number = max_seq + 1
         
         while current < end:
             start_min = current
@@ -114,9 +139,7 @@ class DoctorShiftConfig(models.Model):
             end_label = f"{int(end_min//60):02d}:{int(end_min%60):02d}"
             slot_label = f"{start_label} - {end_label}"
             
-            # Generate slot number based on clinic.days code and shift
-            day_code = (self.day_id.code or '').upper()
-            shift_code = 'M' if self.shift_type == 'morning' else 'E'
+            # Generate slot number based on clinic.days code and shift (continue from next sequence)
             slot_number_str = f"{day_code}-{shift_code}-{slot_number:03d}"
 
             # Map clinic.days to python weekday index (0=Mon .. 6=Sun)
@@ -470,10 +493,27 @@ class ClinicDoctor(models.Model):
         
         # Create new slots for each available day
         for day in self.available_days:
-            slot_number = 1
             
             # Morning shift slots
             if self.morning_shift and self.morning_start_time and self.morning_end_time:
+                # Determine next sequence for morning prefix
+                morning_prefix = f"{day.code}-M-"
+                existing_morning = Slot.search([
+                    ('doctor_id', '=', self.id),
+                    ('day_id', '=', day.id),
+                    '|', ('shift', '=', 'morning'), ('shift_type', '=', 'morning'),
+                ])
+                max_m = 0
+                for s in existing_morning:
+                    sn = (s.slot_number or '').strip()
+                    if sn.startswith(morning_prefix):
+                        try:
+                            n = int(sn.split('-')[-1])
+                            if n > max_m:
+                                max_m = n
+                        except Exception:
+                            continue
+                slot_number = max_m + 1
                 current_time = self.morning_start_time
                 
                 while current_time + slot_duration_hours <= self.morning_end_time:
@@ -496,11 +536,26 @@ class ClinicDoctor(models.Model):
                     current_time = end_time
                     slot_number += 1
             
-            # Reset slot number for evening shift
-            slot_number = 1
-            
             # Evening shift slots
             if self.evening_shift and self.evening_start_time and self.evening_end_time:
+                # Determine next sequence for evening prefix
+                evening_prefix = f"{day.code}-E-"
+                existing_evening = Slot.search([
+                    ('doctor_id', '=', self.id),
+                    ('day_id', '=', day.id),
+                    '|', ('shift', '=', 'evening'), ('shift_type', '=', 'evening'),
+                ])
+                max_e = 0
+                for s in existing_evening:
+                    sn = (s.slot_number or '').strip()
+                    if sn.startswith(evening_prefix):
+                        try:
+                            n = int(sn.split('-')[-1])
+                            if n > max_e:
+                                max_e = n
+                        except Exception:
+                            continue
+                slot_number = max_e + 1
                 current_time = self.evening_start_time
                 
                 while current_time + slot_duration_hours <= self.evening_end_time:

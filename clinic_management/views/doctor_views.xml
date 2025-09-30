@@ -131,7 +131,7 @@
                                 <strong>Safe writing area has been calculated to avoid headers, footers, and existing text.</strong>
                             </div>
                         </page>
-                        <page string="Availability" name="availability">
+                        <page string="Availability" name="availability" invisible="1">
                             <group>
                                 <group string="Morning Shift">
                                     <field name="morning_shift"/>
@@ -169,7 +169,7 @@
                                     <field name="start_time" widget="float_time"/>
                                     <field name="end_time" widget="float_time"/>
                                     <field name="slot_duration"/>
-                                    <field name="active"/>
+                                    <field name="active" invisible="1"/>
                                     <field name="slot_count" readonly="1"/>
                                 </list>
                                 <form string="Shift Configuration">

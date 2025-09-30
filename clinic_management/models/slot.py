@@ -15,7 +15,11 @@ class ClinicSlot(models.Model):
         ('0', 'Monday'), ('1', 'Tuesday'), ('2', 'Wednesday'),
         ('3', 'Thursday'), ('4', 'Friday'), ('5', 'Saturday'), ('6', 'Sunday')
     ], string="Day of Week")
-    shift_type = fields.Selection([('morning', 'Morning'), ('evening', 'Evening')], string="Shift Type")
+    shift_type = fields.Selection([
+        ('morning', 'Morning'),
+        ('evening', 'Evening'),
+        ('night', 'Night'),
+    ], string="Shift Type")
     slot_label = fields.Char("Slot Label")
     start_time = fields.Char("Start Time")
     end_time = fields.Char("End Time")
@@ -28,7 +32,8 @@ class ClinicSlot(models.Model):
     slot_number = fields.Char(string='Slot Number')
     shift = fields.Selection([
         ('morning', 'Morning'),
-        ('evening', 'Evening')
+        ('evening', 'Evening'),
+        ('night', 'Night'),
     ], string='Shift')
     # New simpler availability flags
     is_blocked = fields.Boolean(string='Blocked', default=False, help="If enabled, this slot template is not selectable for any date.")
