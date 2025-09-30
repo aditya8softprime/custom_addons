@@ -12,7 +12,7 @@ class AppointmentDashboard extends Component {
         this.orm = useService('orm');
         this.actionManager = useService('action');
 
-        // Initialize state
+        // Initialize state with today's filter as default
         const initialState = {
             total_appointments: 0,
             total_draft: 0,
@@ -29,7 +29,7 @@ class AppointmentDashboard extends Component {
             doctor_id: null,
             doctors: [],
             doctors_data: [],
-            time_filter: null,
+            time_filter: 'today',  // Default to today's filter
             active_tab: 'overview',
             records: [],
             current_page: 1,
@@ -454,6 +454,19 @@ class AppointmentDashboard extends Component {
             res_id: record.id,
             views: [[false, 'form']],
             target: 'new',
+        });
+    }
+
+    show_booked_slot_message() {
+        this.actionManager.doAction({
+            type: 'ir.actions.client',
+            tag: 'display_notification',
+            params: {
+                title: 'Slot Already Booked',
+                message: 'This slot is already booked. Please select another available slot.',
+                type: 'warning',
+                sticky: false,
+            }
         });
     }
 
