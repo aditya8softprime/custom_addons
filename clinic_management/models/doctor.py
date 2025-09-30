@@ -224,19 +224,15 @@ class ClinicDoctor(models.Model):
     user_id = fields.Many2one('res.users', string='Related User', tracking=True)
     employee_id = fields.Many2one('hr.employee', string='Related Employee', tracking=True)
     # Doctor-specific prescription template (PDF/Image)
-    prescription_template_pdf = fields.Binary(
-        string='Prescription Template PDF',
-        attachment=True,
-        help='Upload a prescription template in PDF. It will be converted to an image automatically.'
-    )
+    # Deprecated template fields retained for backward compatibility (hidden in views)
+    prescription_template_pdf = fields.Binary(string='Prescription Template PDF', attachment=True)
     prescription_template_pdf_filename = fields.Char(string='Template PDF Filename')
-    # Doctor-specific prescription template image for canvas background
-    prescription_template_image = fields.Binary(
-        string='Prescription Template Image',
-        attachment=True,
-        help='Upload a background image for prescriptions. This will auto-load on appointments when this doctor is selected.'
-    )
+    prescription_template_image = fields.Binary(string='Prescription Template Image', attachment=True)
     prescription_template_filename = fields.Char(string='Template Filename')
+
+    # New prescription layout: header/footer images
+    header_image = fields.Binary(string='Prescription Header Image', attachment=True, help='Appears at top of each prescription page')
+    footer_image = fields.Binary(string='Prescription Footer Image', attachment=True, help='Appears at bottom of each prescription page')
     
     # Template analysis fields (computed from OpenCV + Tesseract)
     drawing_area_coords = fields.Text(string='Drawing Area Coordinates', 

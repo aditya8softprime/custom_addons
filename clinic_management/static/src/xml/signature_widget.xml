@@ -2,34 +2,124 @@
 <templates xml:space="preserve">
     <t t-name="clinic_management.DrawCanvasWidget">
         <div class="o_draw_canvas_widget">
-            <!-- Toolbar for page navigation and actions -->
-            <div class="o_draw_canvas_toolbar">
-                <button type="button"
-                        t-att-class="'btn btn-sm ' + (state.tool === 'pen' ? 'btn-primary' : 'btn-outline-secondary')"
-                        t-on-click="onToolPen">Pen</button>
-                <button type="button"
-                        t-att-class="'btn btn-sm ml-1 ' + (state.tool === 'eraser' ? 'btn-primary' : 'btn-outline-secondary')"
-                        t-on-click="onToolEraser">Eraser</button>
-                <label class="ml-2 mr-1">Size</label>
-                <input type="range" min="2" max="80" step="1" t-on-change="onBrushSizeChange" style="width:140px"/>
-                <span class="ml-1" t-esc="state.brushSize"/> px
-                <button type="button" class="btn btn-secondary btn-sm" t-on-click="onPrevPage">Prev</button>
-                <span class="mx-2">Page <t t-esc="state.currentPage"/> / <t t-esc="state.totalPages"/></span>
-                <button type="button" class="btn btn-secondary btn-sm" t-on-click="onNextPage">Next</button>
-                <button type="button" class="btn btn-primary btn-sm ml-3" t-on-click="onAddPage">Add Page</button>
-                <button type="button" class="btn btn-danger btn-sm ml-1" t-on-click="onRemovePage">Remove Page</button>
+            
+            <!-- Main layout: Canvas on left, Toolbar on right -->
+            <div class="o_draw_main_layout" style="display:flex; gap:16px; align-items:flex-start;">
+
+                <!-- Left side: Header + Canvas + Footer -->
+                <div class="o_draw_canvas_layout" style="flex:1; display:flex; flex-direction:column; gap:8px;">
+                    
+                    <!-- Header -->
+                    <div class="header_image_container">
+                        <t t-if="state.headerB64">
+                            <img t-att-src="'data:image/png;base64,' + state.headerB64"
+                                 alt="Header"
+                                 class="header_image"
+                                 style="width:100%; height:auto; display:block;"/>
+                        </t>
+                    </div>
+
+                    <!-- Canvas -->
+                    <div class="canvas_container" style="flex:1; display:block; overflow:auto;">
+                        <canvas t-ref="canvas"
+                                width="2480"
+                                height="3508"
+                                style="width:100%; height:auto; display:block; background:transparent; cursor:crosshair;"/>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="footer_image_container">
+                        <t t-if="state.footerB64">
+                            <img t-att-src="'data:image/png;base64,' + state.footerB64"
+                                 alt="Footer"
+                                 class="footer_image"
+                                 style="width:100%; height:auto; display:block;"/>
+                        </t>
+                    </div>
+                </div>
+
+                <!-- Right side: Toolbar -->
+                <div class="o_draw_canvas_toolbar"
+                     style="flex:0 0 200px; display:flex; flex-direction:column; gap:12px;
+                            padding:12px; background:#f8f9fa; border-radius:8px; border:1px solid #dee2e6;">
+
+                    <!-- Tools -->
+                    <div>
+                        <h6 style="margin:0 0 6px; font-size:12px; font-weight:bold; color:#495057;">Tools</h6>
+                        <button type="button"
+                                t-att-class="'btn btn-sm w-100 ' + (state.tool === 'pen' ? 'btn-primary' : 'btn-outline-secondary')"
+                                t-on-click="onToolPen">✏️ Pen</button>
+                        <button type="button"
+                                t-att-class="'btn btn-sm w-100 mt-1 ' + (state.tool === 'eraser' ? 'btn-primary' : 'btn-outline-secondary')"
+                                t-on-click="onToolEraser">🧽 Eraser</button>
+                    </div>
+
+                    <!-- Pen Settings -->
+                    <div t-if="state.tool === 'pen'">
+                        <h6 style="margin:12px 0 6px; font-size:12px; font-weight:bold; color:#495057;">✏️ Pen Settings</h6>
+                        
+                        <!-- Pen Color -->
+                        <div style="margin-bottom:8px;">
+                            <label style="display:block; font-size:11px; margin-bottom:3px; color:#6c757d;">Color</label>
+                            <div style="display:flex; gap:4px; margin-bottom:6px;">
+                                <button type="button" class="btn btn-sm" 
+                                        style="background:#000000; color:white; flex:1; padding:4px;"
+                                        t-on-click="() => this.onColorChange({target: {value: '#000000'}})">Black</button>
+                                <button type="button" class="btn btn-sm"
+                                        style="background:#0066cc; color:white; flex:1; padding:4px;"
+                                        t-on-click="() => this.onColorChange({target: {value: '#0066cc'}})">Blue</button>
+                                <button type="button" class="btn btn-sm"
+                                        style="background:#cc0000; color:white; flex:1; padding:4px;"
+                                        t-on-click="() => this.onColorChange({target: {value: '#cc0000'}})">Red</button>
+                            </div>
+                            <div style="display:flex; gap:4px;">
+                                <button type="button" class="btn btn-sm"
+                                        style="background:#009900; color:white; flex:1; padding:4px;"
+                                        t-on-click="() => this.onColorChange({target: {value: '#009900'}})">Green</button>
+                                <input type="color" t-att-value="state.penColor" t-on-change="onColorChange"
+                                       style="flex:1; height:28px; border:1px solid #ccc; border-radius:4px; cursor:pointer;"/>
+                            </div>
+                        </div>
+                        
+                        <!-- Pen Size -->
+                        <div>
+                            <label style="display:block; font-size:11px; margin-bottom:3px; color:#6c757d;">Size</label>
+                            <input type="range" min="1" max="20" step="1" t-att-value="state.penSize"
+                                   t-on-change="onPenSizeChange" style="width:100%;"/>
+                            <small style="display:block; text-align:center; margin-top:4px; color:#6c757d;">
+                                <t t-esc="state.penSize"/> px
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <!-- Eraser Settings -->
+                    <div t-if="state.tool === 'eraser'">
+                        <h6 style="margin:12px 0 6px; font-size:12px; font-weight:bold; color:#495057;">🧽 Eraser Settings</h6>
+                        <div>
+                            <label style="display:block; font-size:11px; margin-bottom:3px; color:#6c757d;">Size</label>
+                            <input type="range" min="8" max="250" step="6" t-att-value="state.eraserSize"
+                                   t-on-change="onEraserSizeChange" style="width:100%;"/>
+                            <small style="display:block; text-align:center; margin-top:4px; color:#6c757d;">
+                                <t t-esc="state.eraserSize"/> px
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Page Navigation -->
+                    <div>
+                        <h6 style="margin:12px 0 6px; font-size:12px; font-weight:bold; color:#495057;">Pages</h6>
+                        <div style="text-align:center; margin-bottom:6px; font-size:14px; color:#495057;">
+                            Page <t t-esc="state.currentPage"/> / <t t-esc="state.totalPages"/>
+                        </div>
+                        <div style="display:flex; gap:4px; margin-bottom:6px;">
+                            <button type="button" class="btn btn-secondary btn-sm flex-fill" t-on-click="onPrevPage">← Prev</button>
+                            <button type="button" class="btn btn-secondary btn-sm flex-fill" t-on-click="onNextPage">Next →</button>
+                        </div>
+                        <button type="button" class="btn btn-success btn-sm w-100 mb-1" t-on-click="onAddPage">+ Add Page</button>
+                        <button type="button" class="btn btn-danger btn-sm w-100" t-on-click="onRemovePage">🗑️ Remove</button>
+                    </div>
+                </div>
             </div>
-            
-            <!-- Doctor's Prescription Template as Background -->
-            <div t-if="props.record.data.doctor_id" 
-                 class="prescription-template-bg"
-                 t-att-style="'position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url(/web/image/clinic.doctor/' + (Array.isArray(props.record.data.doctor_id) ? props.record.data.doctor_id[0] : props.record.data.doctor_id) + '/prescription_template_image); background-size: cover; background-position: center; background-repeat: no-repeat; z-index: 1;'"></div>
-            
-            <!-- Canvas for Drawing on Top of Template -->
-            <canvas t-ref="canvas" 
-                    width="2480" 
-                    height="3508" 
-                    style="position: relative; width:100%; height:100%; display:block; z-index: 2; background: transparent; cursor: crosshair; touch-action: none;"></canvas>
         </div>
     </t>
 </templates>

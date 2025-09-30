@@ -12,9 +12,19 @@ class DrawCanvasWidget extends Component {
         this.canvasRef = useRef("canvas");
         this.saveTimeout = null;
         this.isDrawing = false;
-        this.doctorTemplate = null; // base64 image for doctor's prescription template
-        this.drawingArea = null; // allowed drawing area coordinates
-    this.state = useState({ currentPage: 1, totalPages: 1, tool: 'pen', brushSize: 2 });
+    this.headerImgB64 = null; // base64 header image (doctor/company)
+    this.footerImgB64 = null; // base64 footer image (doctor/company)
+    this.drawingArea = null; // allowed drawing area coordinates (optional)
+    this.state = useState({
+            currentPage: 1,
+            totalPages: 1,
+            tool: 'pen',
+            penSize: 2,
+            eraserSize: 32,
+            penColor: '#000000',
+            headerB64: null,
+            footerB64: null,
+        });
 
         onMounted(this.onMounted.bind(this));
         onWillDestroy(() => {
@@ -26,8 +36,9 @@ class DrawCanvasWidget extends Component {
     }
 
     async onMounted() {
-        await this.loadDoctorTemplate();
-        await this.loadDrawingArea();
+        await this.loadHeaderFooterImages();
+        // Do not call backend analysis; use a simple default area (or none)
+        this.drawingArea = { x: 0.08, y: 0.18, width: 0.84, height: 0.64 };
         await this.initPagesState();
         this.renderCanvas();
         await this.fetchAndDrawCurrentPage();
@@ -62,15 +73,15 @@ class DrawCanvasWidget extends Component {
         if (!canvas) return;
 
         // Ensure canvas is interactive
-    canvas.style.cursor = this.state.tool === 'eraser' ? 'cell' : 'crosshair';
         canvas.style.touchAction = 'none';
         canvas.style.pointerEvents = 'auto';
+        this.updateCursor();
 
         const ctx = canvas.getContext("2d");
-    ctx.lineWidth = this.state.brushSize || 2;
+        // Set initial drawing properties
         ctx.lineJoin = "round";
         ctx.lineCap = "round";
-        ctx.strokeStyle = "#000000"; // Set default drawing color
+        this.updateDrawingSettings(ctx);
 
     // Start with a transparent canvas; background template is shown via CSS.
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -128,15 +139,15 @@ class DrawCanvasWidget extends Component {
             if (distance > 2) { // Only draw if movement is significant (more than 2 pixels)
                 ctx.save();
                 if (this.state.tool === 'eraser') {
-                    // Eraser: punch holes in current bitmap (keep template intact, since it's background)
+                    // Eraser: punch holes in current bitmap
                     ctx.globalCompositeOperation = 'destination-out';
                     ctx.strokeStyle = 'rgba(0,0,0,1)';
-                    ctx.lineWidth = this.state.brushSize || 16;
+                    ctx.lineWidth = this.state.eraserSize;
                 } else {
-                    // Pen: normal drawing
+                    // Pen: normal drawing with color
                     ctx.globalCompositeOperation = 'source-over';
-                    ctx.strokeStyle = '#000000';
-                    ctx.lineWidth = this.state.brushSize || 2;
+                    ctx.strokeStyle = this.state.penColor;
+                    ctx.lineWidth = this.state.penSize;
                 }
                 ctx.beginPath();
                 ctx.moveTo(lastX, lastY);
@@ -160,7 +171,6 @@ class DrawCanvasWidget extends Component {
                 hasDrawn = false; // Reset drawing flag
                 lastX = pos.x;
                 lastY = pos.y;
-                canvas.style.cursor = this.state.tool === 'eraser' ? 'cell' : 'crosshair';
             } else {
                 // Show visual feedback for restricted area
                 this.showRestrictedAreaWarning();
@@ -174,7 +184,6 @@ class DrawCanvasWidget extends Component {
             }
             this.isDrawing = false;
             hasDrawn = false;
-            canvas.style.cursor = this.state.tool === 'eraser' ? 'cell' : 'crosshair';
         };
 
         // Mouse events
@@ -238,8 +247,8 @@ class DrawCanvasWidget extends Component {
                 });
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             } else {
-                // No existing image: keep canvas transparent so CSS background template is visible
-                this.initializeWithTemplate(canvas, ctx);
+                // No existing image: start with transparent canvas; header/footer shown outside
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
             }
             // show drawing area outline again
             setTimeout(() => this.showDrawingAreaOutline(canvas, ctx), 300);
@@ -285,68 +294,49 @@ class DrawCanvasWidget extends Component {
     }
 
     saveSimpleCanvas(canvas) {
-        // Create composite image with template + drawing
+        // Create composite image with header/footer + drawing
         this.saveCompositeImage(canvas);
     }
 
     saveCompositeImage(canvas) {
-        console.log('Starting composite image save...');
-        
-        // Create composite canvas with template background + drawing
-        const compositeCanvas = document.createElement('canvas');
-        compositeCanvas.width = canvas.width;
-        compositeCanvas.height = canvas.height;
-        const ctx = compositeCanvas.getContext('2d');
+        const loadImg = (b64) => new Promise((resolve, reject) => {
+            if (!b64) return resolve(null);
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = 'data:image/png;base64,' + b64;
+        });
 
-        // White background first
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
-
-        // Draw template if available
-        if (this.doctorTemplate) {
-            const templateImg = new Image();
-            templateImg.onload = () => {
+        Promise.all([loadImg(this.headerImgB64), loadImg(this.footerImgB64)])
+            .then(([headerImg, footerImg]) => {
                 try {
-                    // Draw template background
-                    ctx.drawImage(templateImg, 0, 0, compositeCanvas.width, compositeCanvas.height);
-                    
-                    // Draw canvas content (drawing) on top
-                    ctx.drawImage(canvas, 0, 0, compositeCanvas.width, compositeCanvas.height);
-                    
-                    // Save composite
-                    const dataURL = compositeCanvas.toDataURL("image/png", 1.0); // Max quality
-                    const base64 = dataURL.split(",")[1];
-                    
-                    console.log('Saving composite image with template + drawing, size:', base64.length);
-                    
+                    const headerH = headerImg ? Math.round(canvas.width * (headerImg.naturalHeight || headerImg.height) / (headerImg.naturalWidth || headerImg.width)) : 0;
+                    const footerH = footerImg ? Math.round(canvas.width * (footerImg.naturalHeight || footerImg.height) / (footerImg.naturalWidth || footerImg.width)) : 0;
+                    const compositeCanvas = document.createElement('canvas');
+                    compositeCanvas.width = canvas.width;
+                    compositeCanvas.height = headerH + canvas.height + footerH;
+                    const ctx = compositeCanvas.getContext('2d');
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
+                    if (headerImg && headerH > 0) {
+                        ctx.drawImage(headerImg, 0, 0, compositeCanvas.width, headerH);
+                    }
+                    ctx.drawImage(canvas, 0, headerH);
+                    if (footerImg && footerH > 0) {
+                        ctx.drawImage(footerImg, 0, headerH + canvas.height, compositeCanvas.width, footerH);
+                    }
+                    const dataURL = compositeCanvas.toDataURL('image/png', 1.0);
+                    const base64 = dataURL.split(',')[1];
                     this._storeImageForCurrentPage(base64);
-                } catch (error) {
-                    console.error('Error creating composite image:', error);
-                    // Fallback to canvas only
+                } catch (e) {
+                    console.error('Composite save failed, fallback to canvas only:', e);
                     this.saveFallbackCanvas(canvas);
                 }
-            };
-            templateImg.onerror = () => {
-                console.warn('Template image failed to load, saving canvas only');
+            })
+            .catch((e) => {
+                console.warn('Header/footer load failed, saving canvas only', e);
                 this.saveFallbackCanvas(canvas);
-            };
-            templateImg.src = 'data:image/png;base64,' + this.doctorTemplate;
-        } else {
-            console.log('No template available, saving canvas only');
-            // No template, save canvas only
-            this.saveFallbackCanvas(canvas);
-        }
-    }
-
-    saveFallbackCanvas(canvas) {
-        const dataURL = canvas.toDataURL("image/png", 1.0);
-        const base64 = dataURL.split(",")[1];
-        
-        try {
-            this._storeImageForCurrentPage(base64);
-        } catch (e) {
-            console.error('Error saving canvas:', e);
-        }
+            });
     }
 
     async _storeImageForCurrentPage(base64) {
@@ -436,30 +426,36 @@ class DrawCanvasWidget extends Component {
     async saveImmediately() {
         const canvas = this.canvasRef.el;
         if (!canvas) return;
-        // Composite and store now
-        // Duplicate logic of saveCompositeImage but ensure immediate storage
-        const compositeCanvas = document.createElement('canvas');
-        compositeCanvas.width = canvas.width;
-        compositeCanvas.height = canvas.height;
-        const ctx = compositeCanvas.getContext('2d');
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
+        // Composite and store now: header + canvas + footer
         try {
-            if (this.doctorTemplate) {
-                const templateImg = new Image();
-                await new Promise((resolve, reject) => {
-                    templateImg.onload = resolve;
-                    templateImg.onerror = reject;
-                    templateImg.src = 'data:image/png;base64,' + this.doctorTemplate;
-                });
-                ctx.drawImage(templateImg, 0, 0, compositeCanvas.width, compositeCanvas.height);
+            const loadImg = (b64) => new Promise((resolve, reject) => {
+                if (!b64) return resolve(null);
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = reject;
+                img.src = 'data:image/png;base64,' + b64;
+            });
+            const [headerImg, footerImg] = await Promise.all([loadImg(this.headerImgB64), loadImg(this.footerImgB64)]);
+            const headerH = headerImg ? Math.round(canvas.width * (headerImg.naturalHeight || headerImg.height) / (headerImg.naturalWidth || headerImg.width)) : 0;
+            const footerH = footerImg ? Math.round(canvas.width * (footerImg.naturalHeight || footerImg.height) / (footerImg.naturalWidth || footerImg.width)) : 0;
+            const compositeCanvas = document.createElement('canvas');
+            compositeCanvas.width = canvas.width;
+            compositeCanvas.height = headerH + canvas.height + footerH;
+            const ctx = compositeCanvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
+            if (headerImg && headerH > 0) {
+                ctx.drawImage(headerImg, 0, 0, compositeCanvas.width, headerH);
             }
-            ctx.drawImage(canvas, 0, 0, compositeCanvas.width, compositeCanvas.height);
+            ctx.drawImage(canvas, 0, headerH);
+            if (footerImg && footerH > 0) {
+                ctx.drawImage(footerImg, 0, headerH + canvas.height, compositeCanvas.width, footerH);
+            }
             const dataURL = compositeCanvas.toDataURL('image/png', 1.0);
             const base64 = dataURL.split(',')[1];
             await this._storeImageForCurrentPage(base64);
         } catch (e) {
-            console.error('Immediate save failed, falling back:', e);
+            console.error('Immediate composite failed, saving canvas only:', e);
             const dataURL = canvas.toDataURL('image/png', 1.0);
             const base64 = dataURL.split(',')[1];
             await this._storeImageForCurrentPage(base64);
@@ -467,51 +463,64 @@ class DrawCanvasWidget extends Component {
     }
 
 
-    async loadDoctorTemplate() {
+    async loadHeaderFooterImages() {
         try {
             const rd = (this.props.record && this.props.record.data) ? this.props.record.data : {};
             const doctorId = rd.doctor_id ? (Array.isArray(rd.doctor_id) ? rd.doctor_id[0] : rd.doctor_id) : null;
-            if (!doctorId) return;
-
-            const result = await rpc('/web/dataset/call_kw', {
-                model: 'clinic.doctor',
-                method: 'read',
-                args: [[doctorId], ['prescription_template_image']],
-                kwargs: {}
-            });
-            if (result && result.length > 0) {
-                this.doctorTemplate = result[0].prescription_template_image || null;
+            const companyId = rd.company_id ? (Array.isArray(rd.company_id) ? rd.company_id[0] : rd.company_id) : null;
+            
+            console.log('Loading header/footer images - doctorId:', doctorId, 'companyId:', companyId);
+            
+            let header = null;
+            let footer = null;
+            
+            if (doctorId) {
+                console.log('Fetching from doctor:', doctorId);
+                const docRes = await rpc('/web/dataset/call_kw', {
+                    model: 'clinic.doctor',
+                    method: 'read',
+                    args: [[doctorId], ['header_image', 'footer_image']],
+                    kwargs: {}
+                });
+                console.log('Doctor response:', docRes);
+                if (docRes && docRes.length > 0) {
+                    header = docRes[0].header_image || null;
+                    footer = docRes[0].footer_image || null;
+                    console.log('Doctor header:', !!header, 'footer:', !!footer);
+                }
             }
+            
+            if ((!header || !footer) && companyId) {
+                console.log('Fetching from company:', companyId, 'need header:', !header, 'need footer:', !footer);
+                const compRes = await rpc('/web/dataset/call_kw', {
+                    model: 'res.company',
+                    method: 'read',
+                    args: [[companyId], ['header_image', 'footer_image']],
+                    kwargs: {}
+                });
+                console.log('Company response:', compRes);
+                if (compRes && compRes.length > 0) {
+                    header = header || compRes[0].header_image || null;
+                    footer = footer || compRes[0].footer_image || null;
+                    console.log('Final header:', !!header, 'footer:', !!footer);
+                }
+            }
+            
+            this.headerImgB64 = header;
+            this.footerImgB64 = footer;
+            // Update reactive state so template <img> tags can render base64 directly
+            this.state.headerB64 = header;
+            this.state.footerB64 = footer;
+            
+            console.log('State updated - headerB64:', !!this.state.headerB64, 'footerB64:', !!this.state.footerB64);
         } catch (e) {
-            console.warn('Could not load doctor template:', e.message);
+            console.error('Could not load header/footer images:', e);
         }
     }
 
     async loadDrawingArea() {
-        try {
-            const rd = (this.props.record && this.props.record.data) ? this.props.record.data : {};
-            const doctorId = rd.doctor_id ? (Array.isArray(rd.doctor_id) ? rd.doctor_id[0] : rd.doctor_id) : null;
-            if (!doctorId) return;
-
-            const result = await rpc('/web/dataset/call_kw', {
-                model: 'clinic.doctor',
-                method: 'get_drawing_area_coords',
-                args: [doctorId],
-                kwargs: {}
-            });
-            
-            if (result) {
-                this.drawingArea = result;
-                console.log('Drawing area loaded:', this.drawingArea);
-            } else {
-                // Default drawing area
-                this.drawingArea = {x: 0.1, y: 0.15, width: 0.8, height: 0.7};
-            }
-        } catch (e) {
-            console.warn('Could not load drawing area:', e.message);
-            // Default drawing area
-            this.drawingArea = {x: 0.1, y: 0.15, width: 0.8, height: 0.7};
-        }
+        // Analysis removed: use a simple default drawing area (optional)
+        this.drawingArea = { x: 0.08, y: 0.18, width: 0.84, height: 0.64 };
     }
 
     initializeWithTemplate(canvas, ctx) {
@@ -573,20 +582,75 @@ class DrawCanvasWidget extends Component {
         }
     }
 
+    // Update drawing settings based on current tool
+    updateDrawingSettings(ctx) {
+        if (this.state.tool === 'eraser') {
+            ctx.lineWidth = this.state.eraserSize;
+            ctx.strokeStyle = 'rgba(0,0,0,1)';
+        } else {
+            ctx.lineWidth = this.state.penSize;
+            ctx.strokeStyle = this.state.penColor;
+        }
+    }
+
+    // Update cursor based on tool and size
+    updateCursor() {
+        const canvas = this.canvasRef.el;
+        if (!canvas) return;
+        
+        if (this.state.tool === 'eraser') {
+            // Create eraser cursor - circle showing eraser size
+            const size = Math.min(this.state.eraserSize, 50); // Cap display size at 50px for visibility
+            const cursorSvg = `
+                <svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="${size/2}" cy="${size/2}" r="${size/2-1}" 
+                            fill="none" stroke="#ff6b6b" stroke-width="2" opacity="0.8"/>
+                </svg>
+            `;
+            const encodedSvg = encodeURIComponent(cursorSvg);
+            canvas.style.cursor = `url("data:image/svg+xml,${encodedSvg}") ${size/2} ${size/2}, auto`;
+        } else {
+            // Pen cursor - crosshair with dot showing pen size
+            const size = Math.min(this.state.penSize * 3, 20); // Scale up for visibility
+            const cursorSvg = `
+                <svg width="${size + 10}" height="${size + 10}" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="${(size + 10)/2}" cy="${(size + 10)/2}" r="${size/2}" 
+                            fill="${this.state.penColor}" opacity="0.7"/>
+                    <circle cx="${(size + 10)/2}" cy="${(size + 10)/2}" r="${size/2}" 
+                            fill="none" stroke="#333" stroke-width="1"/>
+                </svg>
+            `;
+            const encodedSvg = encodeURIComponent(cursorSvg);
+            canvas.style.cursor = `url("data:image/svg+xml,${encodedSvg}") ${(size + 10)/2} ${(size + 10)/2}, crosshair`;
+        }
+    }
+
     // Toolbar handlers
     onToolPen() {
         this.state.tool = 'pen';
-        const canvas = this.canvasRef.el;
-        if (canvas) canvas.style.cursor = 'crosshair';
+        this.updateCursor();
     }
+    
     onToolEraser() {
         this.state.tool = 'eraser';
-        const canvas = this.canvasRef.el;
-        if (canvas) canvas.style.cursor = 'cell';
+        this.updateCursor();
     }
-    onBrushSizeChange(ev) {
+    
+    onPenSizeChange(ev) {
         const v = parseInt(ev.target.value, 10);
-        this.state.brushSize = isNaN(v) ? 2 : v;
+        this.state.penSize = isNaN(v) ? 2 : v;
+        this.updateCursor();
+    }
+    
+    onEraserSizeChange(ev) {
+        const v = parseInt(ev.target.value, 10);
+        this.state.eraserSize = isNaN(v) ? 32 : v;
+        this.updateCursor();
+    }
+    
+    onColorChange(ev) {
+        this.state.penColor = ev.target.value || '#000000';
+        this.updateCursor();
     }
 }
 
