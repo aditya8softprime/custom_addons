@@ -74,11 +74,11 @@
         'menu/clinic_menus.xml',
     ],
     'demo': [
-        'demo/demo_medicines.xml',
+        # 'demo/demo_medicines.xml',
         'demo/demo_services.xml',
         'demo/demo_doctors.xml',
         'demo/demo_patients.xml',
-        'demo/demo_slots.xml',
+        # 'demo/demo_slots.xml',
         # 'demo/demo_appointments.xml', 
         # 'demo/demo_holidays.xml',
         # 'demo/demo_testimonials.xml',

@@ -299,35 +299,20 @@ class ClinicDoctor(models.Model):
             'price_unit': self.consultation_fee,
             'description': f"Consultation – {self.name}"
         }
-    
-    @api.constrains('morning_start_time', 'morning_end_time', 'morning_shift')
-    def _check_morning_hours(self):
-        for record in self:
-            if record.morning_shift and record.morning_start_time >= record.morning_end_time:
-                raise ValidationError(_('Morning End Time must be greater than Morning Start Time'))
-    
-    @api.constrains('evening_start_time', 'evening_end_time', 'evening_shift')
-    def _check_evening_hours(self):
+   
         for record in self:
             if record.evening_shift and record.evening_start_time >= record.evening_end_time:
                 raise ValidationError(_('Evening End Time must be greater than Evening Start Time'))
-    
-    @api.constrains('morning_shift', 'evening_shift')
-    def _check_at_least_one_shift(self):
-        for record in self:
-            if not record.morning_shift and not record.evening_shift:
-                raise ValidationError(_('At least one shift (Morning or Evening) must be enabled'))
-    
-    @api.model_create_multi
-    def create(self, vals_list):
-        doctors = super(ClinicDoctor, self).create(vals_list)
-        # Convert template PDF to image after creation if present
-        for doctor in doctors:
-            if doctor.prescription_template_pdf and not doctor.prescription_template_image:
-                doctor._set_template_image_from_pdf()
-            # Create slots for each doctor
-            doctor._create_slots()
-        return doctors
+    # @api.model_create_multi
+    # def create(self, vals_list):
+    #     doctors = super(ClinicDoctor, self).create(vals_list)
+    #     # Convert template PDF to image after creation if present
+    #     for doctor in doctors:
+    #         # if doctor.prescription_template_pdf and not doctor.prescription_template_image:
+    #         #     doctor._set_template_image_from_pdf()
+    #         # # Create slots for each doctor
+    #         doctor._create_slots()
+    #     return doctors
     
     def write(self, vals):
         res = super(ClinicDoctor, self).write(vals)

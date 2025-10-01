@@ -31,16 +31,6 @@
             <field name="mobile">+1-555-0101</field>
             <field name="email">dr.john.smith@clinic.com</field>
             <field name="specialization_ids" eval="[(6, 0, [ref('demo_service_cardiology'), ref('demo_service_general_consultation')])]"/>
-            <field name="available_days" eval="[(6, 0, [ref('clinic_management.days_monday'), ref('clinic_management.days_tuesday'), ref('clinic_management.days_wednesday'), ref('clinic_management.days_thursday'), ref('clinic_management.days_friday')])]"/>
-            <field name="morning_shift">True</field>
-            <field name="morning_start_time">9.0</field>
-            <field name="morning_end_time">13.0</field>
-            <field name="morning_shift">True</field>
-            <field name="evening_shift">False</field>
-            <field name="evening_shift">True</field>
-            <field name="evening_start_time">14.0</field>
-            <field name="evening_end_time">17.0</field>
-            <field name="slot_duration">30</field>
             <field name="consultation_fee">300.00</field>
             <field name="special_tag_ids" eval="[(6, 0, [ref('demo_tag_senior_consultant'), ref('demo_tag_fellowship_trained')])]"/>
             <field name="bio"><![CDATA[
@@ -63,11 +53,6 @@
             <field name="mobile">+1-555-0102</field>
             <field name="email">dr.sarah.brown@clinic.com</field>
             <field name="specialization_ids" eval="[(6, 0, [ref('demo_service_dermatology'), ref('demo_service_general_consultation')])]"/>
-            <field name="available_days" eval="[(6, 0, [ref('clinic_management.days_monday'), ref('clinic_management.days_wednesday'), ref('clinic_management.days_friday'), ref('clinic_management.days_saturday')])]"/>
-            <field name="morning_start_time">10.0</field>
-            <field name="morning_end_time">18.0</field>
-            <field name="slot_duration">30</field>
-            
             <field name="consultation_fee">200.00</field>
             <field name="special_tag_ids" eval="[(6, 0, [ref('demo_tag_senior_consultant')])]"/>
             <field name="bio"><![CDATA[
@@ -90,11 +75,6 @@
             <field name="mobile">+1-555-0103</field>
             <field name="email">dr.michael.johnson@clinic.com</field>
             <field name="specialization_ids" eval="[(6, 0, [ref('demo_service_pediatrics'), ref('demo_service_general_consultation')])]"/>
-            <field name="available_days" eval="[(6, 0, [ref('clinic_management.days_tuesday'), ref('clinic_management.days_thursday'), ref('clinic_management.days_friday'), ref('clinic_management.days_saturday')])]"/>
-            <field name="morning_start_time">8.0</field>
-            <field name="morning_end_time">16.0</field>
-            <field name="slot_duration">20</field>
-            
             <field name="consultation_fee">180.00</field>
             <field name="bio"><![CDATA[
                 <p>Dr. Michael Johnson is a dedicated pediatrician with 10 years of experience in child healthcare. He is passionate about providing comprehensive care for children from infancy to adolescence.</p>
@@ -116,13 +96,6 @@
             <field name="mobile">+1-555-0104</field>
             <field name="email">dr.emily.davis@clinic.com</field>
             <field name="specialization_ids" eval="[(6, 0, [ref('demo_service_orthopedics'), ref('demo_service_general_consultation')])]"/>
-            <field name="available_days" eval="[(6, 0, [ref('clinic_management.days_monday'), ref('clinic_management.days_tuesday'), ref('clinic_management.days_wednesday'), ref('clinic_management.days_thursday')])]"/>
-            <field name="morning_start_time">9.0</field>
-            <field name="morning_end_time">13.0</field>
-            <field name="morning_shift">True</field>
-            <field name="evening_shift">False</field>
-            <field name="slot_duration">45</field>
-            
             <field name="consultation_fee">250.00</field>
             <field name="special_tag_ids" eval="[(6, 0, [ref('demo_tag_surgery_expert')])]"/>
             <field name="bio"><![CDATA[
@@ -145,11 +118,6 @@
             <field name="mobile">+1-555-0105</field>
             <field name="email">dr.robert.wilson@clinic.com</field>
             <field name="specialization_ids" eval="[(6, 0, [ref('demo_service_neurology'), ref('demo_service_general_consultation')])]"/>
-            <field name="available_days" eval="[(6, 0, [ref('clinic_management.days_monday'), ref('clinic_management.days_wednesday'), ref('clinic_management.days_friday')])]"/>
-            <field name="morning_start_time">10.0</field>
-            <field name="morning_end_time">16.0</field>
-            <field name="slot_duration">60</field>
-            
             <field name="consultation_fee">280.00</field>
             <field name="special_tag_ids" eval="[(6, 0, [ref('demo_tag_senior_consultant')])]"/>
             <field name="bio"><![CDATA[
@@ -172,11 +140,6 @@
             <field name="mobile">+1-555-0106</field>
             <field name="email">dr.lisa.garcia@clinic.com</field>
             <field name="specialization_ids" eval="[(6, 0, [ref('demo_service_ophthalmology'), ref('demo_service_general_consultation')])]"/>
-            <field name="available_days" eval="[(6, 0, [ref('clinic_management.days_tuesday'), ref('clinic_management.days_thursday'), ref('clinic_management.days_saturday')])]"/>
-            <field name="morning_start_time">9.0</field>
-            <field name="morning_end_time">15.0</field>
-            <field name="slot_duration">30</field>
-            
             <field name="consultation_fee">220.00</field>
             <field name="special_tag_ids" eval="[(6, 0, [ref('demo_tag_fellowship_trained')])]"/>
             <field name="bio"><![CDATA[
@@ -199,10 +162,6 @@
             <field name="mobile">+1-555-0107</field>
             <field name="email">dr.david.martinez@clinic.com</field>
             <field name="specialization_ids" eval="[(6, 0, [ref('demo_service_psychiatry')])]"/>
-            <field name="available_days" eval="[(6, 0, [ref('clinic_management.days_monday'), ref('clinic_management.days_tuesday'), ref('clinic_management.days_wednesday'), ref('clinic_management.days_thursday'), ref('clinic_management.days_friday')])]"/>
-            <field name="morning_start_time">11.0</field>
-            <field name="morning_end_time">19.0</field>
-            <field name="slot_duration">60</field>
             
             <field name="consultation_fee">350.00</field>
             <field name="bio"><![CDATA[
