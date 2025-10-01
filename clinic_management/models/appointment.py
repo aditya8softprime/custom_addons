@@ -78,6 +78,9 @@ class ClinicAppointment(models.Model):
     # Multi-page support: total pages in this prescription (page 1 stored in medicine_image; extra pages as attachments)
     prescription_page_count = fields.Integer(string='Prescription Pages', default=1)
     
+    # Stroke-based prescription drawing system
+    prescription_strokes = fields.Text(string='Prescription Strokes Data', help='JSON data of drawing strokes for the prescription')
+    
     # Lab test lines (simplified approach)y
     lab_test_line_ids = fields.One2many('appointment.lab.line', 'appointment_id', string='Lab Test Lines')
     invoice_id = fields.Many2one('account.move', string='Invoice')
@@ -617,7 +620,7 @@ class ClinicAppointment(models.Model):
         })
 
     def action_complete(self):
-        """Complete the appointment: set state, optionally create follow-up, generate PDF from medicine_image,
+        """Complete the appointment: set state, optionally create follow-up, generate PDF from prescription_strokes,
         attach it and send completion email to patient."""
         for appointment in self:
             current_time = fields.Datetime.now()
@@ -636,19 +639,28 @@ class ClinicAppointment(models.Model):
             # Prepare attachments list
             attachment_ids = []
 
-            # If there is at least one prescription page, build a single multi-page PDF
-            if appointment.prescription_page_count and appointment.prescription_page_count > 0 and (appointment.medicine_image or appointment._get_prescription_page_b64(1)):
+            # If there are prescription strokes or legacy medicine_image, create PDF
+            if appointment.prescription_strokes or appointment.medicine_image:
                 try:
-                    # Collect all page images in order
-                    page_images = []
-                    for idx in range(1, int(appointment.prescription_page_count or 1) + 1):
-                        img_b64 = appointment._get_prescription_page_b64(idx)
-                        # No template fill; keep page empty if nothing drawn
-                        if img_b64:
-                            try:
-                                page_images.append(base64.b64decode(img_b64))
-                            except Exception:
-                                logging.getLogger(__name__).warning('Failed to decode image for page %s appointment %s', idx, appointment.id)
+                    prescription_image_b64 = None
+                    
+                    # Try to generate from strokes first
+                    if appointment.prescription_strokes:
+                        prescription_image_b64 = appointment._generate_prescription_image_from_strokes()
+                        if prescription_image_b64:
+                            # Store the generated image in medicine_image for backward compatibility
+                            appointment.medicine_image = prescription_image_b64
+                            appointment.medicine_image_filename = f"Prescription_{appointment.name or appointment.id}.png"
+                    
+                    # Fallback to existing medicine_image
+                    if not prescription_image_b64 and appointment.medicine_image:
+                        prescription_image_b64 = appointment.medicine_image
+                    
+                    if prescription_image_b64:
+                        # Convert to image bytes for PDF
+                        page_images = [base64.b64decode(prescription_image_b64)]
+                    else:
+                        page_images = []
 
                     pdf_bytes = None
 
@@ -714,25 +726,24 @@ class ClinicAppointment(models.Model):
                         })
                         attachment_ids.append(attachment.id)
                     else:
-                        # Fallback: attach first available image page
-                        fallback_img_b64 = appointment._get_prescription_page_b64(1) or appointment.medicine_image
-                        if fallback_img_b64:
-                            img_name = appointment.medicine_image_filename or f"Prescription_{appointment.name or ''}.png"
+                        # Fallback: attach generated prescription image
+                        if prescription_image_b64:
+                            img_name = f"Prescription_{appointment.name or appointment.id}.png"
                             try:
                                 attachment = self.env['ir.attachment'].create({
                                     'name': img_name,
                                     'type': 'binary',
-                                    'datas': fallback_img_b64,
+                                    'datas': prescription_image_b64,
                                     'res_model': 'clinic.appointment',
                                     'res_id': appointment.id,
                                     'mimetype': 'image/png',
                                 })
                                 attachment_ids.append(attachment.id)
                             except Exception:
-                                logging.getLogger(__name__).exception('Failed to attach original image for appointment %s', appointment.id)
+                                logging.getLogger(__name__).exception('Failed to attach prescription image for appointment %s', appointment.id)
 
                 except Exception:
-                    logging.getLogger(__name__).exception('Failed to convert/attach medicine_image for appointment %s', appointment.id)
+                    logging.getLogger(__name__).exception('Failed to convert/attach prescription strokes for appointment %s', appointment.id)
 
             # Send completion email with attachments (if patient has email)
             try:
@@ -1390,3 +1401,120 @@ class ClinicAppointment(models.Model):
             self.prescription_page_count = count - 1
             return count - 1
         return count
+
+    def _generate_prescription_image_from_strokes(self):
+        """Generate prescription image from strokes data, including header and footer."""
+        self.ensure_one()
+        
+        if not self.prescription_strokes:
+            return False
+            
+        try:
+            import json
+            from PIL import Image, ImageDraw
+            
+            # Parse strokes
+            strokes = json.loads(self.prescription_strokes)
+            if not strokes:
+                return False
+            
+            # Canvas dimensions (same as in JS widget)
+            canvas_width = 2480
+            canvas_height = 3508
+            
+            # Create prescription image with header and footer
+            # Get doctor and company for header/footer
+            doctor = self.doctor_id
+            company = self.company_id
+            
+            header_img = None
+            footer_img = None
+            
+            # Get header/footer images
+            if doctor and doctor.header_image:
+                try:
+                    header_data = base64.b64decode(doctor.header_image)
+                    header_img = Image.open(io.BytesIO(header_data))
+                except:
+                    pass
+            elif company and company.header_image:
+                try:
+                    header_data = base64.b64decode(company.header_image)
+                    header_img = Image.open(io.BytesIO(header_data))
+                except:
+                    pass
+                    
+            if doctor and doctor.footer_image:
+                try:
+                    footer_data = base64.b64decode(doctor.footer_image)
+                    footer_img = Image.open(io.BytesIO(footer_data))
+                except:
+                    pass
+            elif company and company.footer_image:
+                try:
+                    footer_data = base64.b64decode(company.footer_image)
+                    footer_img = Image.open(io.BytesIO(footer_data))
+                except:
+                    pass
+            
+            # Calculate header and footer heights
+            header_height = 0
+            footer_height = 0
+            
+            if header_img:
+                header_height = int(canvas_width * header_img.height / header_img.width)
+            if footer_img:
+                footer_height = int(canvas_width * footer_img.height / footer_img.width)
+            
+            # Create composite image
+            total_height = header_height + canvas_height + footer_height
+            composite_img = Image.new('RGB', (canvas_width, total_height), 'white')
+            draw = ImageDraw.Draw(composite_img)
+            
+            # Draw header
+            y_offset = 0
+            if header_img and header_height > 0:
+                header_resized = header_img.resize((canvas_width, header_height))
+                composite_img.paste(header_resized, (0, 0))
+                y_offset += header_height
+            
+            # Draw strokes on canvas area
+            for stroke in strokes:
+                if stroke.get('type') == 'pen' and stroke.get('points') and len(stroke['points']) > 1:
+                    points = stroke['points']
+                    color = stroke.get('color', '#000000')
+                    size = int(stroke.get('size', 2))
+                    
+                    # Convert color to RGB if needed
+                    if color.startswith('#'):
+                        color = tuple(int(color[i:i+2], 16) for i in (1, 3, 5))
+                    
+                    # Draw stroke as connected lines
+                    for i in range(len(points) - 1):
+                        x1 = int(points[i]['x'])
+                        y1 = int(points[i]['y']) + y_offset  # Offset for header
+                        x2 = int(points[i + 1]['x'])
+                        y2 = int(points[i + 1]['y']) + y_offset  # Offset for header
+                        
+                        # Draw line with thickness
+                        for thickness in range(size):
+                            offset = thickness - size // 2
+                            draw.line([(x1 + offset, y1), (x2 + offset, y2)], fill=color, width=1)
+                            draw.line([(x1, y1 + offset), (x2, y2 + offset)], fill=color, width=1)
+            
+            # Draw footer
+            if footer_img and footer_height > 0:
+                footer_y = header_height + canvas_height
+                footer_resized = footer_img.resize((canvas_width, footer_height))
+                composite_img.paste(footer_resized, (0, footer_y))
+            
+            # Convert to base64
+            output_buffer = io.BytesIO()
+            composite_img.save(output_buffer, format='PNG', optimize=True)
+            image_b64 = base64.b64encode(output_buffer.getvalue()).decode()
+            
+            return image_b64
+            
+        except Exception as e:
+            _logger.error("Failed to generate prescription image from strokes for appointment %s: %s", self.id, str(e))
+            return False

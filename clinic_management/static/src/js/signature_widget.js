@@ -18,9 +18,12 @@ class DrawCanvasWidget extends Component {
         this.isDrawing = false;
         this.headerImgB64 = null; // base64 header image (doctor/company)
         this.footerImgB64 = null; // base64 footer image (doctor/company)
-    this.state = useState({
-            currentPage: 1,
-            totalPages: 1,
+        
+        // Strokes-based drawing system
+        this.strokes = []; // Array of stroke objects
+        this.currentStroke = null; // Current stroke being drawn
+        
+        this.state = useState({
             tool: 'pen',
             penSize: 2,
             eraserSize: 32,
@@ -31,7 +34,7 @@ class DrawCanvasWidget extends Component {
 
         onMounted(this.onMounted.bind(this));
         onWillDestroy(() => {
-            this.saveDrawing();
+            this.saveStrokes();
             if (this.saveTimeout) {
                 clearTimeout(this.saveTimeout);
             }
@@ -40,9 +43,9 @@ class DrawCanvasWidget extends Component {
 
     async onMounted() {
         await this.loadHeaderFooterImages();
-        await this.initPagesState();
         this.renderCanvas();
-        await this.fetchAndDrawCurrentPage();
+        await this.loadStrokes();
+        this.redrawCanvas();
     }
 
     getAppointmentId() {
@@ -50,22 +53,37 @@ class DrawCanvasWidget extends Component {
         return rd.id || (this.props.record ? this.props.record.resId : null);
     }
 
-    async initPagesState() {
+    // Load strokes from prescription_strokes field
+    async loadStrokes() {
         try {
-            const apptId = this.getAppointmentId();
-            if (!apptId) return;
-            const result = await rpc('/web/dataset/call_kw', {
-                model: 'clinic.appointment',
-                method: 'get_prescription_pages_count',
-                args: [[apptId]],
-                kwargs: {}
-            });
-            if (result && typeof result === 'number') {
-                this.state.totalPages = result;
-                this.state.currentPage = Math.min(this.state.currentPage, result) || 1;
+            const rd = (this.props.record && this.props.record.data) ? this.props.record.data : {};
+            const strokesData = rd.prescription_strokes || '';
+            
+            if (strokesData) {
+                this.strokes = JSON.parse(strokesData);
+            } else {
+                this.strokes = [];
             }
         } catch (e) {
-            console.warn('Could not fetch pages count:', e.message);
+            console.warn('Could not load strokes:', e.message);
+            this.strokes = [];
+        }
+    }
+
+    // Save strokes to prescription_strokes field
+    saveStrokes() {
+        try {
+            const strokesData = JSON.stringify(this.strokes);
+            
+            if (this.props.record && this.props.record.data) {
+                this.props.record.update({ prescription_strokes: strokesData });
+            } else if (this.props.onChange) {
+                // For cases where we need to update via onChange
+                const currentData = this.props.record?.data || {};
+                this.props.onChange({ ...currentData, prescription_strokes: strokesData });
+            }
+        } catch (e) {
+            console.error('Failed to save strokes:', e);
         }
     }
 
@@ -102,38 +120,34 @@ class DrawCanvasWidget extends Component {
             };
         };
 
-        let hasDrawn = false; // Track if actual drawing happened
-
-    // Drawing is allowed anywhere on the canvas
-
-
-
-
         const draw = (e) => {
-            if (!this.isDrawing) return;
+            if (!this.isDrawing || !this.currentStroke) return;
             const pos = pointerPos(e);
             
             // Check if there's actual movement for drawing
             const distance = Math.sqrt(Math.pow(pos.x - lastX, 2) + Math.pow(pos.y - lastY, 2));
             if (distance > 2) { // Only draw if movement is significant (more than 2 pixels)
+                // Add point to current stroke
+                this.currentStroke.points.push({ x: pos.x, y: pos.y });
+                
+                // Draw the line segment on canvas
                 ctx.save();
                 if (this.state.tool === 'eraser') {
-                    // Eraser: punch holes in current bitmap
-                    ctx.globalCompositeOperation = 'destination-out';
-                    ctx.strokeStyle = 'rgba(0,0,0,1)';
-                    ctx.lineWidth = this.state.eraserSize;
+                    // For eraser, we'll handle it differently - remove intersecting strokes
+                    this.eraseAtPoint(pos.x, pos.y);
                 } else {
-                    // Pen: normal drawing with color
+                    // Pen: draw line segment
                     ctx.globalCompositeOperation = 'source-over';
-                    ctx.strokeStyle = this.state.penColor;
-                    ctx.lineWidth = this.state.penSize;
+                    ctx.strokeStyle = this.currentStroke.color;
+                    ctx.lineWidth = this.currentStroke.size;
+                    ctx.lineJoin = "round";
+                    ctx.lineCap = "round";
+                    ctx.beginPath();
+                    ctx.moveTo(lastX, lastY);
+                    ctx.lineTo(pos.x, pos.y);
+                    ctx.stroke();
                 }
-                ctx.beginPath();
-                ctx.moveTo(lastX, lastY);
-                ctx.lineTo(pos.x, pos.y);
-                ctx.stroke();
                 ctx.restore();
-                hasDrawn = true; // Mark that actual drawing occurred
             }
             
             lastX = pos.x;
@@ -144,20 +158,34 @@ class DrawCanvasWidget extends Component {
             e.preventDefault();
             const pos = pointerPos(e);
             
-            // Start drawing immediately; no restricted area
             this.isDrawing = true;
-            hasDrawn = false; // Reset drawing flag
             lastX = pos.x;
             lastY = pos.y;
+            
+            if (this.state.tool === 'eraser') {
+                // Start erasing at this point
+                this.eraseAtPoint(pos.x, pos.y);
+            } else {
+                // Create new stroke
+                this.currentStroke = {
+                    type: 'pen',
+                    color: this.state.penColor,
+                    size: this.state.penSize,
+                    points: [{ x: pos.x, y: pos.y }]
+                };
+            }
         };
         
         const stopDrawing = () => {
-            if (this.isDrawing && hasDrawn) {
-                // Only save if actual drawing happened
+            if (this.isDrawing) {
+                if (this.state.tool === 'pen' && this.currentStroke && this.currentStroke.points.length > 1) {
+                    // Add completed stroke to strokes array
+                    this.strokes.push(this.currentStroke);
+                }
+                this.currentStroke = null;
                 this.debouncedSave();
             }
             this.isDrawing = false;
-            hasDrawn = false;
         };
 
         // Mouse events
@@ -187,60 +215,69 @@ class DrawCanvasWidget extends Component {
         canvas.addEventListener("pointerout", stopDrawing);
     }
 
-    async fetchAndDrawCurrentPage() {
+    // Redraw canvas from strokes array
+    redrawCanvas() {
         const canvas = this.canvasRef.el;
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
-        const page = this.state.currentPage || 1;
-        try {
-            let imgB64 = null;
-            const rd = (this.props.record && this.props.record.data) ? this.props.record.data : {};
-            if (page === 1) {
-                imgB64 = rd[this.props.name] || null;
-            }
-            if (!imgB64) {
-                const apptId = this.getAppointmentId();
-                if (apptId) {
-                    const result = await rpc('/web/dataset/call_kw', {
-                        model: 'clinic.appointment',
-                        method: 'get_prescription_page',
-                        args: [[apptId], page],
-                        kwargs: {}
-                    });
-                    imgB64 = result || null;
+        
+        // Clear canvas - header/footer are separate overlays
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Redraw all strokes
+        ctx.save();
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+        
+        for (const stroke of this.strokes) {
+            if (stroke.points && stroke.points.length > 1) {
+                ctx.strokeStyle = stroke.color || '#000000';
+                ctx.lineWidth = stroke.size || 2;
+                ctx.globalCompositeOperation = 'source-over';
+                
+                ctx.beginPath();
+                ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+                
+                for (let i = 1; i < stroke.points.length; i++) {
+                    ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
                 }
+                
+                ctx.stroke();
             }
-            // Draw
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if (imgB64) {
-                const img = new Image();
-                await new Promise((resolve, reject) => {
-                    img.onload = resolve;
-                    img.onerror = reject;
-                    img.src = 'data:image/png;base64,' + imgB64;
-                });
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            } else {
-                // No existing image: start with transparent canvas; header/footer shown outside
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-            }
-            // No drawing area outline
-        } catch (e) {
-            console.warn('Failed to draw page', page, e);
         }
+        ctx.restore();
     }
 
-    loadExistingPrescription(canvas, ctx) {
-        const rd = (this.props.record && this.props.record.data) ? this.props.record.data : {};
-        const existingImage = rd[this.props.name];
+
+
+    // Eraser functionality - remove strokes that intersect with eraser circle
+    eraseAtPoint(x, y) {
+        const eraserRadius = this.state.eraserSize / 2;
+        let modified = false;
         
-        if (existingImage) {
-            const img = new Image();
-            img.onload = () => {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            };
-            img.src = 'data:image/png;base64,' + existingImage;
+        // Check each stroke for intersection with eraser circle
+        for (let i = this.strokes.length - 1; i >= 0; i--) {
+            const stroke = this.strokes[i];
+            let shouldRemove = false;
+            
+            // Check if any point in the stroke is within eraser radius
+            for (const point of stroke.points) {
+                const distance = Math.sqrt(Math.pow(point.x - x, 2) + Math.pow(point.y - y, 2));
+                if (distance <= eraserRadius) {
+                    shouldRemove = true;
+                    break;
+                }
+            }
+            
+            if (shouldRemove) {
+                this.strokes.splice(i, 1);
+                modified = true;
+            }
+        }
+        
+        // Redraw canvas if strokes were modified
+        if (modified) {
+            this.redrawCanvas();
         }
     }
 
@@ -250,220 +287,15 @@ class DrawCanvasWidget extends Component {
         }
         
         this.saveTimeout = setTimeout(() => {
-            this.saveDrawing();
+            this.saveStrokes();
         }, 500);
     }
 
-    async saveDrawing() {
-        const canvas = this.canvasRef.el;
-        if (!canvas) return;
-        // Save composite image for page 1, otherwise canvas only
-        this.saveCompositeImage(canvas);
-        
-        if (this.saveTimeout) {
-            clearTimeout(this.saveTimeout);
-            this.saveTimeout = null;
-        }
-    }
-
-    saveSimpleCanvas(canvas) {
-        // Backward-compat alias; delegates to composite handler which is page-aware
-        this.saveCompositeImage(canvas);
-    }
-
-    saveCompositeImage(canvas) {
-        // For pages > 1, save canvas-only to keep subsequent pages blank from header/footer
-        const page = this.state.currentPage || 1;
-        if (page !== 1) {
-            this.saveFallbackCanvas(canvas);
-            return;
-        }
-
-        const loadImg = (b64) => new Promise((resolve, reject) => {
-            if (!b64) return resolve(null);
-            const img = new Image();
-            img.onload = () => resolve(img);
-            img.onerror = reject;
-            img.src = 'data:image/png;base64,' + b64;
-        });
-
-        Promise.all([loadImg(this.headerImgB64), loadImg(this.footerImgB64)])
-            .then(([headerImg, footerImg]) => {
-                try {
-                    const headerH = headerImg ? Math.round(canvas.width * (headerImg.naturalHeight || headerImg.height) / (headerImg.naturalWidth || headerImg.width)) : 0;
-                    const footerH = footerImg ? Math.round(canvas.width * (footerImg.naturalHeight || footerImg.height) / (footerImg.naturalWidth || footerImg.width)) : 0;
-                    const compositeCanvas = document.createElement('canvas');
-                    compositeCanvas.width = canvas.width;
-                    compositeCanvas.height = headerH + canvas.height + footerH;
-                    const ctx = compositeCanvas.getContext('2d');
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
-                    if (headerImg && headerH > 0) {
-                        ctx.drawImage(headerImg, 0, 0, compositeCanvas.width, headerH);
-                    }
-                    ctx.drawImage(canvas, 0, headerH);
-                    if (footerImg && footerH > 0) {
-                        ctx.drawImage(footerImg, 0, headerH + canvas.height, compositeCanvas.width, footerH);
-                    }
-                    const dataURL = compositeCanvas.toDataURL('image/png', 1.0);
-                    const base64 = dataURL.split(',')[1];
-                    this._storeImageForCurrentPage(base64);
-                } catch (e) {
-                    console.error('Composite save failed, fallback to canvas only:', e);
-                    this.saveFallbackCanvas(canvas);
-                }
-            })
-            .catch((e) => {
-                console.warn('Header/footer load failed, saving canvas only', e);
-                this.saveFallbackCanvas(canvas);
-            });
-    }
-
-    // Save only the raw canvas bitmap (no header/footer). Used for pages > 1 or on failures
-    saveFallbackCanvas(canvas) {
-        try {
-            const dataURL = canvas.toDataURL('image/png', 1.0);
-            const base64 = dataURL.split(',')[1];
-            this._storeImageForCurrentPage(base64);
-        } catch (e) {
-            console.error('Failed to save fallback canvas:', e);
-        }
-    }
-
-    async _storeImageForCurrentPage(base64) {
-        try {
-            const page = this.state.currentPage || 1;
-            if (page === 1) {
-                if (this.props.record && this.props.name) {
-                    this.props.record.update({ [this.props.name]: base64 });
-                } else if (this.props.onChange) {
-                    this.props.onChange(base64);
-                }
-            } else {
-                const apptId = this.getAppointmentId();
-                if (!apptId) return;
-                await rpc('/web/dataset/call_kw', {
-                    model: 'clinic.appointment',
-                    method: 'set_prescription_page',
-                    args: [[apptId], page, base64, null],
-                    kwargs: {}
-                });
-            }
-        } catch (e) {
-            console.error('Failed storing page image:', e);
-        }
-    }
-
-    async onPrevPage() {
-        if (this.state.currentPage <= 1) return;
-        await this.saveImmediately();
-        this.state.currentPage -= 1;
-        await this.fetchAndDrawCurrentPage();
-    }
-
-    async onNextPage() {
-        if (this.state.currentPage >= this.state.totalPages) return;
-        await this.saveImmediately();
-        this.state.currentPage += 1;
-        await this.fetchAndDrawCurrentPage();
-    }
-
-    async onAddPage() {
-        try {
-            await this.saveImmediately();
-            const apptId = this.getAppointmentId();
-            if (!apptId) return;
-            const newCount = await rpc('/web/dataset/call_kw', {
-                model: 'clinic.appointment',
-                method: 'add_prescription_page',
-                args: [[apptId]],
-                kwargs: {}
-            });
-            if (newCount) {
-                this.state.totalPages = newCount;
-                this.state.currentPage = newCount;
-                // New page starts empty: fetch and draw current page (will render template to canvas)
-                await this.fetchAndDrawCurrentPage();
-            }
-        } catch (e) {
-            console.error('Failed to add page:', e);
-        }
-    }
-
-    async onRemovePage() {
-        try {
-            const page = this.state.currentPage;
-            if (this.state.totalPages <= 1) return; // must keep at least one page
-            const apptId = this.getAppointmentId();
-            if (!apptId) return;
-            const newCount = await rpc('/web/dataset/call_kw', {
-                model: 'clinic.appointment',
-                method: 'remove_prescription_page',
-                args: [[apptId], page],
-                kwargs: {}
-            });
-            if (typeof newCount === 'number') {
-                this.state.totalPages = newCount;
-                if (this.state.currentPage > newCount) {
-                    this.state.currentPage = newCount;
-                }
-                await this.fetchAndDrawCurrentPage();
-            }
-        } catch (e) {
-            console.error('Failed to remove page:', e);
-        }
-    }
-
-    async saveImmediately() {
-        const canvas = this.canvasRef.el;
-        if (!canvas) return;
-        const page = this.state.currentPage || 1;
-        // For pages > 1, save canvas-only immediately
-        if (page !== 1) {
-            try {
-                const dataURL = canvas.toDataURL('image/png', 1.0);
-                const base64 = dataURL.split(',')[1];
-                await this._storeImageForCurrentPage(base64);
-                return;
-            } catch (e) {
-                console.error('Immediate save (canvas-only) failed:', e);
-            }
-        }
-
-        // Page 1: Composite and store now: header + canvas + footer
-        try {
-            const loadImg = (b64) => new Promise((resolve, reject) => {
-                if (!b64) return resolve(null);
-                const img = new Image();
-                img.onload = () => resolve(img);
-                img.onerror = reject;
-                img.src = 'data:image/png;base64,' + b64;
-            });
-            const [headerImg, footerImg] = await Promise.all([loadImg(this.headerImgB64), loadImg(this.footerImgB64)]);
-            const headerH = headerImg ? Math.round(canvas.width * (headerImg.naturalHeight || headerImg.height) / (headerImg.naturalWidth || headerImg.width)) : 0;
-            const footerH = footerImg ? Math.round(canvas.width * (footerImg.naturalHeight || footerImg.height) / (footerImg.naturalWidth || footerImg.width)) : 0;
-            const compositeCanvas = document.createElement('canvas');
-            compositeCanvas.width = canvas.width;
-            compositeCanvas.height = headerH + canvas.height + footerH;
-            const ctx = compositeCanvas.getContext('2d');
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
-            if (headerImg && headerH > 0) {
-                ctx.drawImage(headerImg, 0, 0, compositeCanvas.width, headerH);
-            }
-            ctx.drawImage(canvas, 0, headerH);
-            if (footerImg && footerH > 0) {
-                ctx.drawImage(footerImg, 0, headerH + canvas.height, compositeCanvas.width, footerH);
-            }
-            const dataURL = compositeCanvas.toDataURL('image/png', 1.0);
-            const base64 = dataURL.split(',')[1];
-            await this._storeImageForCurrentPage(base64);
-        } catch (e) {
-            console.error('Immediate composite failed, saving canvas only:', e);
-            const dataURL = canvas.toDataURL('image/png', 1.0);
-            const base64 = dataURL.split(',')[1];
-            await this._storeImageForCurrentPage(base64);
-        }
+    // Clear all strokes
+    clearDrawing() {
+        this.strokes = [];
+        this.redrawCanvas();
+        this.saveStrokes();
     }
 
 
@@ -573,17 +405,7 @@ class DrawCanvasWidget extends Component {
         }
     }
 
-    // Drawing area concept removed: users can draw anywhere on the canvas
 
-    drawDoctorTemplate(canvas, ctx) {
-        // Keep canvas transparent - template is shown via CSS background
-        // Template will be composite with drawing during save
-        const rd = (this.props.record && this.props.record.data) ? this.props.record.data : {};
-        if (!rd[this.props.name] && this.doctorTemplate) {
-            // If no existing drawing, save the template as initial medicine_image
-            this.saveCompositeImage(canvas);
-        }
-    }
 
     // Update drawing settings based on current tool
     updateDrawingSettings(ctx) {
