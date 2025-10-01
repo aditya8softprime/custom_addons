@@ -67,6 +67,9 @@
                         <h1>
                             <field name="name"/>
                         </h1>
+                        <h1>
+                            <field name="queue_number" readonly="1" invisible="state != 'confirmed'"/>
+                        </h1>
                     </div>
                     <group>
                         <group>
@@ -85,7 +88,7 @@
                                    domain="[('id', 'in', slots)]" invisible="appointment_type == 'walkin' or not show_slot_selector"/>
                             <field name="slot_char" readonly="1" invisible="appointment_type == 'walkin' or show_slot_selector"/>
                             <field name="show_slot_selector" invisible="1"/>
-                            <field name="queue_number" readonly="1" invisible="state != 'confirmed'"/>
+                            <field name="queue_number" readonly="1" invisible="1"/>
                             <field name="start_time" widget="float_time" readonly="appointment_type == 'walkin'"/>
                             <field name="end_time" widget="float_time" readonly="appointment_type == 'walkin'"/>
                             <field name="consulting_fee" readonly="1" />
@@ -206,6 +209,7 @@
                             <div class="oe_kanban_details">
                                 <strong class="o_kanban_record_title">
                                     <field name="name"/>
+                                    <span t-if="record.queue_number.value" class="badge badge-primary ml-2">Queue #<field name="queue_number"/></span>
                                     <span t-if="record.appointment_type.raw_value == 'walkin'" class="badge badge-info ml-2">Walk-in</span>
                                 </strong>
                                 <div class="o_kanban_record_subtitle">
@@ -232,10 +236,6 @@
                                         <strong>Time: </strong>
                                         <field name="start_time" widget="float_time"/> - <field name="end_time" widget="float_time"/>
                                     </div>
-                                </div>
-                                <div t-if="record.queue_number.value">
-                                    <strong>Queue: </strong>
-                                    <field name="queue_number"/>
                                 </div>
                             </div>
                         </div>

@@ -89,16 +89,16 @@
     </record>
 
     <record id="action_clinic_service" model="ir.actions.act_window">
-        <field name="name">Services/Treatments</field>
+        <field name="name">Departments</field>
         <field name="res_model">clinic.service</field>
         <field name="view_mode">kanban,list,form</field>
         <field name="context">{'search_default_active': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-                Create your first service!
+                Create your first department!
             </p>
             <p>
-                Define the services/treatments your clinic offers.
+                Define the departments your clinic offers.
             </p>
         </field>
     </record>

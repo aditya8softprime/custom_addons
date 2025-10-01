@@ -92,7 +92,7 @@
               groups="group_clinic_admin,group_clinic_receptionist,group_clinic_doctor"/>
 
     <menuitem id="menu_clinic_service"
-              name="Services/Treatments"
+              name="Departnments"
               parent="menu_clinic_configuration"
               action="action_clinic_service"
               sequence="4"

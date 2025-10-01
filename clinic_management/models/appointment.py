@@ -23,7 +23,7 @@ class ClinicAppointment(models.Model):
     patient_phone = fields.Char(related='patient_id.phone', string='Phone', store=True)
     patient_email = fields.Char(related='patient_id.email', string='Email', store=True)
     
-    service_id = fields.Many2one('clinic.service', string='Service', required=True, tracking=True)
+    service_id = fields.Many2one('clinic.service', string='Department', required=True, tracking=True)
     doctor_id = fields.Many2one('clinic.doctor', string='Doctor', required=True, tracking=True)
     
     # Appointment Type

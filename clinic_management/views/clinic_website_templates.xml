@@ -239,7 +239,7 @@
                                     <p class="lead mb-4" t-esc="clinic_settings.tagline or 'Quality Healthcare Services You Can Trust'"/>
                                     <div class="mt-4">
                                         <a t-if="clinic_settings.enable_online_booking" href="#booking" class="btn btn-primary btn-lg mr-3 smooth-scroll">Book Appointment</a>
-                                        <a href="#services" class="btn btn-outline-light btn-lg smooth-scroll">Our Services</a>
+                                        <a href="#departments" class="btn btn-outline-light btn-lg smooth-scroll">Our Departments</a>
                                     </div>
                                 </div>
                             </div>
@@ -255,7 +255,7 @@
                                     <p class="lead" t-esc="clinic_settings.tagline if clinic_settings else 'Quality Healthcare Services You Can Trust'"/>
                                     <div class="mt-4">
                                         <a t-if="clinic_settings and clinic_settings.enable_online_booking" href="#booking" class="btn btn-primary btn-lg mr-3 smooth-scroll">Book Appointment</a>
-                                        <a href="#services" class="btn btn-outline-primary btn-lg smooth-scroll">Our Services</a>
+                                        <a href="#departments" class="btn btn-outline-primary btn-lg smooth-scroll">Our Departments</a>
                                     </div>
                                 </div>
                             </div>
@@ -294,7 +294,7 @@
                         <t t-if="services">
                             <div class="row mb-5">
                                 <div class="col-md-12">
-                                    <h2 class="text-center section-title" t-esc="clinic_settings.services_section_title if clinic_settings else 'Our Services'"/>
+                                    <h2 class="text-center section-title" t-esc="clinic_settings.services_section_title if clinic_settings else 'Our Departments'"/>
                                     <t t-if="clinic_settings and clinic_settings.services_section_subtitle">
                                         <p class="text-center text-muted mb-4" t-esc="clinic_settings.services_section_subtitle"/>
                                     </t>
@@ -405,9 +405,9 @@
                                             </div>
                                             <div class="row">
                                                 <div class="col-md-6 mb-3">
-                                                    <label for="service_id" class="form-label">Service *</label>
+                                                    <label for="service_id" class="form-label">Department*</label>
                                                     <select class="form-control" id="service_id" name="service_id" required="">
-                                                        <option value="">Select Service</option>
+                                                        <option value="">Select Department</option>
                                                         <t t-foreach="services" t-as="service">
                                                             <option t-att-value="service.id" t-esc="service.name"/>
                                                         </t>
@@ -804,13 +804,13 @@
     </template>
 
     <!-- Services Page -->
-    <template id="services_page" name="Services Page">
+    <template id="services_page" name="Departments Page">
         <t t-call="website.layout">
             <div id="wrap">
                 <div class="container mt-5">
                     <div class="row">
                         <div class="col-md-12">
-                            <h1 class="text-center mb-5">Our Medical Services</h1>
+                            <h1 class="text-center mb-5">Our Medical Departments</h1>
                             <div class="row">
                                 <t t-foreach="services" t-as="service">
                                     <div class="col-md-6 mb-4">
@@ -885,9 +885,9 @@
                                                         </select>
                                                     </div>
                                                     <div class="form-group col-md-6 mb-3">
-                                                        <label for="service_id">Service Required *</label>
+                                                        <label for="service_id">Department Required *</label>
                                                         <select class="form-control" id="service_id" name="service_id" required="required">
-                                                            <option value="">Select Service</option>
+                                                            <option value="">Select Department</option>
                                                             <t t-foreach="services" t-as="service">
                                                                 <option t-att-value="service.id" t-esc="service.name"/>
                                                             </t>
@@ -1135,7 +1135,7 @@
                                         </div>
                                         <div class="mt-4">
                                             <a href="/clinic" class="btn btn-primary">Return to Homepage</a>
-                                            <a href="/clinic/services" class="btn btn-outline-primary ml-2">View Services</a>
+                                            <a href="/clinic/services" class="btn btn-outline-primary ml-2">View Departments</a>
                                         </div>
                                     </div>
                                 </div>
@@ -1224,7 +1224,7 @@
                             <nav aria-label="breadcrumb">
                                 <ol class="breadcrumb">
                                     <li class="breadcrumb-item"><a href="/clinic">Home</a></li>
-                                    <li class="breadcrumb-item"><a href="/clinic/services">Services</a></li>
+                                    <li class="breadcrumb-item"><a href="/clinic/services">Departments</a></li>
                                     <li class="breadcrumb-item active" aria-current="page" t-esc="service.name"/>
                                 </ol>
                             </nav>
