@@ -9,9 +9,9 @@
                 <!-- Left side: Header + Canvas + Footer -->
                 <div class="o_draw_canvas_layout" style="flex:1; display:flex; flex-direction:column; gap:8px;">
                     
-                    <!-- Header -->
+                    <!-- Header (only on page 1) -->
                     <div class="header_image_container">
-                        <t t-if="state.headerB64">
+                        <t t-if="state.currentPage === 1 and state.headerB64">
                             <img t-att-src="'data:image/png;base64,' + state.headerB64"
                                  alt="Header"
                                  class="header_image"
@@ -27,9 +27,9 @@
                                 style="width:100%; height:auto; display:block; background:transparent; cursor:crosshair;"/>
                     </div>
 
-                    <!-- Footer -->
+                    <!-- Footer (only on page 1) -->
                     <div class="footer_image_container">
-                        <t t-if="state.footerB64">
+                        <t t-if="state.currentPage === 1 and state.footerB64">
                             <img t-att-src="'data:image/png;base64,' + state.footerB64"
                                  alt="Footer"
                                  class="footer_image"
@@ -105,10 +105,30 @@
                         </div>
                     </div>
 
+                    <!-- Page Navigation -->
+                    <div>
+                        <h6 style="margin:12px 0 6px; font-size:12px; font-weight:bold; color:#495057;">Pages</h6>
+                        <div style="text-align:center; margin-bottom:6px; font-size:14px; color:#495057;">
+                            Page <t t-esc="state.currentPage"/> / <t t-esc="state.totalPages"/>
+                        </div>
+                        <div style="display:flex; gap:4px; margin-bottom:6px;">
+                            <button type="button" class="btn btn-secondary btn-sm flex-fill" 
+                                    t-on-click="onPrevPage" 
+                                    t-att-disabled="state.currentPage &lt;= 1">← Prev</button>
+                            <button type="button" class="btn btn-secondary btn-sm flex-fill" 
+                                    t-on-click="onNextPage" 
+                                    t-att-disabled="state.currentPage &gt;= state.totalPages">Next →</button>
+                        </div>
+                        <button type="button" class="btn btn-success btn-sm w-100 mb-1" t-on-click="onAddPage">+ Add Page</button>
+                        <button type="button" class="btn btn-danger btn-sm w-100 mb-1" 
+                                t-on-click="onRemovePage"
+                                t-att-disabled="state.totalPages &lt;= 1">🗑️ Remove Page</button>
+                    </div>
+
                     <!-- Actions -->
                     <div>
                         <h6 style="margin:12px 0 6px; font-size:12px; font-weight:bold; color:#495057;">Actions</h6>
-                        <button type="button" class="btn btn-warning btn-sm w-100" t-on-click="clearDrawing">🗑️ Clear All</button>
+                        <button type="button" class="btn btn-warning btn-sm w-100" t-on-click="clearDrawing">🗑️ Clear Current Page</button>
                     </div>
                 </div>
             </div>

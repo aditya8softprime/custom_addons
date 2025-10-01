@@ -642,25 +642,33 @@ class ClinicAppointment(models.Model):
             # If there are prescription strokes or legacy medicine_image, create PDF
             if appointment.prescription_strokes or appointment.medicine_image:
                 try:
-                    prescription_image_b64 = None
+                    # Collect all page images in order
+                    page_images = []
                     
-                    # Try to generate from strokes first
-                    if appointment.prescription_strokes:
-                        prescription_image_b64 = appointment._generate_prescription_image_from_strokes()
-                        if prescription_image_b64:
-                            # Store the generated image in medicine_image for backward compatibility
+                    for page_idx in range(1, int(appointment.prescription_page_count or 1) + 1):
+                        prescription_image_b64 = None
+                        
+                        _logger.info(f"Generating image for page {page_idx} of {appointment.prescription_page_count}")
+                        
+                        # Always generate image from strokes (even if empty) to maintain page structure
+                        prescription_image_b64 = appointment._generate_prescription_image_from_strokes(page_idx)
+                        
+                        _logger.info(f"Page {page_idx} image generated: {bool(prescription_image_b64)}")
+                        
+                        # Store page 1 in medicine_image for backward compatibility
+                        if prescription_image_b64 and page_idx == 1:
                             appointment.medicine_image = prescription_image_b64
-                            appointment.medicine_image_filename = f"Prescription_{appointment.name or appointment.id}.png"
-                    
-                    # Fallback to existing medicine_image
-                    if not prescription_image_b64 and appointment.medicine_image:
-                        prescription_image_b64 = appointment.medicine_image
-                    
-                    if prescription_image_b64:
-                        # Convert to image bytes for PDF
-                        page_images = [base64.b64decode(prescription_image_b64)]
-                    else:
-                        page_images = []
+                            appointment.medicine_image_filename = f"Prescription_{appointment.name or appointment.id}_page_{page_idx}.png"
+                        
+                        # Fallback to existing medicine_image for page 1 if generation failed
+                        if not prescription_image_b64 and page_idx == 1 and appointment.medicine_image:
+                            prescription_image_b64 = appointment.medicine_image
+                        
+                        if prescription_image_b64:
+                            try:
+                                page_images.append(base64.b64decode(prescription_image_b64))
+                            except Exception:
+                                _logger.warning('Failed to decode image for page %s appointment %s', page_idx, appointment.id)
 
                     pdf_bytes = None
 
@@ -726,14 +734,16 @@ class ClinicAppointment(models.Model):
                         })
                         attachment_ids.append(attachment.id)
                     else:
-                        # Fallback: attach generated prescription image
-                        if prescription_image_b64:
-                            img_name = f"Prescription_{appointment.name or appointment.id}.png"
+                        # Fallback: attach first available page image
+                        if page_images:
+                            img_name = f"Prescription_{appointment.name or appointment.id}_page_1.png"
                             try:
+                                # Convert first page back to base64 for attachment
+                                fallback_b64 = base64.b64encode(page_images[0]).decode()
                                 attachment = self.env['ir.attachment'].create({
                                     'name': img_name,
                                     'type': 'binary',
-                                    'datas': prescription_image_b64,
+                                    'datas': fallback_b64,
                                     'res_model': 'clinic.appointment',
                                     'res_id': appointment.id,
                                     'mimetype': 'image/png',
@@ -1373,6 +1383,75 @@ class ClinicAppointment(models.Model):
             self.prescription_page_count = int(index)
         return ok
 
+    def get_prescription_page_strokes(self, page_index):
+        """Get strokes data for a specific page"""
+        self.ensure_one()
+        try:
+            page_index = int(page_index)
+            if page_index == 1:
+                # Page 1 strokes stored in prescription_strokes field
+                return self.prescription_strokes or ''
+            else:
+                # Other pages stored as attachments
+                attach_name = f'prescription_strokes_page_{page_index}.json'
+                attachment = self.env['ir.attachment'].search([
+                    ('res_model', '=', self._name),
+                    ('res_id', '=', self.id),
+                    ('name', '=', attach_name),
+                ], limit=1)
+                
+                if attachment and attachment.datas:
+                    import base64
+                    return base64.b64decode(attachment.datas).decode('utf-8')
+                return '[]'  # Return empty JSON array instead of empty string
+        except Exception as e:
+            _logger.error("Failed to get strokes for page %s: %s", page_index, str(e))
+            return '[]'  # Return empty JSON array instead of empty string
+
+    def set_prescription_page_strokes(self, page_index, strokes_data):
+        """Set strokes data for a specific page"""
+        self.ensure_one()
+        try:
+            page_index = int(page_index)
+            if page_index == 1:
+                # Page 1 strokes stored in prescription_strokes field
+                self.prescription_strokes = strokes_data
+                return True
+            else:
+                # Other pages stored as attachments
+                attach_name = f'prescription_strokes_page_{page_index}.json'
+                
+                # Remove existing attachment if any
+                existing = self.env['ir.attachment'].search([
+                    ('res_model', '=', self._name),
+                    ('res_id', '=', self.id),
+                    ('name', '=', attach_name),
+                ])
+                if existing:
+                    existing.unlink()
+                
+                # Create new attachment with strokes data
+                if strokes_data:
+                    import base64
+                    strokes_b64 = base64.b64encode(strokes_data.encode('utf-8')).decode()
+                    self.env['ir.attachment'].create({
+                        'name': attach_name,
+                        'type': 'binary',
+                        'datas': strokes_b64,
+                        'res_model': self._name,
+                        'res_id': self.id,
+                        'mimetype': 'application/json',
+                    })
+                
+                # Ensure page_count covers this index
+                if page_index > int(self.prescription_page_count or 1):
+                    self.prescription_page_count = page_index
+                
+                return True
+        except Exception as e:
+            _logger.error("Failed to set strokes for page %s: %s", page_index, str(e))
+            return False
+
     def add_prescription_page(self):
         """Add a new empty page at the end and return the new page count (index of added page)."""
         self.ensure_one()
@@ -1389,8 +1468,9 @@ class ClinicAppointment(models.Model):
             index = int(self.prescription_page_count or 1)
         count = int(self.prescription_page_count or 1)
         if index == count and count > 1:
-            # delete attachment for this page (if index > 1)
+            # delete attachments for this page (if index > 1)
             if index > 1:
+                # Delete image attachment
                 attach = self.env['ir.attachment'].search([
                     ('res_model', '=', self._name),
                     ('res_id', '=', self.id),
@@ -1398,25 +1478,42 @@ class ClinicAppointment(models.Model):
                 ], limit=1)
                 if attach:
                     attach.unlink()
+                
+                # Delete strokes attachment
+                strokes_attach_name = f'prescription_strokes_page_{index}.json'
+                strokes_attach = self.env['ir.attachment'].search([
+                    ('res_model', '=', self._name),
+                    ('res_id', '=', self.id),
+                    ('name', '=', strokes_attach_name),
+                ], limit=1)
+                if strokes_attach:
+                    strokes_attach.unlink()
+                    
             self.prescription_page_count = count - 1
             return count - 1
         return count
 
-    def _generate_prescription_image_from_strokes(self):
-        """Generate prescription image from strokes data, including header and footer."""
+    def _generate_prescription_image_from_strokes(self, page_index=1):
+        """Generate prescription image from strokes data. Page 1 includes header and footer, others are canvas only."""
         self.ensure_one()
         
-        if not self.prescription_strokes:
-            return False
+        _logger.info(f"Generating prescription image for page {page_index}")
+        
+        # Get strokes for the specific page
+        if page_index == 1:
+            strokes_data = self.prescription_strokes if self.prescription_strokes else '[]'
+        else:
+            strokes_data = self.get_prescription_page_strokes(page_index)
+            
+        _logger.info(f"Page {page_index} strokes data length: {len(strokes_data)}")
             
         try:
             import json
             from PIL import Image, ImageDraw
             
-            # Parse strokes
-            strokes = json.loads(self.prescription_strokes)
-            if not strokes:
-                return False
+            # Parse strokes for the specific page (empty array if no strokes)
+            strokes = json.loads(strokes_data)
+            # Continue even if no strokes - we still want to generate the page template
             
             # Canvas dimensions (same as in JS widget)
             canvas_width = 2480
@@ -1430,50 +1527,58 @@ class ClinicAppointment(models.Model):
             header_img = None
             footer_img = None
             
-            # Get header/footer images
-            if doctor and doctor.header_image:
-                try:
-                    header_data = base64.b64decode(doctor.header_image)
-                    header_img = Image.open(io.BytesIO(header_data))
-                except:
-                    pass
-            elif company and company.header_image:
-                try:
-                    header_data = base64.b64decode(company.header_image)
-                    header_img = Image.open(io.BytesIO(header_data))
-                except:
-                    pass
-                    
-            if doctor and doctor.footer_image:
-                try:
-                    footer_data = base64.b64decode(doctor.footer_image)
-                    footer_img = Image.open(io.BytesIO(footer_data))
-                except:
-                    pass
-            elif company and company.footer_image:
-                try:
-                    footer_data = base64.b64decode(company.footer_image)
-                    footer_img = Image.open(io.BytesIO(footer_data))
-                except:
-                    pass
+            # Get header/footer images only for page 1
+            if page_index == 1:
+                if doctor and doctor.header_image:
+                    try:
+                        header_data = base64.b64decode(doctor.header_image)
+                        header_img = Image.open(io.BytesIO(header_data))
+                    except:
+                        pass
+                elif company and company.header_image:
+                    try:
+                        header_data = base64.b64decode(company.header_image)
+                        header_img = Image.open(io.BytesIO(header_data))
+                    except:
+                        pass
+                        
+                if doctor and doctor.footer_image:
+                    try:
+                        footer_data = base64.b64decode(doctor.footer_image)
+                        footer_img = Image.open(io.BytesIO(footer_data))
+                    except:
+                        pass
+                elif company and company.footer_image:
+                    try:
+                        footer_data = base64.b64decode(company.footer_image)
+                        footer_img = Image.open(io.BytesIO(footer_data))
+                    except:
+                        pass
             
-            # Calculate header and footer heights
+            # Calculate header and footer heights (only for page 1)
             header_height = 0
             footer_height = 0
             
-            if header_img:
-                header_height = int(canvas_width * header_img.height / header_img.width)
-            if footer_img:
-                footer_height = int(canvas_width * footer_img.height / footer_img.width)
+            if page_index == 1:
+                if header_img:
+                    header_height = int(canvas_width * header_img.height / header_img.width)
+                if footer_img:
+                    footer_height = int(canvas_width * footer_img.height / footer_img.width)
             
             # Create composite image
-            total_height = header_height + canvas_height + footer_height
+            if page_index == 1:
+                # Page 1: Header + Canvas + Footer
+                total_height = header_height + canvas_height + footer_height
+            else:
+                # Other pages: Canvas only
+                total_height = canvas_height
+                
             composite_img = Image.new('RGB', (canvas_width, total_height), 'white')
             draw = ImageDraw.Draw(composite_img)
             
-            # Draw header
+            # Draw header (page 1 only)
             y_offset = 0
-            if header_img and header_height > 0:
+            if page_index == 1 and header_img and header_height > 0:
                 header_resized = header_img.resize((canvas_width, header_height))
                 composite_img.paste(header_resized, (0, 0))
                 y_offset += header_height
@@ -1502,8 +1607,8 @@ class ClinicAppointment(models.Model):
                             draw.line([(x1 + offset, y1), (x2 + offset, y2)], fill=color, width=1)
                             draw.line([(x1, y1 + offset), (x2, y2 + offset)], fill=color, width=1)
             
-            # Draw footer
-            if footer_img and footer_height > 0:
+            # Draw footer (page 1 only)
+            if page_index == 1 and footer_img and footer_height > 0:
                 footer_y = header_height + canvas_height
                 footer_resized = footer_img.resize((canvas_width, footer_height))
                 composite_img.paste(footer_resized, (0, footer_y))

@@ -20,8 +20,9 @@ class DrawCanvasWidget extends Component {
         this.footerImgB64 = null; // base64 footer image (doctor/company)
         
         // Strokes-based drawing system
-        this.strokes = []; // Array of stroke objects
+        this.strokes = []; // Array of stroke objects for current page
         this.currentStroke = null; // Current stroke being drawn
+        this.allPageStrokes = new Map(); // Map of page number to strokes array
         
         this.state = useState({
             tool: 'pen',
@@ -30,11 +31,13 @@ class DrawCanvasWidget extends Component {
             penColor: '#000000',
             headerB64: null,
             footerB64: null,
+            currentPage: 1,
+            totalPages: 1,
         });
 
         onMounted(this.onMounted.bind(this));
         onWillDestroy(() => {
-            this.saveStrokes();
+            this.saveCurrentPageStrokes();
             if (this.saveTimeout) {
                 clearTimeout(this.saveTimeout);
             }
@@ -43,8 +46,9 @@ class DrawCanvasWidget extends Component {
 
     async onMounted() {
         await this.loadHeaderFooterImages();
+        await this.initPagesState();
         this.renderCanvas();
-        await this.loadStrokes();
+        await this.loadAllPagesStrokes();
         this.redrawCanvas();
     }
 
@@ -53,37 +57,114 @@ class DrawCanvasWidget extends Component {
         return rd.id || (this.props.record ? this.props.record.resId : null);
     }
 
-    // Load strokes from prescription_strokes field
-    async loadStrokes() {
+    async initPagesState() {
         try {
-            const rd = (this.props.record && this.props.record.data) ? this.props.record.data : {};
-            const strokesData = rd.prescription_strokes || '';
+            const apptId = this.getAppointmentId();
+            if (!apptId) return;
             
-            if (strokesData) {
-                this.strokes = JSON.parse(strokesData);
-            } else {
-                this.strokes = [];
+            const result = await rpc('/web/dataset/call_kw', {
+                model: 'clinic.appointment',
+                method: 'get_prescription_pages_count',
+                args: [[apptId]],
+                kwargs: {}
+            });
+            
+            if (result && typeof result === 'number') {
+                this.state.totalPages = result;
+                this.state.currentPage = Math.min(this.state.currentPage, result) || 1;
             }
         } catch (e) {
-            console.warn('Could not load strokes:', e.message);
+            console.warn('Could not fetch pages count:', e.message);
+        }
+    }
+
+    // Load strokes for all pages
+    async loadAllPagesStrokes() {
+        try {
+            const apptId = this.getAppointmentId();
+            if (!apptId) return;
+            
+            // Load strokes for all pages
+            for (let pageNum = 1; pageNum <= this.state.totalPages; pageNum++) {
+                await this.loadStrokesForPage(pageNum);
+            }
+            
+            // Set current page strokes
+            this.strokes = this.allPageStrokes.get(this.state.currentPage) || [];
+            
+        } catch (e) {
+            console.warn('Could not load all pages strokes:', e.message);
             this.strokes = [];
         }
     }
 
-    // Save strokes to prescription_strokes field
-    saveStrokes() {
+    async loadStrokesForPage(pageNum) {
         try {
-            const strokesData = JSON.stringify(this.strokes);
-            
-            if (this.props.record && this.props.record.data) {
-                this.props.record.update({ prescription_strokes: strokesData });
-            } else if (this.props.onChange) {
-                // For cases where we need to update via onChange
-                const currentData = this.props.record?.data || {};
-                this.props.onChange({ ...currentData, prescription_strokes: strokesData });
+            if (pageNum === 1) {
+                // Page 1: Load from prescription_strokes field
+                const rd = (this.props.record && this.props.record.data) ? this.props.record.data : {};
+                const strokesData = rd.prescription_strokes || '';
+                
+                if (strokesData) {
+                    this.allPageStrokes.set(1, JSON.parse(strokesData));
+                } else {
+                    this.allPageStrokes.set(1, []);
+                }
+            } else {
+                // Other pages: Load via RPC
+                const apptId = this.getAppointmentId();
+                if (!apptId) return;
+                
+                const result = await rpc('/web/dataset/call_kw', {
+                    model: 'clinic.appointment',
+                    method: 'get_prescription_page_strokes',
+                    args: [[apptId], pageNum],
+                    kwargs: {}
+                });
+                
+                if (result) {
+                    this.allPageStrokes.set(pageNum, JSON.parse(result));
+                } else {
+                    this.allPageStrokes.set(pageNum, []);
+                }
             }
         } catch (e) {
-            console.error('Failed to save strokes:', e);
+            console.warn(`Could not load strokes for page ${pageNum}:`, e.message);
+            this.allPageStrokes.set(pageNum, []);
+        }
+    }
+
+    // Save strokes for current page
+    async saveCurrentPageStrokes() {
+        try {
+            const currentPage = this.state.currentPage;
+            const strokesData = JSON.stringify(this.strokes);
+            
+            // Update in-memory cache
+            this.allPageStrokes.set(currentPage, [...this.strokes]);
+            
+            if (currentPage === 1) {
+                // Page 1: Save to prescription_strokes field
+                if (this.props.record && this.props.record.data) {
+                    this.props.record.update({ prescription_strokes: strokesData });
+                } else if (this.props.onChange) {
+                    const currentData = this.props.record?.data || {};
+                    this.props.onChange({ ...currentData, prescription_strokes: strokesData });
+                }
+            } else {
+                // Other pages: Save via RPC
+                const apptId = this.getAppointmentId();
+                if (!apptId) return;
+                
+                await rpc('/web/dataset/call_kw', {
+                    model: 'clinic.appointment',
+                    method: 'set_prescription_page_strokes',
+                    args: [[apptId], currentPage, strokesData],
+                    kwargs: {}
+                });
+            }
+        } catch (e) {
+            console.error('Failed to save strokes for current page:', e);
         }
     }
 
@@ -287,15 +368,105 @@ class DrawCanvasWidget extends Component {
         }
         
         this.saveTimeout = setTimeout(() => {
-            this.saveStrokes();
+            this.saveCurrentPageStrokes();
         }, 500);
     }
 
-    // Clear all strokes
+    // Page navigation methods
+    async onPrevPage() {
+        if (this.state.currentPage <= 1) return;
+        
+        // Save current page before switching
+        await this.saveCurrentPageStrokes();
+        
+        // Switch to previous page
+        this.state.currentPage -= 1;
+        this.strokes = this.allPageStrokes.get(this.state.currentPage) || [];
+        this.redrawCanvas();
+    }
+
+    async onNextPage() {
+        if (this.state.currentPage >= this.state.totalPages) return;
+        
+        // Save current page before switching
+        await this.saveCurrentPageStrokes();
+        
+        // Switch to next page
+        this.state.currentPage += 1;
+        this.strokes = this.allPageStrokes.get(this.state.currentPage) || [];
+        this.redrawCanvas();
+    }
+
+    async onAddPage() {
+        try {
+            // Save current page before adding new page
+            await this.saveCurrentPageStrokes();
+            
+            const apptId = this.getAppointmentId();
+            if (!apptId) return;
+            
+            const newCount = await rpc('/web/dataset/call_kw', {
+                model: 'clinic.appointment',
+                method: 'add_prescription_page',
+                args: [[apptId]],
+                kwargs: {}
+            });
+            
+            if (newCount) {
+                this.state.totalPages = newCount;
+                this.state.currentPage = newCount;
+                
+                // Initialize empty strokes for new page
+                this.strokes = [];
+                this.allPageStrokes.set(newCount, []);
+                this.redrawCanvas();
+            }
+        } catch (e) {
+            console.error('Failed to add page:', e);
+        }
+    }
+
+    async onRemovePage() {
+        try {
+            const currentPage = this.state.currentPage;
+            if (this.state.totalPages <= 1) return; // Must keep at least one page
+            
+            const apptId = this.getAppointmentId();
+            if (!apptId) return;
+            
+            const newCount = await rpc('/web/dataset/call_kw', {
+                model: 'clinic.appointment',
+                method: 'remove_prescription_page',
+                args: [[apptId], currentPage],
+                kwargs: {}
+            });
+            
+            if (typeof newCount === 'number') {
+                this.state.totalPages = newCount;
+                
+                // Remove from memory cache
+                this.allPageStrokes.delete(currentPage);
+                
+                // Adjust current page if needed
+                if (this.state.currentPage > newCount) {
+                    this.state.currentPage = newCount;
+                }
+                
+                // Load current page strokes
+                this.strokes = this.allPageStrokes.get(this.state.currentPage) || [];
+                this.redrawCanvas();
+            }
+        } catch (e) {
+            console.error('Failed to remove page:', e);
+        }
+    }
+
+    // Clear current page strokes
     clearDrawing() {
         this.strokes = [];
+        this.allPageStrokes.set(this.state.currentPage, []);
         this.redrawCanvas();
-        this.saveStrokes();
+        this.saveCurrentPageStrokes();
     }
 
 
