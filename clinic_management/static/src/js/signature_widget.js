@@ -7,14 +7,17 @@ import { rpc } from "@web/core/network/rpc";
 class DrawCanvasWidget extends Component {
     static template = "clinic_management.DrawCanvasWidget";
     static props = { ...standardFieldProps };
+    
+    // Static cache for header/footer images to prevent reload on tab switch
+    static imageCache = new Map();
+    static imageCacheTTL = 5 * 60 * 1000; // 5 minutes
 
     setup() {
         this.canvasRef = useRef("canvas");
         this.saveTimeout = null;
         this.isDrawing = false;
-    this.headerImgB64 = null; // base64 header image (doctor/company)
-    this.footerImgB64 = null; // base64 footer image (doctor/company)
-    this.drawingArea = null; // allowed drawing area coordinates (optional)
+        this.headerImgB64 = null; // base64 header image (doctor/company)
+        this.footerImgB64 = null; // base64 footer image (doctor/company)
     this.state = useState({
             currentPage: 1,
             totalPages: 1,
@@ -37,8 +40,6 @@ class DrawCanvasWidget extends Component {
 
     async onMounted() {
         await this.loadHeaderFooterImages();
-        // Do not call backend analysis; use a simple default area (or none)
-        this.drawingArea = { x: 0.08, y: 0.18, width: 0.84, height: 0.64 };
         await this.initPagesState();
         this.renderCanvas();
         await this.fetchAndDrawCurrentPage();
@@ -86,9 +87,6 @@ class DrawCanvasWidget extends Component {
     // Start with a transparent canvas; background template is shown via CSS.
     ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // Always show drawing area outline for guidance
-        setTimeout(() => this.showDrawingAreaOutline(canvas, ctx), 500);
-
         let lastX = 0;
         let lastY = 0;
 
@@ -106,19 +104,7 @@ class DrawCanvasWidget extends Component {
 
         let hasDrawn = false; // Track if actual drawing happened
 
-        // const isInDrawingArea = (x, y) => {
-        // const areaX = this.drawingArea.x * canvas.width;
-        // const areaY = this.drawingArea.y * canvas.height;
-        // const areaWidth = this.drawingArea.width * canvas.width;
-        // const areaHeight = this.drawingArea.height * canvas.height;
-
-        // return x >= areaX && x <= areaX + areaWidth && 
-        //     y >= areaY && y <= areaY + areaHeight;
-        // };
-        const isInDrawingArea = (x, y) => {
-        // Always allow drawing anywhere
-        return true;
-};
+    // Drawing is allowed anywhere on the canvas
 
 
 
@@ -126,13 +112,6 @@ class DrawCanvasWidget extends Component {
         const draw = (e) => {
             if (!this.isDrawing) return;
             const pos = pointerPos(e);
-            
-            // Check if position is within allowed drawing area
-            if (!isInDrawingArea(pos.x, pos.y)) {
-                // If outside drawing area, stop drawing
-                this.isDrawing = false;
-                return;
-            }
             
             // Check if there's actual movement for drawing
             const distance = Math.sqrt(Math.pow(pos.x - lastX, 2) + Math.pow(pos.y - lastY, 2));
@@ -165,16 +144,11 @@ class DrawCanvasWidget extends Component {
             e.preventDefault();
             const pos = pointerPos(e);
             
-            // Only start drawing if within allowed area
-            if (isInDrawingArea(pos.x, pos.y)) {
-                this.isDrawing = true;
-                hasDrawn = false; // Reset drawing flag
-                lastX = pos.x;
-                lastY = pos.y;
-            } else {
-                // Show visual feedback for restricted area
-                this.showRestrictedAreaWarning();
-            }
+            // Start drawing immediately; no restricted area
+            this.isDrawing = true;
+            hasDrawn = false; // Reset drawing flag
+            lastX = pos.x;
+            lastY = pos.y;
         };
         
         const stopDrawing = () => {
@@ -250,8 +224,7 @@ class DrawCanvasWidget extends Component {
                 // No existing image: start with transparent canvas; header/footer shown outside
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
             }
-            // show drawing area outline again
-            setTimeout(() => this.showDrawingAreaOutline(canvas, ctx), 300);
+            // No drawing area outline
         } catch (e) {
             console.warn('Failed to draw page', page, e);
         }
@@ -284,7 +257,7 @@ class DrawCanvasWidget extends Component {
     async saveDrawing() {
         const canvas = this.canvasRef.el;
         if (!canvas) return;
-        // Save composite image with template + drawing
+        // Save composite image for page 1, otherwise canvas only
         this.saveCompositeImage(canvas);
         
         if (this.saveTimeout) {
@@ -294,11 +267,18 @@ class DrawCanvasWidget extends Component {
     }
 
     saveSimpleCanvas(canvas) {
-        // Create composite image with header/footer + drawing
+        // Backward-compat alias; delegates to composite handler which is page-aware
         this.saveCompositeImage(canvas);
     }
 
     saveCompositeImage(canvas) {
+        // For pages > 1, save canvas-only to keep subsequent pages blank from header/footer
+        const page = this.state.currentPage || 1;
+        if (page !== 1) {
+            this.saveFallbackCanvas(canvas);
+            return;
+        }
+
         const loadImg = (b64) => new Promise((resolve, reject) => {
             if (!b64) return resolve(null);
             const img = new Image();
@@ -337,6 +317,17 @@ class DrawCanvasWidget extends Component {
                 console.warn('Header/footer load failed, saving canvas only', e);
                 this.saveFallbackCanvas(canvas);
             });
+    }
+
+    // Save only the raw canvas bitmap (no header/footer). Used for pages > 1 or on failures
+    saveFallbackCanvas(canvas) {
+        try {
+            const dataURL = canvas.toDataURL('image/png', 1.0);
+            const base64 = dataURL.split(',')[1];
+            this._storeImageForCurrentPage(base64);
+        } catch (e) {
+            console.error('Failed to save fallback canvas:', e);
+        }
     }
 
     async _storeImageForCurrentPage(base64) {
@@ -426,7 +417,20 @@ class DrawCanvasWidget extends Component {
     async saveImmediately() {
         const canvas = this.canvasRef.el;
         if (!canvas) return;
-        // Composite and store now: header + canvas + footer
+        const page = this.state.currentPage || 1;
+        // For pages > 1, save canvas-only immediately
+        if (page !== 1) {
+            try {
+                const dataURL = canvas.toDataURL('image/png', 1.0);
+                const base64 = dataURL.split(',')[1];
+                await this._storeImageForCurrentPage(base64);
+                return;
+            } catch (e) {
+                console.error('Immediate save (canvas-only) failed:', e);
+            }
+        }
+
+        // Page 1: Composite and store now: header + canvas + footer
         try {
             const loadImg = (b64) => new Promise((resolve, reject) => {
                 if (!b64) return resolve(null);
@@ -469,6 +473,46 @@ class DrawCanvasWidget extends Component {
             const doctorId = rd.doctor_id ? (Array.isArray(rd.doctor_id) ? rd.doctor_id[0] : rd.doctor_id) : null;
             const companyId = rd.company_id ? (Array.isArray(rd.company_id) ? rd.company_id[0] : rd.company_id) : null;
             
+            // Create cache key based on doctor and company IDs
+            const cacheKey = `${doctorId || 'null'}_${companyId || 'null'}`;
+
+            const now = Date.now();
+
+            // 1) Check in-memory cache first
+            const cachedMem = DrawCanvasWidget.imageCache.get(cacheKey);
+            if (cachedMem && (now - cachedMem.ts) < DrawCanvasWidget.imageCacheTTL) {
+                this.headerImgB64 = cachedMem.header;
+                this.footerImgB64 = cachedMem.footer;
+                this.state.headerB64 = cachedMem.header;
+                this.state.footerB64 = cachedMem.footer;
+                return;
+            }
+
+            // 2) Check persistent cache (localStorage) to survive dev asset reloads
+            let cachedLS = null;
+            try {
+                const lsKey = `cm_sig_header_footer_${cacheKey}`;
+                const raw = window.localStorage ? window.localStorage.getItem(lsKey) : null;
+                if (raw) {
+                    const obj = JSON.parse(raw);
+                    if (obj && obj.ts && (now - obj.ts) < DrawCanvasWidget.imageCacheTTL) {
+                        cachedLS = obj;
+                    }
+                }
+            } catch (e) {
+                // localStorage may be unavailable or quota exceeded; ignore and proceed
+            }
+
+            if (cachedLS) {
+                this.headerImgB64 = cachedLS.header || null;
+                this.footerImgB64 = cachedLS.footer || null;
+                this.state.headerB64 = this.headerImgB64;
+                this.state.footerB64 = this.footerImgB64;
+                // hydrate in-memory cache for faster next time
+                DrawCanvasWidget.imageCache.set(cacheKey, { header: this.headerImgB64, footer: this.footerImgB64, ts: cachedLS.ts });
+                return;
+            }
+            
             console.log('Loading header/footer images - doctorId:', doctorId, 'companyId:', companyId);
             
             let header = null;
@@ -506,71 +550,30 @@ class DrawCanvasWidget extends Component {
                 }
             }
             
+            // Cache the images for future use with timestamp
+            const ts = Date.now();
+            DrawCanvasWidget.imageCache.set(cacheKey, { header, footer, ts });
+            try {
+                const lsKey = `cm_sig_header_footer_${cacheKey}`;
+                if (window.localStorage) {
+                    window.localStorage.setItem(lsKey, JSON.stringify({ header, footer, ts }));
+                }
+            } catch (e) {
+                // Ignore storage errors (quota, disabled storage, etc.)
+            }
+            
             this.headerImgB64 = header;
             this.footerImgB64 = footer;
-            // Update reactive state so template <img> tags can render base64 directly
             this.state.headerB64 = header;
             this.state.footerB64 = footer;
             
-            console.log('State updated - headerB64:', !!this.state.headerB64, 'footerB64:', !!this.state.footerB64);
+            console.log('Cached and set header/footer images for key:', cacheKey, 'headerB64:', !!this.state.headerB64, 'footerB64:', !!this.state.footerB64);
         } catch (e) {
             console.error('Could not load header/footer images:', e);
         }
     }
 
-    async loadDrawingArea() {
-        // Analysis removed: use a simple default drawing area (optional)
-        this.drawingArea = { x: 0.08, y: 0.18, width: 0.84, height: 0.64 };
-    }
-
-    initializeWithTemplate(canvas, ctx) {
-        // Initialize canvas with template for first time
-        // Template is shown via CSS background, no need to save immediately
-        // Save will only happen when user actually draws something
-        console.log('Template loaded as background, waiting for user drawing...');
-        
-        // Optionally show drawing area outline
-        this.showDrawingAreaOutline(canvas, ctx);
-    }
-
-    showDrawingAreaOutline(canvas, ctx) {
-        if (!this.drawingArea) return;
-        
-        // Draw a subtle outline of the allowed drawing area
-        const areaX = this.drawingArea.x * canvas.width;
-        const areaY = this.drawingArea.y * canvas.height;
-        const areaWidth = this.drawingArea.width * canvas.width;
-        const areaHeight = this.drawingArea.height * canvas.height;
-        
-        ctx.save();
-        ctx.strokeStyle = 'rgba(0, 123, 255, 0.3)'; // Light blue outline
-        ctx.lineWidth = 2;
-        ctx.setLineDash([10, 5]); // Dashed line
-        ctx.strokeRect(areaX, areaY, areaWidth, areaHeight);
-        ctx.restore();
-        
-        // Auto-hide outline after 3 seconds
-        setTimeout(() => {
-            ctx.clearRect(areaX - 2, areaY - 2, areaWidth + 4, areaHeight + 4);
-        }, 3000);
-    }
-
-    showRestrictedAreaWarning() {
-        // Show temporary visual feedback
-        console.warn('Drawing not allowed in this area. Please draw only in the designated area.');
-        
-        // Add visual feedback with red cursor
-        const canvas = this.canvasRef.el;
-        if (canvas) {
-            canvas.style.cursor = 'not-allowed';
-            setTimeout(() => {
-                canvas.style.cursor = 'crosshair';
-            }, 1000);
-        }
-        
-        // TODO: Add toast notification for better UX
-        // this.env.services.notification.add('Please draw only in the designated area', {type: 'warning'});
-    }
+    // Drawing area concept removed: users can draw anywhere on the canvas
 
     drawDoctorTemplate(canvas, ctx) {
         // Keep canvas transparent - template is shown via CSS background
