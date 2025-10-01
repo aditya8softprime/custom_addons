@@ -38,9 +38,8 @@ class ClinicAppointment(models.Model):
     show_slot_selector = fields.Boolean(string='Show Slot Selector', compute='_compute_show_slot_selector')
     slots = fields.Many2many('clinic.slot', string='Slots')
     
-    # Queue system for walk-in appointments
-    queue_number = fields.Char(string='Queue Number', readonly=True, copy=False)
-    queue_position = fields.Integer(string='Position in Queue', compute='_compute_queue_position', store=True)
+    # Queue system for appointments
+    queue_number = fields.Char(string='Queue Number', compute='_compute_queue_number', store=True, copy=False)
 
     appointment_date = fields.Date(string='Appointment Date', required=True, tracking=True)
     
@@ -235,27 +234,7 @@ class ClinicAppointment(models.Model):
                 appointment.next_visit_date = False
     
     @api.depends('queue_number', 'doctor_id', 'appointment_date', 'state')
-    def _compute_queue_position(self):
-        """Compute position in queue for walk-in appointments"""
-        for appointment in self:
-            if appointment.appointment_type == 'walkin' and appointment.queue_number and appointment.state == 'waiting':
-                # Get all waiting walk-in appointments for the same doctor and date
-                waiting_appointments = self.search([
-                    ('doctor_id', '=', appointment.doctor_id.id),
-                    ('appointment_date', '=', appointment.appointment_date),
-                    ('appointment_type', '=', 'walkin'),
-                    ('state', '=', 'waiting'),
-                    ('queue_number', '!=', False)
-                ], order='queue_number')
-                
-                position = 1
-                for idx, app in enumerate(waiting_appointments):
-                    if app.id == appointment.id:
-                        position = idx + 1
-                        break
-                appointment.queue_position = position
-            else:
-                appointment.queue_position = 0
+
     
     def _get_root_appointment(self):
         """Get the root appointment of the chain"""
@@ -318,11 +297,7 @@ class ClinicAppointment(models.Model):
         
         appointments = super(ClinicAppointment, self).create(vals_list)
         
-        # Handle walk-in appointments after creation
-        for appointment in appointments:
-            if appointment.appointment_type == 'walkin':
-                # Generate queue number for walk-in appointments
-                appointment._generate_queue_number()
+        # Queue numbers will be automatically computed when appointments are confirmed
                 
         return appointments
     
@@ -554,10 +529,8 @@ class ClinicAppointment(models.Model):
                     if conflict:
                         raise ValidationError(_("This slot is already booked for the selected date"))
             
-            # For walk-in appointments, generate queue number if not present
-            elif appointment.appointment_type == 'walkin':
-                if not appointment.queue_number:
-                    appointment._generate_queue_number()
+            # Queue number will be automatically computed for both walk-in and scheduled appointments
+            # when company has enable_queue_system = True
             
             # Set consulting fee if not set
             if not appointment.consulting_fee and appointment.doctor_id:
@@ -1236,32 +1209,34 @@ class ClinicAppointment(models.Model):
     # Queue Management Methods
     # ===============================
     
-    def _generate_queue_number(self):
-        """Generate queue number for walk-in appointments"""
-        self.ensure_one()
-        if self.appointment_type == 'walkin':
-            # Generate queue number based on date and doctor
-            today_str = self.appointment_date.strftime('%Y%m%d')
-            doctor_initial = self.doctor_id.name[0] if self.doctor_id.name else 'D'
-            
-            # Get count of walk-in appointments for this doctor today
-            existing_count = self.search_count([
-                ('doctor_id', '=', self.doctor_id.id),
-                ('appointment_date', '=', self.appointment_date),
-                ('appointment_type', '=', 'walkin'),
-                ('queue_number', '!=', False)
-            ])
-            
-            queue_num = existing_count + 1
-            self.queue_number = f"{doctor_initial}{today_str}{queue_num:03d}"
+    @api.depends('doctor_id', 'appointment_date', 'state', 'company_id.enable_queue_system')
+    def _compute_queue_number(self):
+        """Generate sequential queue number for appointments per doctor per date"""
+        for appointment in self:
+            if (appointment.state == 'confirmed' and 
+                appointment.doctor_id and 
+                appointment.appointment_date and
+                appointment.company_id.enable_queue_system):
+                
+                # Get count of confirmed appointments for this doctor on this date created before this one
+                existing_count = self.search_count([
+                    ('doctor_id', '=', appointment.doctor_id.id),
+                    ('appointment_date', '=', appointment.appointment_date),
+                    ('state', '=', 'confirmed'),
+                    ('id', '<', appointment.id)
+                ])
+                
+                queue_num = existing_count + 1
+                appointment.queue_number = str(queue_num)
+            else:
+                appointment.queue_number = False
     
     def action_move_to_waiting(self):
-        """Move walk-in appointment to waiting state and generate queue number"""
+        """Move walk-in appointment to waiting state"""
         for appointment in self:
             if appointment.appointment_type == 'walkin' and appointment.state == 'paid':
-                if not appointment.queue_number:
-                    appointment._generate_queue_number()
                 appointment.state = 'waiting'
+                # Queue number is automatically computed when state changes
     
     def get_queue_data(self, doctor_id, date):
         """Get queue data for a specific doctor and date"""
@@ -1278,8 +1253,7 @@ class ClinicAppointment(models.Model):
                 'id': appointment.id,
                 'queue_number': appointment.queue_number,
                 'patient_name': appointment.patient_id.name,
-                'state': appointment.state,
-                'queue_position': appointment.queue_position
+                'state': appointment.state
             })
         
         return queue_data

@@ -85,8 +85,7 @@
                                    domain="[('id', 'in', slots)]" invisible="appointment_type == 'walkin' or not show_slot_selector"/>
                             <field name="slot_char" readonly="1" invisible="appointment_type == 'walkin' or show_slot_selector"/>
                             <field name="show_slot_selector" invisible="1"/>
-                            <field name="queue_number" readonly="1" invisible="appointment_type != 'walkin'"/>
-                            <field name="queue_position" readonly="1" invisible="appointment_type != 'walkin' or state != 'waiting'"/>
+                            <field name="queue_number" readonly="1" invisible="state != 'confirmed'"/>
                             <field name="start_time" widget="float_time" readonly="appointment_type == 'walkin'"/>
                             <field name="end_time" widget="float_time" readonly="appointment_type == 'walkin'"/>
                             <field name="consulting_fee" readonly="1" />
@@ -173,8 +172,7 @@
                 <field name="slot_char" optional="show" invisible="appointment_type == 'walkin'" string="Slot"/>
                 <field name="start_time" widget="float_time" optional="hide" invisible="appointment_type == 'walkin'"/>
                 <field name="end_time" widget="float_time" optional="hide" invisible="appointment_type == 'walkin'"/>
-                <field name="queue_number" optional="show" invisible="appointment_type != 'walkin'"/>
-                <field name="queue_position" optional="show" invisible="appointment_type != 'walkin' or state != 'waiting'"/>
+                <field name="queue_number" optional="show" invisible="state != 'confirmed'"/>
                 <field name="consulting_fee"/>
                 <field name="state" decoration-success="state == 'completed'" 
                        decoration-info="state == 'confirmed'" 
@@ -200,7 +198,6 @@
                 <field name="start_time"/>
                 <field name="end_time"/>
                 <field name="queue_number"/>
-                <field name="queue_position"/>
                 <field name="state"/>
                 <field name="color"/>
                 <templates>
@@ -236,12 +233,9 @@
                                         <field name="start_time" widget="float_time"/> - <field name="end_time" widget="float_time"/>
                                     </div>
                                 </div>
-                                <div t-if="record.appointment_type.raw_value == 'walkin' and record.queue_number.value">
+                                <div t-if="record.queue_number.value">
                                     <strong>Queue: </strong>
                                     <field name="queue_number"/>
-                                    <span t-if="record.state.raw_value == 'waiting' and record.queue_position.value" class="ml-2">
-                                        (Position: <field name="queue_position"/>)
-                                    </span>
                                 </div>
                             </div>
                         </div>

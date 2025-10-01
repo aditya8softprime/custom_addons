@@ -14,3 +14,8 @@ class ResCompany(models.Model):
         string='Footer Image', 
         help='Footer image for clinic prescriptions and documents'
     )
+    enable_queue_system = fields.Boolean(
+        string='Enable Queue System',
+        default=True,
+        help='Enable automatic queue number generation for appointments based on doctor and date'
+    )
