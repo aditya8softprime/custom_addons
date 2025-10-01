@@ -747,6 +747,31 @@ class ClinicAppointment(models.Model):
                         template.send_mail(appointment.id, force_send=True, email_values=email_values)
             except Exception:
                 logging.getLogger(__name__).exception('Failed to send completion email for appointment %s', appointment.id)
+
+    def action_download_prescription(self):
+        """Download prescription PDF"""
+        self.ensure_one()
+        
+        if not self.medicine_pdf:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': 'No Prescription Available',
+                    'message': 'No prescription PDF is available for this appointment.',
+                    'type': 'warning',
+                    'sticky': False,
+                }
+            }
+        
+        # Return download action
+        filename = self.medicine_pdf_filename or f"Prescription_{self.name or self.id}.pdf"
+        
+        return {
+            'type': 'ir.actions.act_url',
+            'url': f'/web/content?model=clinic.appointment&field=medicine_pdf&id={self.id}&filename={filename}&download=true',
+            'target': 'self',
+        }
     
     def action_cancel(self):
         """Cancel the appointment"""

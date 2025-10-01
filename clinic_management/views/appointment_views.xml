@@ -22,6 +22,9 @@
                         invisible="state != 'patient_in'" class="btn-primary" groups="clinic_management.group_clinic_doctor,clinic_management.group_clinic_admin"/>
                     <button name="action_complete" string="Complete" type="object" 
                         invisible="state != 'in_consultation'" class="btn-success" groups="clinic_management.group_clinic_doctor,clinic_management.group_clinic_admin"/>
+                    <button name="action_download_prescription" string="Download Prescription" type="object" 
+                        invisible="not medicine_pdf" class="btn-info" groups="clinic_management.group_clinic_doctor,clinic_management.group_clinic_admin" 
+                        icon="fa-download" title="Download prescription PDF"/>
                     <button name="action_mark_no_show" string="No Show" type="object" 
                         invisible="state not in ('confirmed','draft','paid')" class="btn-warning" groups="clinic_management.group_clinic_receptionist,clinic_management.group_clinic_admin"/>
                     <button name="action_cancel" string="Cancel" type="object" 
@@ -119,6 +122,7 @@
                                 <field name="medicine_image" widget="draw_canvas" groups="clinic_management.group_clinic_receptionist" nolabel="1" readonly="1"/>
                                 <field name="medicine_pdf" filename="medicine_pdf_filename" invisible="not medicine_pdf" widget="binary" options="{'accepted_file_extensions': '.pdf'}"/>
                                 <field name="medicine_image_filename" invisible="1"/>
+                                <field name="medicine_pdf" invisible="1"/>
                                 <field name="medicine_pdf_filename" invisible="1"/>
                                 <!-- Company fields removed - now fetched directly via RPC in JavaScript -->
                             </group>
