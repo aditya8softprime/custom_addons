@@ -63,14 +63,22 @@
                             <field name="previous_appointments_count" widget="statinfo" string="Previous"/>
                         </button>
                     </div>
-                    <div class="oe_title">
-                        <h1>
-                            <field name="name"/>
-                        </h1>
-                        <h1>
-                            <field name="queue_number" readonly="1" invisible="state != 'confirmed'"/>
-                        </h1>
-                    </div>
+                    <group>
+                        <group>
+                            <div class="oe_title">
+                                <h1>
+                                    <field name="name" readonly="1"/>
+                                </h1>
+                            </div>
+                        </group>
+                        <group>
+                            <h2>
+                                <span invisible="state == 'draft'" style="color: red; font-weight: bold;">
+                                    <field name="queue_number" readonly="1"/>
+                                </span>
+                            </h2>
+                        </group>
+                    </group>
                     <group>
                         <group>
                             <field name="patient_id" readonly="state != 'draft'"/>
