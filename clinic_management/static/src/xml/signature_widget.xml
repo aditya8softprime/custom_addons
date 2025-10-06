@@ -40,6 +40,7 @@
 
                 <!-- Right side: Toolbar -->
                 <div class="o_draw_canvas_toolbar"
+                     t-if="!props.readonly"
                      style="flex:0 0 200px; display:flex; flex-direction:column; gap:12px;
                             padding:12px; background:#f8f9fa; border-radius:8px; border:1px solid #dee2e6;
                             position:sticky; top:20px; align-self:flex-start; max-height:calc(100vh - 40px); overflow-y:auto;">
@@ -130,6 +131,23 @@
                     <div>
                         <h6 style="margin:12px 0 6px; font-size:12px; font-weight:bold; color:#495057;">Actions</h6>
                         <button type="button" class="btn btn-warning btn-sm w-100" t-on-click="clearDrawing">🗑️ Clear Current Page</button>
+                    </div>
+                </div>
+                <div t-if="props.readonly" 
+                     style="flex:0 0 200px; display:flex; flex-direction:column; gap:12px;
+                            padding:12px; background:#f8f9fa; border-radius:8px; border:1px solid #dee2e6;
+                            position:sticky; top:20px; align-self:flex-start; max-height:calc(100vh - 40px); overflow-y:auto;">
+                    <h6 style="margin:12px 0 6px; font-size:12px; font-weight:bold; color:#495057;">Pages</h6>
+                    <div style="text-align:center; margin-bottom:6px; font-size:14px; color:#495057;">
+                        Page <t t-esc="state.currentPage"/> / <t t-esc="state.totalPages"/>
+                    </div>
+                    <div style="display:flex; gap:4px; margin-bottom:6px;">
+                        <button type="button" class="btn btn-secondary btn-sm flex-fill" 
+                                t-on-click="onPrevPage" 
+                                t-att-disabled="state.currentPage &lt;= 1">← Prev</button>
+                        <button type="button" class="btn btn-secondary btn-sm flex-fill" 
+                                t-on-click="onNextPage" 
+                                t-att-disabled="state.currentPage &gt;= state.totalPages">Next →</button>
                     </div>
                 </div>
             </div>

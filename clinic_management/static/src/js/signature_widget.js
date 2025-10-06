@@ -33,6 +33,9 @@ class DrawCanvasWidget extends Component {
             footerB64: null,
             currentPage: 1,
             totalPages: 1,
+            patientName: null,
+            patientAge: null,
+            patientGender: null,
         });
 
         onMounted(this.onMounted.bind(this));
@@ -46,6 +49,7 @@ class DrawCanvasWidget extends Component {
 
     async onMounted() {
         await this.loadHeaderFooterImages();
+        await this.loadPatientDetails();
         await this.initPagesState();
         this.renderCanvas();
         await this.loadAllPagesStrokes();
@@ -55,6 +59,43 @@ class DrawCanvasWidget extends Component {
     getAppointmentId() {
         const rd = (this.props.record && this.props.record.data) ? this.props.record.data : {};
         return rd.id || (this.props.record ? this.props.record.resId : null);
+    }
+
+    async loadPatientDetails() {
+        try {
+            // Try to get patient details from the current record data first
+            const rd = (this.props.record && this.props.record.data) ? this.props.record.data : {};
+            
+            if (rd.patient_id && rd.patient_age && rd.patient_gender) {
+                // Use already available data
+                this.state.patientName = Array.isArray(rd.patient_id) ? rd.patient_id[1] : rd.patient_id || 'Unknown Patient';
+                this.state.patientAge = rd.patient_age || 'N/A';
+                this.state.patientGender = rd.patient_gender || 'N/A';
+            } else {
+                // Fetch from server if not available
+                const apptId = this.getAppointmentId();
+                if (apptId) {
+                    const result = await rpc('/web/dataset/call_kw', {
+                        model: 'clinic.appointment',
+                        method: 'read',
+                        args: [[apptId], ['patient_id', 'patient_age', 'patient_gender']],
+                        kwargs: {}
+                    });
+                    
+                    if (result && result.length > 0) {
+                        const apptData = result[0];
+                        this.state.patientName = Array.isArray(apptData.patient_id) ? apptData.patient_id[1] : 'Unknown Patient';
+                        this.state.patientAge = apptData.patient_age || 'N/A';
+                        this.state.patientGender = apptData.patient_gender || 'N/A';
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error loading patient details:', error);
+            this.state.patientName = 'Unknown Patient';
+            this.state.patientAge = 'N/A';
+            this.state.patientGender = 'N/A';
+        }
     }
 
     async initPagesState() {
@@ -237,6 +278,12 @@ class DrawCanvasWidget extends Component {
 
         const startDrawing = (e) => {
             e.preventDefault();
+            
+            // Check if widget is readonly - prevent any drawing/editing
+            if (this.props.readonly) {
+                return;
+            }
+            
             const pos = pointerPos(e);
             
             this.isDrawing = true;
