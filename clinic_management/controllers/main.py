@@ -219,7 +219,8 @@ class ClinicWebsite(http.Controller):
                     'id': slot.id,
                     'start_time': start_time_str,
                     'end_time': end_time_str,
-                    'slot_number': slot.slot_number
+                    'slot_number': slot.slot_number,
+                    'slot_label': slot.slot_label or f"{start_time_str} - {end_time_str}"
                 })
             
             _logger.info(f"Found {len(slots_data)} available slots")

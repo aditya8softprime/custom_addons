@@ -636,7 +636,7 @@
                                             data.result.forEach(slot => {
                                                 const option = document.createElement('option');
                                                 option.value = slot.id;
-                                                option.textContent = `${slot.start_time} - ${slot.end_time}`;
+                                                option.textContent = slot.slot_label || `${slot.start_time} - ${slot.end_time}`;
                                                 slotSelect.appendChild(option);
                                             });
                                         } else {
@@ -1140,7 +1140,7 @@
                                     data.result.forEach(slot => {
                                         const option = document.createElement('option');
                                         option.value = slot.id;
-                                        option.textContent = slot.start_time + ' - ' + slot.end_time;
+                                        option.textContent = slot.slot_label || (slot.start_time + ' - ' + slot.end_time);
                                         slotSelect.appendChild(option);
                                     });
                                 } else {

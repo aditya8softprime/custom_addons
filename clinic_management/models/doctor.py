@@ -137,7 +137,9 @@ class DoctorShiftConfig(models.Model):
             
             start_label = f"{int(start_min//60):02d}:{int(start_min%60):02d}"
             end_label = f"{int(end_min//60):02d}:{int(end_min%60):02d}"
-            slot_label = f"{start_label} - {end_label}"
+            # Combine day code, shift code and time for complete slot label
+            time_range = f"{start_label}-{end_label}"
+            slot_label = f"{day_code}-{shift_code} {time_range}"
             
             # Generate slot number based on clinic.days code and shift (continue from next sequence)
             slot_number_str = f"{day_code}-{shift_code}-{slot_number:03d}"

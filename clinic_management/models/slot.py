@@ -6,7 +6,8 @@ class ClinicSlot(models.Model):
     _name = 'clinic.slot'
     _description = 'Clinic Appointment Slots'
     _inherit = ['mail.thread', 'mail.activity.mixin']
-    _rec_name = 'display_name'  # use our computed label everywhere
+    _order = 'day_of_week, start_time_float'
+    _rec_name = 'slot_label'  # use our computed label everywhere
 
     # New structure fields
     doctor_id = fields.Many2one('clinic.doctor', string="Doctor", required=True, ondelete="cascade")
@@ -62,12 +63,18 @@ class ClinicSlot(models.Model):
         for rec in self:
             # New structure - use slot_label if available
             if rec.slot_label and rec.day_of_week is not False:
-                day_names = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
-                day_code = day_names[int(rec.day_of_week)] if rec.day_of_week else ""
-                shift_txt = dict(self._fields['shift_type'].selection).get(rec.shift_type, "") if rec.shift_type else ""
-                
-                parts = [p for p in [day_code, shift_txt, rec.slot_label] if p]
-                rec.display_name = " ".join(parts) or "Slot"
+                # Check if slot_label already contains day-shift prefix (e.g., "MON-E 06:30-07:00")
+                if '-' in rec.slot_label and ' ' in rec.slot_label:
+                    # slot_label already contains day and shift info, use it directly
+                    rec.display_name = rec.slot_label
+                else:
+                    # Legacy format - combine day, shift, and slot_label
+                    day_names = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
+                    day_code = day_names[int(rec.day_of_week)] if rec.day_of_week else ""
+                    shift_txt = dict(self._fields['shift_type'].selection).get(rec.shift_type, "") if rec.shift_type else ""
+                    
+                    parts = [p for p in [day_code, shift_txt, rec.slot_label] if p]
+                    rec.display_name = " ".join(parts) or "Slot"
                 continue
                 
             # Backward compatibility - use old structure
