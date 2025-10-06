@@ -17,6 +17,8 @@ class AppointmentDashboard extends Component {
             total_appointments: 0,
             total_draft: 0,
             total_confirmed: 0,
+            total_paid: 0,
+            total_waiting: 0,
             total_patient_in: 0,
             total_in_consultation: 0,
             total_completed: 0,
@@ -199,6 +201,8 @@ class AppointmentDashboard extends Component {
 
         console.log('Rendering pie chart with data:', {
             confirmed: this.state.total_confirmed,
+            paid: this.state.total_paid,
+            waiting: this.state.total_waiting,
             completed: this.state.total_completed,
             patient_in: this.state.total_patient_in,
             in_consultation: this.state.total_in_consultation,
@@ -210,10 +214,12 @@ class AppointmentDashboard extends Component {
         this.pieChart = new window.Chart(ctx, {
             type: 'pie',
             data: {
-                labels: ['Confirmed', 'Completed', 'Patient In', 'In Consultation', 'No Show', 'Cancelled', 'Draft'],
+                labels: ['Confirmed', 'Paid', 'Waiting', 'Completed', 'Patient In', 'In Consultation', 'No Show', 'Cancelled', 'Draft'],
                 datasets: [{
                     data: [
                         this.state.total_confirmed,
+                        this.state.total_paid,
+                        this.state.total_waiting,
                         this.state.total_completed,
                         this.state.total_patient_in,
                         this.state.total_in_consultation,
@@ -223,10 +229,12 @@ class AppointmentDashboard extends Component {
                     ],
                     backgroundColor: [
                         '#007bff',
+                        '#20c997',
+                        '#fd7e14',
                         '#28a745',
                         '#17a2b8',
                         '#ffc107',
-                        '#fd7e14',
+                        '#e83e8c',
                         '#dc3545',
                         '#6c757d'
                     ],
@@ -280,6 +288,8 @@ class AppointmentDashboard extends Component {
 
         console.log('Rendering bar chart with data:', {
             confirmed: this.state.total_confirmed,
+            paid: this.state.total_paid,
+            waiting: this.state.total_waiting,
             completed: this.state.total_completed,
             patient_in: this.state.total_patient_in,
             in_consultation: this.state.total_in_consultation,
@@ -291,11 +301,13 @@ class AppointmentDashboard extends Component {
         this.barChart = new window.Chart(ctx, {
             type: 'bar',
             data: {
-                labels: ['Confirmed', 'Completed', 'Checked In', 'In Consultation', 'No Show', 'Cancelled', 'Draft'],
+                labels: ['Confirmed', 'Paid', 'Waiting', 'Completed', 'Checked In', 'In Consultation', 'No Show', 'Cancelled', 'Draft'],
                 datasets: [{
                     label: 'Appointments',
                     data: [
                         this.state.total_confirmed,
+                        this.state.total_paid,
+                        this.state.total_waiting,
                         this.state.total_completed,
                         this.state.total_patient_in,
                         this.state.total_in_consultation,
@@ -305,19 +317,23 @@ class AppointmentDashboard extends Component {
                     ],
                     backgroundColor: [
                         'rgba(0,123,255,0.7)',
+                        'rgba(32,201,151,0.7)',
+                        'rgba(253,126,20,0.7)',
                         'rgba(40,167,69,0.7)',
                         'rgba(23,162,184,0.7)',
                         'rgba(255,193,7,0.7)',
-                        'rgba(253,126,20,0.7)',
+                        'rgba(232,62,140,0.7)',
                         'rgba(220,53,69,0.7)',
                         'rgba(108,117,125,0.7)'
                     ],
                     borderColor: [
                         '#007bff',
+                        '#20c997',
+                        '#fd7e14',
                         '#28a745',
                         '#17a2b8',
                         '#ffc107',
-                        '#fd7e14',
+                        '#e83e8c',
                         '#dc3545',
                         '#6c757d'
                     ],

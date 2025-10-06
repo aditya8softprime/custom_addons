@@ -1003,6 +1003,8 @@ class ClinicAppointment(models.Model):
         # Filter by state
         draft = appointments.filtered(lambda r: r.state == 'draft')
         confirmed = appointments.filtered(lambda r: r.state == 'confirmed')
+        paid = appointments.filtered(lambda r: r.state == 'paid')
+        waiting = appointments.filtered(lambda r: r.state == 'waiting')
         patient_in = appointments.filtered(lambda r: r.state == 'patient_in')
         in_consultation = appointments.filtered(lambda r: r.state == 'in_consultation')
         completed = appointments.filtered(lambda r: r.state == 'completed')
@@ -1020,6 +1022,8 @@ class ClinicAppointment(models.Model):
             'total_appointments': len(appointments),
             'total_draft': len(draft),
             'total_confirmed': len(confirmed),
+            'total_paid': len(paid),
+            'total_waiting': len(waiting),
             'total_patient_in': len(patient_in),
             'total_in_consultation': len(in_consultation),
             'total_completed': len(completed),
@@ -1180,7 +1184,7 @@ class ClinicAppointment(models.Model):
         total_records = self.env['clinic.appointment'].search_count(domain)
         
         # Fetch records
-        fields = ['id', 'name', 'patient_id', 'doctor_id', 'appointment_date', 'start_time', 'end_time', 'state', 'consulting_fee']
+        fields = ['id', 'name', 'patient_id', 'doctor_id', 'appointment_date', 'start_time', 'end_time', 'state', 'consulting_fee', 'appointment_type']
         appointments = self.env['clinic.appointment'].search_read(
             domain, fields, offset=offset, limit=limit, order='appointment_date desc'
         )
@@ -1195,6 +1199,7 @@ class ClinicAppointment(models.Model):
             'time_slot': f"{self._float_to_time(appointment['start_time'])} - {self._float_to_time(appointment['end_time'])}",
             'state': appointment['state'],
             'consulting_fee': appointment['consulting_fee'],
+            'appointment_type': appointment['appointment_type'] or 'scheduled',
         } for appointment in appointments]
         
         return {

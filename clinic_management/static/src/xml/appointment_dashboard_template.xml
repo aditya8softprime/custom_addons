@@ -124,6 +124,32 @@
                     </div>
                 </div>
                 
+                <!-- Paid -->
+                <div class="col-md-3 col-sm-6">
+                    <div class="card h-100 shadow-sm clickable-card" style="background-color: #20c997; color: white;" t-on-click="(event) => this._open_list_view('paid')">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <i class="fa fa-credit-card fa-2x me-3"></i>
+                                <h2 class="mb-0 fw-bold"><t t-esc="state.total_paid"/></h2>
+                            </div>
+                            <h5 class="card-title mb-2">Paid</h5>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Waiting -->
+                <div class="col-md-3 col-sm-6">
+                    <div class="card h-100 shadow-sm clickable-card" style="background-color: #fd7e14; color: white;" t-on-click="(event) => this._open_list_view('waiting')">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <i class="fa fa-hourglass-half fa-2x me-3"></i>
+                                <h2 class="mb-0 fw-bold"><t t-esc="state.total_waiting"/></h2>
+                            </div>
+                            <h5 class="card-title mb-2">Waiting</h5>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- Completed -->
                 <div class="col-md-3 col-sm-6">
                     <div class="card h-100 shadow-sm clickable-card" style="background-color: #28a745; color: white;" t-on-click="(event) => this._open_list_view('completed')">
@@ -165,7 +191,7 @@
                 
                 <!-- No Show -->
                 <div class="col-md-3 col-sm-6">
-                    <div class="card h-100 shadow-sm clickable-card" style="background-color: #fd7e14; color: white;" t-on-click="(event) => this._open_list_view('no_show')">
+                    <div class="card h-100 shadow-sm clickable-card" style="background-color: #e83e8c; color: white;" t-on-click="(event) => this._open_list_view('no_show')">
                         <div class="card-body text-center">
                             <div class="d-flex align-items-center justify-content-center mb-2">
                                 <i class="fa fa-user-times fa-2x me-3"></i>
@@ -215,6 +241,7 @@
                                     <th>Reference</th>
                                     <th>Patient</th>
                                     <th>Doctor</th>
+                                    <th>Appointment Type</th>
                                     <th>Date</th>
                                     <th>Time</th>
                                     <th>Status</th>
@@ -227,10 +254,15 @@
                                         <td><t t-esc="record.name"/></td>
                                         <td><t t-esc="record.patient_name || '-'"/></td>
                                         <td><t t-esc="record.doctor_name || '-'"/></td>
+                                        <td>
+                                            <span t-att-class="'badge bg-' + (record.appointment_type === 'scheduled' ? 'primary' : 'info')">
+                                                <t t-esc="record.appointment_type ? record.appointment_type.toUpperCase().replace('_', ' ') : 'SCHEDULED'"/>
+                                            </span>
+                                        </td>
                                         <td><t t-esc="record.appointment_date || '-'"/></td>
                                         <td><t t-esc="record.time_slot || '-'"/></td>
                                         <td>
-                                            <span t-att-class="'badge bg-' + (record.state === 'completed' ? 'success' : record.state === 'confirmed' ? 'primary' : record.state === 'patient_in' ? 'info' : record.state === 'in_consultation' ? 'warning' : record.state === 'cancelled' ? 'danger' : record.state === 'no_show' ? 'secondary' : 'light text-dark')">
+                                            <span t-att-class="'badge bg-' + (record.state === 'completed' ? 'success' : record.state === 'confirmed' ? 'primary' : record.state === 'paid' ? 'success' : record.state === 'waiting' ? 'warning' : record.state === 'patient_in' ? 'info' : record.state === 'in_consultation' ? 'warning' : record.state === 'cancelled' ? 'danger' : record.state === 'no_show' ? 'dark' : 'light text-dark')">
                                                 <t t-esc="record.state.toUpperCase().replace('_', ' ')"/>
                                             </span>
                                         </td>
