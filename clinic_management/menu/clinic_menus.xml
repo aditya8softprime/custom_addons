@@ -46,7 +46,7 @@
     <menuitem id="menu_clinic_website_root"
               name="Website"
               parent="menu_clinic_root"
-              sequence="3"
+              sequence="4"
               groups="group_clinic_admin"/>
     
     <menuitem id="menu_clinic_website_settings"
@@ -67,7 +67,7 @@
     <menuitem id="menu_clinic_configuration"
               name="Configuration"
               parent="menu_clinic_root"
-              sequence="4"
+              sequence="5"
               groups="group_clinic_admin,group_clinic_receptionist,group_clinic_doctor"/>
 
     <menuitem id="menu_clinic_doctor"
@@ -77,16 +77,16 @@
               sequence="1"
               groups="group_clinic_admin,group_clinic_receptionist,group_clinic_doctor"/>
 
-    <menuitem id="menu_doctor_shift_config"
+    <!-- <menuitem id="menu_doctor_shift_config"
               name="Doctor Shift Config"
               parent="menu_clinic_configuration"
               action="action_doctor_shift_config"
               sequence="2"
-              groups="group_clinic_admin"/>
+              groups="group_clinic_admin"/> -->
 
     <menuitem id="menu_clinic_patient"
               name="Patients"
-              parent="menu_clinic_configuration"
+              parent="menu_clinic_root"
               action="action_clinic_patient"
               sequence="3"
               groups="group_clinic_admin,group_clinic_receptionist,group_clinic_doctor"/>
