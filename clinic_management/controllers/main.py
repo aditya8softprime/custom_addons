@@ -265,8 +265,8 @@ class ClinicWebsite(http.Controller):
             # Log all submitted form data (except sensitive information)
             _logger.info("Booking form submitted with data: %s", {k: v for k, v in post.items() if k not in ['csrf_token']})
             
-            # Validate required fields
-            required_fields = ['patient_name', 'gender', 'age', 'phone', 'service_id', 'doctor_id', 'appointment_date', 'symptom']
+            # Validate required fields (symptom is now optional)
+            required_fields = ['patient_name', 'gender', 'age', 'phone', 'service_id', 'doctor_id', 'appointment_date']
             missing_fields = []
             
             for field in required_fields:

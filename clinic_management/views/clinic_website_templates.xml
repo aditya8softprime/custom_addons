@@ -484,8 +484,8 @@
                                                 </div>
                                             </div>
                                             <div class="mb-3">
-                                                <label for="symptom" class="form-label">Symptoms/Reason for Visit *</label>
-                                                <textarea class="form-control" id="symptom" name="symptom" rows="3"></textarea>
+                                                <label for="symptom" class="form-label">Symptoms/Reason for Visit</label>
+                                                <textarea class="form-control" id="symptom" name="symptom" rows="3" placeholder="Optional: Describe your symptoms or reason for visit"></textarea>
                                             </div>
                                             <div class="text-center">
                                                 <button type="submit" class="btn btn-primary btn-lg">Book Appointment</button>
@@ -982,8 +982,8 @@
                                                 </div>
                                                 
                                                 <div class="form-group mb-3">
-                                                    <label for="symptom">Symptoms / Reason for Visit *</label>
-                                                    <textarea class="form-control" id="symptom" name="symptom" rows="3" placeholder="Please describe your symptoms..." required="required"></textarea>
+                                                    <label for="symptom">Symptoms / Reason for Visit</label>
+                                                    <textarea class="form-control" id="symptom" name="symptom" rows="3" placeholder="Optional: Describe your symptoms or reason for visit"></textarea>
                                                 </div>
                                                 
                                                 <div class="text-center">
