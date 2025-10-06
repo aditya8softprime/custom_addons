@@ -41,7 +41,8 @@
                 <!-- Right side: Toolbar -->
                 <div class="o_draw_canvas_toolbar"
                      style="flex:0 0 200px; display:flex; flex-direction:column; gap:12px;
-                            padding:12px; background:#f8f9fa; border-radius:8px; border:1px solid #dee2e6;">
+                            padding:12px; background:#f8f9fa; border-radius:8px; border:1px solid #dee2e6;
+                            position:sticky; top:20px; align-self:flex-start; max-height:calc(100vh - 40px); overflow-y:auto;">
 
                     <!-- Tools -->
                     <div>
