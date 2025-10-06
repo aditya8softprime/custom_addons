@@ -30,6 +30,7 @@ class AppointmentDashboard extends Component {
             doctors: [],
             doctors_data: [],
             time_filter: 'today',  // Default to today's filter
+            appointment_type: null,  // New appointment type filter
             active_tab: 'overview',
             records: [],
             current_page: 1,
@@ -96,7 +97,7 @@ class AppointmentDashboard extends Component {
         try {
             // Fetch dashboard tile data
             const result = await this.orm.call("clinic.appointment", "get_appointment_dashboard_data", [
-                this.state.doctor_id, this.state.time_filter, this.state.selected_date
+                this.state.doctor_id, this.state.time_filter, this.state.selected_date, this.state.appointment_type
             ]);
             
             console.log('Dashboard data received:', result);
@@ -153,7 +154,8 @@ class AppointmentDashboard extends Component {
                 this.state.selected_state,
                 offset,
                 this.state.records_per_page,
-                this.state.selected_date
+                this.state.selected_date,
+                this.state.appointment_type
             ]);
             
             this.state.total_records = result.total_records;
@@ -367,6 +369,10 @@ class AppointmentDashboard extends Component {
         if (this.state.active_tab === 'doctors') {
             this._fetch_doctors_data();
         }
+        // Refresh list data if list tab is active
+        if (this.state.active_tab === 'list') {
+            this._fetch_list_data();
+        }
     }
 
     on_doctor_change(event) {
@@ -377,6 +383,10 @@ class AppointmentDashboard extends Component {
         // Refresh doctors data if doctors tab is active
         if (this.state.active_tab === 'doctors') {
             this._fetch_doctors_data();
+        }
+        // Refresh list data if list tab is active
+        if (this.state.active_tab === 'list') {
+            this._fetch_list_data();
         }
     }
 
@@ -390,6 +400,11 @@ class AppointmentDashboard extends Component {
         if (this.state.active_tab === 'doctors') {
             this._fetch_doctors_data();
         }
+        
+        // Refresh list data if list tab is active
+        if (this.state.active_tab === 'list') {
+            this._fetch_list_data();
+        }
     }
 
     clear_date_filter() {
@@ -401,6 +416,23 @@ class AppointmentDashboard extends Component {
         // Refresh doctors data if doctors tab is active
         if (this.state.active_tab === 'doctors') {
             this._fetch_doctors_data();
+        }
+        
+        // Refresh list data if list tab is active
+        if (this.state.active_tab === 'list') {
+            this._fetch_list_data();
+        }
+    }
+
+    on_appointment_type_change(event) {
+        this.state.appointment_type = event.target.value || null;
+        this.state.current_page = 1;
+        // Only fetch overview data, not doctors data as per requirement
+        this._fetch_data();
+        
+        // Refresh list data if list tab is active
+        if (this.state.active_tab === 'list') {
+            this._fetch_list_data();
         }
     }
 

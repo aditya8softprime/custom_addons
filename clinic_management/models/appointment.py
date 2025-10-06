@@ -944,7 +944,7 @@ class ClinicAppointment(models.Model):
         return account
 
     @api.model
-    def get_appointment_dashboard_data(self, doctor_id=None, time_filter=None, selected_date=None):
+    def get_appointment_dashboard_data(self, doctor_id=None, time_filter=None, selected_date=None, appointment_type=None):
         """Return data for the appointment dashboard tiles"""
         company_id = self.env.company.id
         
@@ -952,6 +952,8 @@ class ClinicAppointment(models.Model):
         domain = [('company_id', '=', company_id)]
         if doctor_id:
             domain.append(('doctor_id', '=', int(doctor_id)))
+        if appointment_type:
+            domain.append(('appointment_type', '=', appointment_type))
             
         # Apply time filter
         start_date = None
@@ -1123,7 +1125,7 @@ class ClinicAppointment(models.Model):
         return {'doctors_data': doctors_data}
 
     @api.model
-    def get_appointment_list_data(self, doctor_id=None, time_filter=None, state=None, offset=0, limit=15, selected_date=None):
+    def get_appointment_list_data(self, doctor_id=None, time_filter=None, state=None, offset=0, limit=15, selected_date=None, appointment_type=None):
         """Fetch appointment data for the dashboard table"""
         company_id = self.env.company.id
         
@@ -1133,6 +1135,8 @@ class ClinicAppointment(models.Model):
             domain.append(('doctor_id', '=', int(doctor_id)))
         if state:
             domain.append(('state', '=', state))
+        if appointment_type:
+            domain.append(('appointment_type', '=', appointment_type))
             
         # Apply time filter
         if time_filter and time_filter != 'till_now':

@@ -51,6 +51,20 @@
                         </ul>
                     </div>
                     
+                    <!-- Appointment Type Filter -->
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                            <t t-if="state.appointment_type === 'scheduled'">Scheduled</t>
+                            <t t-elif="state.appointment_type === 'walkin'">Walk-in</t>
+                            <t t-else="">All Types</t>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" t-on-click="(event) => this.on_appointment_type_change({ target: { value: '' } })">All Types</a></li>
+                            <li><a class="dropdown-item" href="#" t-on-click="(event) => this.on_appointment_type_change({ target: { value: 'scheduled' } })">Scheduled</a></li>
+                            <li><a class="dropdown-item" href="#" t-on-click="(event) => this.on_appointment_type_change({ target: { value: 'walkin' } })">Walk-in</a></li>
+                        </ul>
+                    </div>
+                    
                     <!-- Time Filter Buttons -->
                     <div class="btn-group" role="group">
                         <button type="button" t-att-class="state.time_filter === 'today' ? 'btn btn-primary' : 'btn btn-outline-primary'" t-on-click="(event) => this.on_time_filter_change('today')">Today</button>
@@ -287,7 +301,7 @@
                                                          t-att-title="slot.is_booked ? 'Already Booked - Click to see message' : 'Available - Click to book'"
                                                          t-on-click="slot.is_booked ? (event) => this.show_booked_slot_message() : (event) => this.book_slot(doctor_data.id, slot.id, doctor_data.name, doctor_data.service_id)">
                                                         <div class="slot-time">
-                                                            <t t-esc="slot.start_time"/> - <t t-esc="slot.end_time"/>
+                                                            <t t-esc="slot.slot_label"/>
                                                         </div>
                                                         <div class="slot-status">
                                                             <t t-if="slot.is_booked">
