@@ -35,6 +35,9 @@
                             invisible="not show_reschedule_button" class="btn-success"/>
                     <button name="reset_to_in_consultation" string="Reset to In Consultation" type="object"
                             class="btn-warning"/>
+                    <button name="action_reset_to_draft" string="Reset to Draft" type="object" 
+                        invisible="state != 'confirmed'" class="btn-secondary" 
+                        groups="clinic_management.group_clinic_receptionist,clinic_management.group_clinic_admin"/>
                     <field name="state" widget="statusbar" 
                            statusbar_visible="draft,confirmed,waiting,paid,patient_in,in_consultation,completed"/>
                 </header>
@@ -199,7 +202,7 @@
         <field name="name">clinic.appointment.kanban</field>
         <field name="model">clinic.appointment</field>
         <field name="arch" type="xml">
-            <kanban default_group_by="state" records_draggable="0" class="o_kanban_small_column" default_order="state desc">
+            <kanban default_group_by="state" records_draggable="0" class="o_kanban_small_column" default_order="state asc">
                 <field name="patient_id"/>
                 <field name="service_id"/>
                 <field name="doctor_id"/>
@@ -386,7 +389,7 @@
         <field name="name">Walk-in Appointments</field>
         <field name="res_model">clinic.appointment</field>
         <field name="view_mode">kanban,list,form</field>
-        <field name="domain">[('appointment_type', '=', 'walkin'), ('state', '=', 'waiting')]</field>
+        <field name="domain">[('appointment_type', '=', 'walkin')]</field>
         <field name="context">{'search_default_today': 1, 'search_default_group_by_state': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">

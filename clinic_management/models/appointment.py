@@ -542,6 +542,24 @@ class ClinicAppointment(models.Model):
             
             appointment.state = 'confirmed'
     
+    def action_reset_to_draft(self):
+        """Reset appointment from confirmed state back to draft"""
+        for appointment in self:
+            if appointment.state != 'confirmed':
+                raise ValidationError(_("Only confirmed appointments can be reset to draft"))
+            
+            # Clear slot character if it was a scheduled appointment
+            if appointment.appointment_type == 'scheduled':
+                appointment.slot_char = False
+            
+            appointment.state = 'draft'
+            
+            # Log the state change
+            appointment.message_post(
+                body=_("Appointment has been reset to draft state"),
+                message_type='notification'
+            )
+    
     def action_pay(self):
         """Open payment wizard"""
         self.ensure_one()
