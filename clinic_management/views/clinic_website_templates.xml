@@ -3,6 +3,8 @@
     <!-- Dynamic CSS based on website settings -->
     <template id="clinic_dynamic_css" name="Clinic Dynamic CSS">
         <xpath expr="//head" position="inside">
+            <!-- Ensure FontAwesome is loaded -->
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
             <style>
                 :root {
                     --primary-color: <t t-esc="clinic_settings.primary_color if clinic_settings else '#007bff'"/>;
@@ -72,13 +74,32 @@
                     color: var(--text-color);
                 }
                 
+                .social-links {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 15px;
+                    align-items: center;
+                }
+                
                 .social-links a {
-                    color: var(--primary-color) !important;
-                    transition: color 0.3s ease;
+                    transition: transform 0.3s ease, opacity 0.3s ease;
+                    text-decoration: none;
                 }
                 
                 .social-links a:hover {
-                    color: var(--accent-color) !important;
+                    transform: translateY(-3px) scale(1.1);
+                    opacity: 0.8;
+                }
+                
+                .social-links a i {
+                    border-radius: 8px;
+                    padding: 8px;
+                    background: rgba(255, 255, 255, 0.1);
+                    transition: background 0.3s ease;
+                }
+                
+                .social-links a:hover i {
+                    background: rgba(255, 255, 255, 0.2);
                 }
                 
                 .service-tile, .doctor-tile {
@@ -218,10 +239,36 @@
         </xpath>
     </template>
     
-    <!-- Inherit website layout to include dynamic CSS -->
+    <!-- Inherit website layout to include dynamic CSS and remove default footer -->
     <template id="website_layout_inherit_clinic" inherit_id="website.layout">
         <xpath expr="//head" position="inside">
             <t t-call="clinic_management.clinic_dynamic_css"/>
+        </xpath>
+        <!-- Remove the default Odoo footer -->
+        <xpath expr="//div[@id='footer']" position="replace">
+            <!-- Empty replacement to completely remove default footer -->
+        </xpath>
+        <!-- Additional CSS to ensure footer is hidden -->
+        <xpath expr="//head" position="inside">
+            <style>
+                /* Hide default Odoo footer elements */
+                #footer .s_text_block,
+                #footer section.s_text_block,
+                .oe_structure section.s_text_block,
+                footer section.s_text_block {
+                    display: none !important;
+                }
+                
+                /* Hide any remaining default footer content */
+                #footer .container .row:has(.col-lg-2, .col-lg-5, .col-lg-4) {
+                    display: none !important;
+                }
+                
+                /* Ensure default footer is completely hidden */
+                #footer.oe_structure.oe_structure_solo {
+                    display: none !important;
+                }
+            </style>
         </xpath>
     </template>
     
@@ -766,28 +813,40 @@
                                 </div>
                                 
                                 <!-- Social Media -->
-                                <div class="col-md-4 mb-4">
+                               <div class="col-md-4 mb-4">
                                     <h5>Follow Us</h5>
                                     <t t-if="clinic_settings.show_social_media">
-                                        <div class="social-links">
-                                            <a t-if="clinic_settings.facebook_url" t-att-href="clinic_settings.facebook_url" target="_blank" class="mr-3">
-                                                <i class="fab fa-facebook fa-2x"></i>
+                                        <div class="social-links d-flex flex-wrap gap-3">
+                                            <a t-if="clinic_settings.facebook_url" t-att-href="clinic_settings.facebook_url"
+                                            target="_blank" class="btn btn-outline-primary btn-sm d-flex align-items-center" title="Facebook">
+                                                <i class="fab fa-facebook me-2"></i>
+                                                <span>Facebook</span>
                                             </a>
-                                            <a t-if="clinic_settings.instagram_url" t-att-href="clinic_settings.instagram_url" target="_blank" class="mr-3">
-                                                <i class="fab fa-instagram fa-2x"></i>
+                                            <a t-if="clinic_settings.instagram_url" t-att-href="clinic_settings.instagram_url"
+                                            target="_blank" class="btn btn-outline-danger btn-sm d-flex align-items-center" title="Instagram">
+                                                <i class="fab fa-instagram me-2"></i>
+                                                <span>Instagram</span>
                                             </a>
-                                            <a t-if="clinic_settings.twitter_url" t-att-href="clinic_settings.twitter_url" target="_blank" class="mr-3">
-                                                <i class="fab fa-twitter fa-2x"></i>
+                                            <a t-if="clinic_settings.twitter_url" t-att-href="clinic_settings.twitter_url"
+                                            target="_blank" class="btn btn-outline-info btn-sm d-flex align-items-center" title="Twitter">
+                                                <i class="fab fa-twitter me-2"></i>
+                                                <span>Twitter</span>
                                             </a>
-                                            <a t-if="clinic_settings.linkedin_url" t-att-href="clinic_settings.linkedin_url" target="_blank" class="mr-3">
-                                                <i class="fab fa-linkedin fa-2x"></i>
+                                            <a t-if="clinic_settings.linkedin_url" t-att-href="clinic_settings.linkedin_url"
+                                            target="_blank" class="btn btn-outline-primary btn-sm d-flex align-items-center" title="LinkedIn">
+                                                <i class="fab fa-linkedin me-2"></i>
+                                                <span>LinkedIn</span>
                                             </a>
-                                            <a t-if="clinic_settings.whatsapp_number" t-attf-href="https://wa.me/#{clinic_settings.whatsapp_number}" target="_blank" class="mr-3">
-                                                <i class="fab fa-whatsapp fa-2x"></i>
+                                            <a t-if="clinic_settings.whatsapp_number"
+                                            t-attf-href="https://wa.me/#{clinic_settings.whatsapp_number}"
+                                            target="_blank" class="btn btn-outline-success btn-sm d-flex align-items-center" title="WhatsApp">
+                                                <i class="fab fa-whatsapp me-2"></i>
+                                                <span>WhatsApp</span>
                                             </a>
                                         </div>
                                     </t>
                                 </div>
+
                             </div>
                             
                             <hr class="mt-4"/>
