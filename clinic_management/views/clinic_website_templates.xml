@@ -239,7 +239,7 @@
                                     <p class="lead mb-4" t-esc="clinic_settings.tagline or 'Quality Healthcare Services You Can Trust'"/>
                                     <div class="mt-4">
                                         <a t-if="clinic_settings.enable_online_booking" href="#booking" class="btn btn-primary btn-lg mr-3 smooth-scroll">Book Appointment</a>
-                                        <a href="#departments" class="btn btn-outline-light btn-lg smooth-scroll">Our Departments</a>
+                                        <a href="/clinic/services" class="btn btn-secondary btn-lg ml-2">View All Departments</a>
                                     </div>
                                 </div>
                             </div>
@@ -255,7 +255,7 @@
                                     <p class="lead" t-esc="clinic_settings.tagline if clinic_settings else 'Quality Healthcare Services You Can Trust'"/>
                                     <div class="mt-4">
                                         <a t-if="clinic_settings and clinic_settings.enable_online_booking" href="#booking" class="btn btn-primary btn-lg mr-3 smooth-scroll">Book Appointment</a>
-                                        <a href="#departments" class="btn btn-outline-primary btn-lg smooth-scroll">Our Departments</a>
+                                        <a href="#services" class="btn btn-outline-primary btn-lg smooth-scroll">Our Departments</a>
                                     </div>
                                 </div>
                             </div>
