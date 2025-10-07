@@ -974,46 +974,43 @@ class ClinicAppointment(models.Model):
             domain.append(('appointment_type', '=', appointment_type))
             
         # Apply time filter
-        start_date = None
-        end_date = None
         if time_filter and time_filter != 'till_now':
             user_tz = self.env.user.tz or 'UTC'
             tz = pytz.timezone(user_tz)
             now = datetime.now(tz)
             
             if time_filter == 'today':
-                start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
-                end_date = now.replace(hour=23, minute=59, second=59)
+                # For today filter, use the current date in user timezone
+                today_date = now.date()
+                domain.append(('appointment_date', '=', today_date))
             elif time_filter == 'tomorrow':
-                tomorrow = now + timedelta(days=1)
-                start_date = tomorrow.replace(hour=0, minute=0, second=0, microsecond=0)
-                end_date = tomorrow.replace(hour=23, minute=59, second=59)
+                # For tomorrow filter, use tomorrow's date in user timezone
+                tomorrow_date = (now + timedelta(days=1)).date()
+                domain.append(('appointment_date', '=', tomorrow_date))
             elif time_filter == 'custom_date' and selected_date:
                 # Parse the selected date string (YYYY-MM-DD)
                 from datetime import datetime as dt
                 selected_dt = dt.strptime(selected_date, '%Y-%m-%d')
-                # Convert to user timezone
-                selected_dt = tz.localize(selected_dt)
-                start_date = selected_dt.replace(hour=0, minute=0, second=0, microsecond=0)
-                end_date = selected_dt.replace(hour=23, minute=59, second=59)
+                domain.append(('appointment_date', '=', selected_dt.date()))
             elif time_filter == 'week':
+                # For week filter, get start and end dates
                 start_date = now - timedelta(days=now.weekday())
-                start_date = start_date.replace(hour=0, minute=0, second=0)
-                end_date = start_date + timedelta(days=6, hours=23, minutes=59)
+                end_date = start_date + timedelta(days=6)
+                domain.append(('appointment_date', '>=', start_date.date()))
+                domain.append(('appointment_date', '<=', end_date.date()))
             elif time_filter == 'month':
-                start_date = now.replace(day=1, hour=0, minute=0, second=0)
+                # For month filter, get start and end dates
+                start_date = now.replace(day=1)
                 next_month = (start_date + timedelta(days=31)).replace(day=1)
-                end_date = next_month - timedelta(seconds=1)
+                end_date = next_month - timedelta(days=1)
+                domain.append(('appointment_date', '>=', start_date.date()))
+                domain.append(('appointment_date', '<=', end_date.date()))
             elif time_filter == 'year':
-                start_date = now.replace(month=1, day=1, hour=0, minute=0, second=0)
-                end_date = now.replace(month=12, day=31, hour=23, minute=59)
-            
-            if start_date and end_date:
-                utc_tz = pytz.UTC
-                start_date_utc = start_date.astimezone(utc_tz)
-                end_date_utc = end_date.astimezone(utc_tz)
-                domain.append(('appointment_date', '>=', start_date_utc.date()))
-                domain.append(('appointment_date', '<=', end_date_utc.date()))
+                # For year filter, get start and end dates
+                start_date = now.replace(month=1, day=1)
+                end_date = now.replace(month=12, day=31)
+                domain.append(('appointment_date', '>=', start_date.date()))
+                domain.append(('appointment_date', '<=', end_date.date()))
         
         # Fetch appointments
         appointments = self.env['clinic.appointment'].search(domain)
@@ -1167,36 +1164,37 @@ class ClinicAppointment(models.Model):
             now = datetime.now(tz)
             
             if time_filter == 'today':
-                start_date = now.replace(hour=0, minute=0, second=0)
-                end_date = now.replace(hour=23, minute=59, second=59)
+                # For today filter, use the current date in user timezone
+                today_date = now.date()
+                domain.append(('appointment_date', '=', today_date))
             elif time_filter == 'tomorrow':
-                tomorrow = now + timedelta(days=1)
-                start_date = tomorrow.replace(hour=0, minute=0, second=0)
-                end_date = tomorrow.replace(hour=23, minute=59, second=59)
+                # For tomorrow filter, use tomorrow's date in user timezone
+                tomorrow_date = (now + timedelta(days=1)).date()
+                domain.append(('appointment_date', '=', tomorrow_date))
             elif time_filter == 'custom_date' and selected_date:
+                # Parse the selected date string (YYYY-MM-DD)
                 from datetime import datetime as dt
                 selected_dt = dt.strptime(selected_date, '%Y-%m-%d')
-                selected_dt = tz.localize(selected_dt)
-                start_date = selected_dt.replace(hour=0, minute=0, second=0)
-                end_date = selected_dt.replace(hour=23, minute=59, second=59)
+                domain.append(('appointment_date', '=', selected_dt.date()))
             elif time_filter == 'week':
+                # For week filter, get start and end dates
                 start_date = now - timedelta(days=now.weekday())
-                start_date = start_date.replace(hour=0, minute=0, second=0)
-                end_date = start_date + timedelta(days=6, hours=23, minutes=59)
+                end_date = start_date + timedelta(days=6)
+                domain.append(('appointment_date', '>=', start_date.date()))
+                domain.append(('appointment_date', '<=', end_date.date()))
             elif time_filter == 'month':
-                start_date = now.replace(day=1, hour=0, minute=0, second=0)
+                # For month filter, get start and end dates
+                start_date = now.replace(day=1)
                 next_month = (start_date + timedelta(days=31)).replace(day=1)
-                end_date = next_month - timedelta(seconds=1)
+                end_date = next_month - timedelta(days=1)
+                domain.append(('appointment_date', '>=', start_date.date()))
+                domain.append(('appointment_date', '<=', end_date.date()))
             elif time_filter == 'year':
-                start_date = now.replace(month=1, day=1, hour=0, minute=0, second=0)
-                end_date = now.replace(month=12, day=31, hour=23, minute=59)
-                
-            if start_date and end_date:
-                utc_tz = pytz.UTC
-                start_date_utc = start_date.astimezone(utc_tz)
-                end_date_utc = end_date.astimezone(utc_tz)
-                domain.append(('appointment_date', '>=', start_date_utc.date()))
-                domain.append(('appointment_date', '<=', end_date_utc.date()))
+                # For year filter, get start and end dates
+                start_date = now.replace(month=1, day=1)
+                end_date = now.replace(month=12, day=31)
+                domain.append(('appointment_date', '>=', start_date.date()))
+                domain.append(('appointment_date', '<=', end_date.date()))
         
         # Get total count
         total_records = self.env['clinic.appointment'].search_count(domain)
