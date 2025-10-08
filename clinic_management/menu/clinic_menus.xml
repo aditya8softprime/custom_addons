@@ -10,6 +10,7 @@
               name="Appointment Dashboard"
               parent="menu_clinic_root"
               action="action_appointment_dashboard"
+              groups="group_clinic_receptionist,group_clinic_admin"
               sequence="0"/>
 
     <!-- Appointments Menu (Main Group) -->
